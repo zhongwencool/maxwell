@@ -16,7 +16,7 @@ defmodule Maxwell.Mixfile do
   end
 
   defp deps do
-    [
+    [{:tesla, github: "zhongwencool/tesla", branch: "master"},
      {:ibrowse, github: "cmullaparthi/ibrowse", tag: "v4.2", optional: true},
      {:poison, github: "devinus/poison", tag: "2.1.0", optional: true}
     ]

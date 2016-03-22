@@ -1,6 +1,6 @@
 defmodule MaxwellTest do
   use ExUnit.Case
-  doctest Maxwell
+  # doctest Maxwell
 
   defmodule ClientWithAdapterFun do
     use Maxwell.Builder
