@@ -2,7 +2,6 @@ defmodule Maxwell do
   @moduledoc  """
   #{File.read!("README.md")}
   """
-  use Tesla.Builder
 
   defstruct url: "",
             method: nil,
@@ -11,5 +10,7 @@ defmodule Maxwell do
             opts: [],
             status: nil,
             _module_: nil
+            
+  use Maxwell.Builder
 
 end
