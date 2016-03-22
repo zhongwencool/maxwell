@@ -34,13 +34,24 @@ defmodule Maxwell.Builder do
 
           or
                 {:error, {:conn_failed, {:error, :nxdomain}}}
+
+          If adapter supports it, you can make asynchronous requests by passing `respond_to: pid` option:
+                Maxwell.get(url: "http://example.org", respond_to: self)
+                receive do
+                  {:maxwell_response, res} -> res.status # => 200
+                end
           """
         def unquote(method)(maxwell\\[])
         def unquote(method)(maxwell)when is_list(maxwell) do
-          url     = maxwell|> Keyword.get(:url, "")
-          headers = maxwell|> Keyword.get(:headers, %{})
-          query   = maxwell|> Keyword.get(:query, %{})
-          opts    = maxwell|> Keyword.get(:opts, [])
+          url        = maxwell|> Keyword.get(:url, "")
+          headers    = maxwell|> Keyword.get(:headers, %{})
+          query      = maxwell|> Keyword.get(:query, %{})
+          opts       = maxwell|> Keyword.get(:opts, [])
+
+          if respond_to = maxwell|> Keyword.get(:respond_to, nil) do
+            opts = [{:respond_to, respond_to} | opts]
+          end
+
           %Maxwell{
             method: unquote(method),
             _module_: __MODULE__,
@@ -97,14 +108,23 @@ defmodule Maxwell.Builder do
                }
           or
                {:error, {:conn_failed, {:error, :timeout}}}
+          If adapter supports it, you can make asynchronous requests by passing `respond_to: pid` option:
+                Maxwell.get(url: "http://example.org", respond_to: self)
+                receive do
+                  {:maxwell_response, res} -> res.status # => 200
+                end
           """
         def unquote(method)(maxwell\\[])
         def unquote(method)(maxwell)when is_list(maxwell) do
-          url     = maxwell |> Keyword.get(:url, "")
-          headers = maxwell |> Keyword.get(:headers, %{})
-          query   = maxwell |> Keyword.get(:query, %{})
-          opts    = maxwell |> Keyword.get(:opts, [])
-          body    = maxwell |> Keyword.get(:body, %{})
+          url        = maxwell |> Keyword.get(:url, "")
+          headers    = maxwell |> Keyword.get(:headers, %{})
+          query      = maxwell |> Keyword.get(:query, %{})
+          opts       = maxwell |> Keyword.get(:opts, [])
+          body       = maxwell |> Keyword.get(:body, %{})
+          if respond_to = maxwell|> Keyword.get(:respond_to, nil) do
+            opts = [{:respond_to, respond_to} | opts]
+          end
+
           %Maxwell{
             method: unquote(method),
             _module_: __MODULE__,
