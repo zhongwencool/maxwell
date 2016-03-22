@@ -32,7 +32,7 @@ defmodule IbrowseTest do
       {:tesla_response, res} ->
         assert res.status == 200
     after
-      2000 -> raise "Timeout"
+      5000 -> raise "Timeout"
     end
   end
 

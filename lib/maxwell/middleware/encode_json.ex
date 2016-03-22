@@ -1,9 +1,8 @@
 defmodule Maxwell.Middleware.EncodeJson do
-  def call(env, run, opts \\ []) do
-
+  def call(env, run, encode_fun) do
+    unless is_function(encode_fun), do: encode_fun = &Poison.encode/1
     if env.body do
-      encode = opts[:json_lib] || Poison
-      {:ok, body} = encode.encode(env.body)
+      {:ok, body} = encode_fun.(env.body)
       env = %{env | body: body}
       headers = %{'Content-Type': 'application/json'}
 

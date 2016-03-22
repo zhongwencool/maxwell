@@ -4,8 +4,8 @@ defmodule JsonTest do
   defmodule Client do
     use Maxwell.Builder
 
-    middleware Maxwell.Middleware.EncodeJson
-    middleware Maxwell.Middleware.DecodeJson
+    middleware Maxwell.Middleware.EncodeJson, &Poison.encode/1
+    middleware Maxwell.Middleware.DecodeJson, &Poison.decode/1
 
     adapter fn (env) ->
       case env.url do

@@ -1,12 +1,12 @@
 # Maxwell
 
-Maxwell is an HTTP client. It similar to [Maxwell](https://github.com/teamon/Maxwell) (base on [Faraday](https://github.com/lostisland/faraday))
-It embraces the concept of middleware when processing the request/response cycle.
+Maxwell is an HTTP client. It borrow idea from [tesla(elixir)](https://github.com/teamon/tesla) which base on [Faraday(ruby)](https://github.com/lostisland/faraday)
+It support for middleware and multiple adapters.
 
 ## Basic usage
 
+## Get request example
 ```ex
-# Example get request
 iex> Maxwell.get(url: "http://httpbin.org/ip")
 {:ok,
  %Maxwell{_module_: Maxwell, body: '{\n  "origin": "xx.xxx.xxx.xxx"\n}\n',
@@ -20,13 +20,39 @@ iex> Maxwell.get!(url: "http://httpbin.org/get", query: %{a: 1, b: "foo"})
  method: :get, opts: [], status: 200, url: "http://httpbin.org/get?a=1&b=foo"}}
 ```
 
-# Example post request
+## Post! request example 
 ```ex
-iex> Maxwell.post!(url: "http://httpbin.org/post", body: "foo")
+iex> Maxwell.post!(url: "http://httpbin.org/post", body: "foo_body")
 %Maxwell{_module_: Maxwell,
- body: '{\n  "args": {}, \n  "data": "foo", \n  ...\n',
+ body: '{\n  "args": {}, \n  "data": "foo_body_", \n  ...\n',
  headers: %{'Access-Control-Allow-Credentials' => 'true'},
  method: :post, opts: [], status: 200, url: "http://httpbin.org/post"}
+```
+## Request parameters
+```ex
+[url:        request_url_string,
+ headers:    request_headers_map,
+ query:      request_query_map,
+ body:       request_body_term,
+ opts:       request_opts_keyword_list,
+ respond_to: pid]
+```
+`h Maxwell.#{method}` will help you
+
+## Reponse result 
+```ex
+{:ok,
+  %Maxwell{
+    headers: reponse_headers_map,
+    status:  reponse_http_status_integer,
+    body:    reponse_body_term,
+    opts:    request_opts_keyword_list,
+    url:     request_urlwithquery_string,    
+  }}
+
+# or
+{:error, reason_term} 
+  
 ```
 ## Creating API clients
 
@@ -36,6 +62,7 @@ For example
 
 ```ex
 defmodule GitHub do
+  # create get/1, get!/1, post/1, post!/1  
   use Maxwell.Builder, ~w(get post)a
   
   middleware Maxwell.Middleware.BaseUrl, "https://api.github.com"
@@ -81,8 +108,12 @@ Maxwell has support for different adapters that do the actual HTTP request proce
 Maxwell has built-in support for [ibrowse](https://github.com/cmullaparthi/ibrowse) Erlang HTTP client.
 
 To use it simply include `adapter Mawell.Adapter.Ibrowse` line in your API client definition.
-
+config global adapter
+```ex
+config :maxwell, default_adapter: Maxwell.Adapter.Ibrowse  
+```
 NOTE: Remember to include ibrowse in applications list.
+
 ## Middleware
 
 ### Basic
@@ -90,18 +121,19 @@ NOTE: Remember to include ibrowse in applications list.
 - `Maxwell.Middleware.BaseUrl` - set base url for all request
 - `Maxwell.Middleware.Headers` - set request headers
 - `Maxwell.Middleware.Opts` - set options for all request
-- `Maxwell.Middleware.body` - set request body
 - `Maxwell.Middleware.DecodeRels` - decode reponse rels
 
 ### JSON
 NOTE: default requires [poison](https://github.com/devinus/poison) as dependency
-config by
-```ex
-config :maxwell, json_lib: Poison
-```
 
+- `Maxwell.Middleware.EncodeJson` - endode request body as JSON, it will add %{'Content-Type': 'application/json'} to headers
 - `Maxwell.Middleware.DecodeJson` - decode response body as JSON
-- `Maxwell.Middleware.EncodeJson` - endode request body as JSON
+
+Example 
+```ex
+middleware Maxwell.Middleware.EncodeJson &Poison.encode/1
+middleware Maxwell.Middleware.DecodeJson &Poison.decode/1
+```
 
 ## Writing your own middleware
 
@@ -122,7 +154,7 @@ The arguments are:
 
 There is no distinction between request and response middleware, it's all about executing `run` function at the correct time.
 
-For example, z request logger middleware could be implemented like this:
+For example, request logger middleware could be implemented like this:
 
 ```ex
 defmodule Maxwell.Middleware.RequestLogger do
@@ -151,7 +183,7 @@ If adapter supports it, you can make asynchronous requests by passing `respond_t
 
 ```ex
 
-Maxwell.get("http://example.org", respond_to: self)
+Maxwell.get(url: "http://example.org", respond_to: self)
 
 receive do
   {:maxwell_response, res} -> res.status # => 200
@@ -159,3 +191,6 @@ end
 ```
 
 ## todo
+
+- [] hackney adapter 
+ 

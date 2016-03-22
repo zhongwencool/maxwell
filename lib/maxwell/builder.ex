@@ -26,8 +26,8 @@ defmodule Maxwell.Builder do
                {:ok, %Maxwell{
                       headers: reponse_headers_map,
                       status:  reponse_http_status_integer,
-                      body:    reponse_body_map,
-                      opts:    request_opts_keyword_list
+                      body:    reponse_body_term,
+                      opts:    request_opts_keyword_list,
                       url:     request_urlwithquery_string,
                       query:   request_query_map
                }
@@ -76,7 +76,7 @@ defmodule Maxwell.Builder do
         @doc """
           Method: #{unquote(method)}
 
-          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list, body: body_map]`
+          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list, body: body_term]`
 
           Returns `{:ok, %Maxwell{}}` or `{:error, reason}`
           ## Examples
@@ -84,17 +84,16 @@ defmodule Maxwell.Builder do
                       url:     request_url_string,
                       headers: request_headers_map,
                       query:   request_query_map,
-                      body:    request_body_map,
+                      body:    request_body_term,
                       opts:    request_opts_keyword_list
                     ] |> Maxwell.YourClient.#{unquote(method)}
 
                {:ok, %Maxwell{
                      headers: reponse_headers_map,
                      status:  reponse_http_status_integer,
-                     body:    reponse_body_map,
+                     body:    reponse_body_term,
                      opts:    request_opts_keyword_list
                      url:     request_urlwithquery_string,
-                     query:   request_query_map
                }
           or
                {:error, {:conn_failed, {:error, :timeout}}}
@@ -119,7 +118,7 @@ defmodule Maxwell.Builder do
         @doc """
           Method: #{unquote(method_exception)}
 
-          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list, body: body_map]`
+          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list, body: body_term]`
 
           Return `%Maxwell{}` or raise `%Maxwell.Error{}`
 
