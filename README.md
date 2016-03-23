@@ -26,7 +26,7 @@ iex> Maxwell.post!(url: "http://httpbin.org/post", body: "foo_body")
   headers: %{'Access-Control-Allow-Credentials' => 'true'},
   method: :post, opts: [], status: 200, url: "http://httpbin.org/post"}
 ```
-> **Compare to other http client **: [Compare Example](https://github.com/zhongwencool/maxwell/blob/master/example/github_client.ex)
+> **Compare to other http client **: [Compare Example](https://github.com/zhongwencool/maxwell/blob/master/examples/github_client.ex)
  
 ## Request parameters
 ```ex
