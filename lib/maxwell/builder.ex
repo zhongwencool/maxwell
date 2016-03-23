@@ -54,12 +54,11 @@ defmodule Maxwell.Builder do
 
           %Maxwell{
             method: unquote(method),
-            _module_: __MODULE__,
             headers: headers,
             opts: opts,
             url: Maxwell.Until.append_query_string(url, query)
           }
-          |> request
+          |> call_middleware
         end
         @doc """
           Method without body: #{unquote(method_exception)}
@@ -76,7 +75,7 @@ defmodule Maxwell.Builder do
               result
             {:error, reason}  ->
               raise Maxwell.Error, value: reason,
-                message: "method: #{unquote(method)} url: #{maxwell.url}, module: #{__MODULE__}"
+                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{maxwell[:url]}, module: #{__MODULE__}"
           end
         end
       end
@@ -127,13 +126,12 @@ defmodule Maxwell.Builder do
 
           %Maxwell{
             method: unquote(method),
-            _module_: __MODULE__,
             headers: headers,
             opts: opts,
             body: body,
             url: Maxwell.Until.append_query_string(url, query)
           }
-          |> request
+          |> call_middleware
         end
         @doc """
           Method: #{unquote(method_exception)}
@@ -150,21 +148,13 @@ defmodule Maxwell.Builder do
               result
             {:error, reason}  ->
               raise Maxwell.Error, value: reason,
-                message: "method: #{unquote(method)} url: #{maxwell.url}, module: #{__MODULE__}"
+                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{maxwell[:url]}, module: #{__MODULE__}"
           end
         end
       end
     end
 
-    request =
-      quote location: :keep do
-        def request(maxwell = %Maxwell{}) do
-          maxwell |> maxwell._module_.call_middleware
-        end
-      end
-
     quote do
-      unquote(request)
       unquote(method_defs)
       unquote(method_defs_with_body)
 
@@ -180,19 +170,19 @@ defmodule Maxwell.Builder do
     case Module.get_attribute(env.module, :adapter) do
       nil ->
         quote do
-          def call_adapter(env) do
-            Maxwell.Adapter.default_adapter.call(env)
+          defp call_adapter(env) do
+            Maxwell.Adapter.Ibrowse.call(env) # default
           end
         end
       {:fn, _, _} = adapter ->
         quote do
-          def call_adapter(env) do
+          defp call_adapter(env) do
             unquote(adapter).(env)
           end
         end
       mod when is_atom(mod) ->
         quote do
-          def call_adapter(env) do
+          defp call_adapter(env) do
             unquote(mod).call(env)
           end
         end
@@ -216,7 +206,7 @@ defmodule Maxwell.Builder do
          end)
 
     quote do
-      def call_middleware(env) do
+      defp call_middleware(env) do
         unquote(reduced)
       end
     end

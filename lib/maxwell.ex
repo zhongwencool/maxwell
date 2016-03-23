@@ -8,8 +8,7 @@ defmodule Maxwell do
             headers: %{},
             body: nil,
             opts: [],
-            status: nil,
-            _module_: nil
+            status: nil
             
   use Maxwell.Builder
 

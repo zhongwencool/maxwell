@@ -1,4 +1,13 @@
 defmodule Maxwell.Adapter do
+  @doc """
+  ```
+  # module
+  @adapter Adapter.Module
+  # or function
+  @adapter fn(env) -> env end
+  ```
+  """
+
   defmacro adapter({:fn, _, _} = ad) do
     escaped = Macro.escape(ad)
     quote do
@@ -9,10 +18,6 @@ defmodule Maxwell.Adapter do
     quote do
       @adapter unquote(adapter)
     end
-  end
-
-  def default_adapter do
-    Application.get_env(:maxwell, :default_adapter, Maxwell.Adapter.Ibrowse)
   end
 
 end

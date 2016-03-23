@@ -20,9 +20,6 @@ use Mix.Config
 #
 #     config :logger, level: :info
 #
-config :maxwell,
-  default_adapter: Maxwell.Adapter.Ibrowse
-
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
 # by uncommenting the line below and defining dev.exs, test.exs and such.

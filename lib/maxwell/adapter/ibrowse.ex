@@ -19,9 +19,10 @@ defmodule Maxwell.Adapter.Ibrowse do
     method = env.method
     opts = env.opts
     body = env.body || []
+    IO.inspect {url, headers, method, body, opts}
     case :ibrowse.send_req(url, headers, method, body, opts) do
       {:ibrowse_req_id, id} -> {:ok, id}
-      response -> response
+      response -> response |> IO.inspect
     end
   end
 

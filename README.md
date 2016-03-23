@@ -5,29 +5,29 @@ It support for middleware and multiple adapters.
 
 ## Basic usage
 
-## Get request example
+## Get/1 request example
 ```ex
 iex> Maxwell.get(url: "http://httpbin.org/ip")
 {:ok,
- %Maxwell{_module_: Maxwell, body: '{\n  "origin": "xx.xxx.xxx.xxx"\n}\n',
-  headers: %{'Access-Control-Allow-Credentials' => 'true'},
-  method: :get, opts: [], status: 200, url: "http://httpbin.org/ip"}}
+ %Maxwell{body: '{\n  "origin": "xx.xxx.xxx.xxx"\n}\n',
+   headers: %{'Access-Control-Allow-Credentials' => 'true'},
+   method: :get, opts: [], status: 200, url: "http://httpbin.org/ip"}}
 
 iex> Maxwell.get!(url: "http://httpbin.org/get", query: %{a: 1, b: "foo"})
-%Maxwell{_module_: Maxwell,
- body: '{\n  "args": {\n    "a": "1", \n    "b": "foo"\n  }...',
- headers: %{'Access-Control-Allow-Credentials' => 'true'},
- method: :get, opts: [], status: 200, url: "http://httpbin.org/get?a=1&b=foo"}}
+%Maxwell{body: '{\n  "args": {\n    "a": "1", \n    "b": "foo"\n  }...',
+  headers: %{'Access-Control-Allow-Credentials' => 'true'},
+  method: :get, opts: [], status: 200, url: "http://httpbin.org/get?a=1&b=foo"}}
 ```
 
-## Post! request example 
+## Post!/1 request example 
 ```ex
 iex> Maxwell.post!(url: "http://httpbin.org/post", body: "foo_body")
-%Maxwell{_module_: Maxwell,
- body: '{\n  "args": {}, \n  "data": "foo_body_", \n  ...\n',
- headers: %{'Access-Control-Allow-Credentials' => 'true'},
- method: :post, opts: [], status: 200, url: "http://httpbin.org/post"}
+%Maxwell{body: '{\n  "args": {}, \n  "data": "foo_body_", \n  ...\n',
+  headers: %{'Access-Control-Allow-Credentials' => 'true'},
+  method: :post, opts: [], status: 200, url: "http://httpbin.org/post"}
 ```
+> **Compare to other http client **: [Compare Example](https://github.com/zhongwencool/maxwell/blob/master/example/github_client.ex)
+ 
 ## Request parameters
 ```ex
 [url:        request_url_string,
@@ -108,11 +108,9 @@ Maxwell has support for different adapters that do the actual HTTP request proce
 Maxwell has built-in support for [ibrowse](https://github.com/cmullaparthi/ibrowse) Erlang HTTP client.
 
 To use it simply include `adapter Mawell.Adapter.Ibrowse` line in your API client definition.
-config global adapter
-```ex
-config :maxwell, default_adapter: Maxwell.Adapter.Ibrowse  
-```
-NOTE: Remember to include ibrowse in applications list.
+default adapter is `Maxwell.Adapter.Ibrowse`
+
+NOTE: Remember to include adapter(ibrowse) in applications list.
 
 ## Middleware
 
