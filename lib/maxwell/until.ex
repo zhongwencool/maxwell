@@ -14,6 +14,10 @@ defmodule Maxwell.Until do
 
   end
 
+  def default_adapter do
+    Application.get_env(:maxwell, :default_adapter, Maxwell.Adapter.Ibrowse)
+  end
+
   def adjust_method_format(methods, default_methods) do
     case methods do
       [] ->

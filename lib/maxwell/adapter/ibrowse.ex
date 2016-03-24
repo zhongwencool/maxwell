@@ -1,4 +1,16 @@
 defmodule Maxwell.Adapter.Ibrowse do
+@moduledoc  """
+  [ibrowse](https://github.com/cmullaparthi/ibrowse) adapter
+  """
+
+  @doc """
+    Receives `%Maxwell{}`
+
+    Returns `{:ok, %Maxwell{}}` or `{:error, reason_term}` when synchronous request
+
+    Returns `{:ok, id_integer}` when asynchronous requests(options add [respond_to: target_self])
+
+  """
   def call(env) do
     if target = env.opts[:respond_to] do
 
@@ -19,10 +31,9 @@ defmodule Maxwell.Adapter.Ibrowse do
     method = env.method
     opts = env.opts
     body = env.body || []
-    IO.inspect {url, headers, method, body, opts}
     case :ibrowse.send_req(url, headers, method, body, opts) do
       {:ibrowse_req_id, id} -> {:ok, id}
-      response -> response |> IO.inspect
+      response -> response
     end
   end
 

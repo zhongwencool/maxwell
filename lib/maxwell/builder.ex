@@ -21,7 +21,7 @@ defmodule Maxwell.Builder do
                       headers: request_headers_map,
                       query:   request_query_map,
                       opts:    request_opts_keyword_list
-                    ] |> Maxwell.TestClient.Test.#{unquote(method)}
+                    ] |> Maxwell.YourClient.Test.#{unquote(method)}
 
                {:ok, %Maxwell{
                       headers: reponse_headers_map,
@@ -120,6 +120,7 @@ defmodule Maxwell.Builder do
           query      = maxwell |> Keyword.get(:query, %{})
           opts       = maxwell |> Keyword.get(:opts, [])
           body       = maxwell |> Keyword.get(:body, %{})
+
           if respond_to = maxwell|> Keyword.get(:respond_to, nil) do
             opts = [{:respond_to, respond_to} | opts]
           end
@@ -171,7 +172,7 @@ defmodule Maxwell.Builder do
       nil ->
         quote do
           defp call_adapter(env) do
-            Maxwell.Adapter.Ibrowse.call(env) # default
+            Maxwell.Until.default_adapter.call(env) # default
           end
         end
       {:fn, _, _} = adapter ->

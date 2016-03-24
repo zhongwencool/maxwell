@@ -1,4 +1,12 @@
 defmodule Maxwell.Middleware.DecodeRels do
+@moduledoc  """
+  Decode reponse's body's rels
+  ```ex
+  # Client.ex
+  use Maxwell.Builder ~(get)a
+  @middleware Maxwell.Middleware.DecodeRels
+  ```
+  """
   def call(env, run, _) do
     env = run.(env)
 

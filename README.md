@@ -1,11 +1,10 @@
 # Maxwell
 
-Maxwell is an HTTP client. It borrow idea from [tesla(elixir)](https://github.com/teamon/tesla) which base on [Faraday(ruby)](https://github.com/lostisland/faraday)
-It support for middleware and multiple adapters.
+Maxwell is an HTTP client which support for middleware and multiple adapters(ibrowse hackney...). It borrow idea from [tesla(elixir)](https://github.com/teamon/tesla) which base on [Faraday(ruby)](https://github.com/lostisland/faraday)
 
 ## Basic usage
 
-## Get/1 request example
+## request example
 ```ex
 iex> Maxwell.get(url: "http://httpbin.org/ip")
 {:ok,
@@ -13,20 +12,12 @@ iex> Maxwell.get(url: "http://httpbin.org/ip")
    headers: %{'Access-Control-Allow-Credentials' => 'true'},
    method: :get, opts: [], status: 200, url: "http://httpbin.org/ip"}}
 
-iex> Maxwell.get!(url: "http://httpbin.org/get", query: %{a: 1, b: "foo"})
-%Maxwell{body: '{\n  "args": {\n    "a": "1", \n    "b": "foo"\n  }...',
-  headers: %{'Access-Control-Allow-Credentials' => 'true'},
-  method: :get, opts: [], status: 200, url: "http://httpbin.org/get?a=1&b=foo"}}
-```
-
-## Post!/1 request example 
-```ex
 iex> Maxwell.post!(url: "http://httpbin.org/post", body: "foo_body")
 %Maxwell{body: '{\n  "args": {}, \n  "data": "foo_body_", \n  ...\n',
   headers: %{'Access-Control-Allow-Credentials' => 'true'},
   method: :post, opts: [], status: 200, url: "http://httpbin.org/post"}
 ```
-> **Compare to other http client **: [Compare Example](https://github.com/zhongwencool/maxwell/blob/master/examples/github_client.ex)
+> **Compare to using ibrowse's api **: [Compare Example](https://github.com/zhongwencool/maxwell/blob/master/examples/github_client.ex)
  
 ## Request parameters
 ```ex
@@ -35,9 +26,9 @@ iex> Maxwell.post!(url: "http://httpbin.org/post", body: "foo_body")
  query:      request_query_map,
  body:       request_body_term,
  opts:       request_opts_keyword_list,
- respond_to: pid]
+ respond_to: request_async_pid]
 ```
-`h Maxwell.#{method}` will help you
+`h Maxwell.{method}` to see more information
 
 ## Reponse result 
 ```ex
@@ -58,12 +49,10 @@ iex> Maxwell.post!(url: "http://httpbin.org/post", body: "foo_body")
 
 Use `Maxwell.Builder` module to create API wrappers.
 
-For example
-
 ```ex
 defmodule GitHub do
-  # create get/1, get!/1, post/1, post!/1  
-  use Maxwell.Builder, ~w(get post)a
+  # create get/1, get!/1  
+  use Maxwell.Builder, ~w(get)a # or [:get]  or ["get"]
   
   middleware Maxwell.Middleware.BaseUrl, "https://api.github.com"
   middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
@@ -82,23 +71,23 @@ Then use it like this:
 
 ```ex
 GitHub.get(url: "/user/zhongwencool/repos")
-GitHub.user_repos(url: "zhonngwencool")
+GitHub.user_repos("zhonngwencool")
 ```
 
 ## Installation
 
   1. Add maxwell to your list of dependencies in `mix.exs`:
-
-        def deps do
-          [{:maxwell, github: "zhongwencool/maxwell", branch: master}]
-        end
-
+```ex
+   def deps do
+     [{:maxwell, github: "zhongwencool/maxwell", branch: master}]
+   end
+```
   2. Ensure maxwell is started before your application:
-
-        def application do
-          [applications: [:maxwell]]
-        end
-
+```ex
+   def application do
+      [applications: [:maxwell]] # also add your adapter here 
+   end
+```
 ## Adapters
 
 Maxwell has support for different adapters that do the actual HTTP request processing.
@@ -108,7 +97,12 @@ Maxwell has support for different adapters that do the actual HTTP request proce
 Maxwell has built-in support for [ibrowse](https://github.com/cmullaparthi/ibrowse) Erlang HTTP client.
 
 To use it simply include `adapter Mawell.Adapter.Ibrowse` line in your API client definition.
-default adapter is `Maxwell.Adapter.Ibrowse`
+global default adapter
+
+```ex 
+config :maxwell,
+  default_adapter: Maxwell.Adapter.Ibrowse
+```  
 
 NOTE: Remember to include adapter(ibrowse) in applications list.
 
@@ -127,7 +121,8 @@ NOTE: default requires [poison](https://github.com/devinus/poison) as dependency
 - `Maxwell.Middleware.EncodeJson` - endode request body as JSON, it will add %{'Content-Type': 'application/json'} to headers
 - `Maxwell.Middleware.DecodeJson` - decode response body as JSON
 
-Example 
+Custom json library example 
+
 ```ex
 middleware Maxwell.Middleware.EncodeJson &Poison.encode/1
 middleware Maxwell.Middleware.DecodeJson &Poison.decode/1
@@ -139,12 +134,11 @@ A Maxwell middleware is a module with `call/3` function:
 
 ```ex
 defmodule MyMiddleware do
-  def call(env, run, options) do
-    # ...
+  def call(env = %maxwell{}, run, options) do
+    # ...     
   end
 end
 ```
-
 The arguments are:
 - `env` - `%Maxwell{}` instance
 - `run` - continuation function for the rest of middleware/adapter stack
@@ -187,8 +181,6 @@ receive do
   {:maxwell_response, res} -> res.status # => 200
 end
 ```
-
 ## todo
 
 - [] hackney adapter 
- 
