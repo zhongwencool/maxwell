@@ -48,7 +48,7 @@ defmodule Maxwell.Adapter.Ibrowse do
 
       {:ibrowse_async_response_end, _} ->
         response = format_response(env, status, headers, body)
-        send target, {:tesla_response, response}
+        send target, {:maxwell_response, response}
     end
   end
 

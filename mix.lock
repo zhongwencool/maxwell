@@ -1,2 +1,8 @@
-%{"ibrowse": {:git, "https://github.com/cmullaparthi/ibrowse.git", "fd81d44182507c23445ed720df8c30e2e8da9d9b", [tag: "v4.2"]},
-  "poison": {:git, "https://github.com/devinus/poison.git", "7a7882e8b9877c8868eabaa6b005c813f8d6dc6b", [tag: "2.1.0"]}}
+%{"certifi": {:hex, :certifi, "0.4.0"},
+  "hackney": {:git, "https://github.com/benoitc/hackney.git", "32f092df1e920f36de65f3ae802fc1d34cc0ec4d", [tag: "1.5.7"]},
+  "ibrowse": {:git, "https://github.com/cmullaparthi/ibrowse.git", "fd81d44182507c23445ed720df8c30e2e8da9d9b", [tag: "v4.2"]},
+  "idna": {:hex, :idna, "1.2.0"},
+  "metrics": {:hex, :metrics, "1.0.1"},
+  "mimerl": {:hex, :mimerl, "1.0.2"},
+  "poison": {:git, "https://github.com/devinus/poison.git", "7a7882e8b9877c8868eabaa6b005c813f8d6dc6b", [tag: "2.1.0"]},
+  "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.0"}}

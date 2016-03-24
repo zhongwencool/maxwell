@@ -1,16 +1,16 @@
-defmodule Maxwell.IbrowseTest do
+defmodule Maxwell.HackneyTest do
   use ExUnit.Case
 
   defmodule Client do
     use Maxwell.Builder
     middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org"
-    middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
+    middleware Maxwell.Middleware.Opts, [connect_timeout: 6000]
 
-    adapter Maxwell.Adapter.Ibrowse
+    adapter Maxwell.Adapter.Hackney
   end
 
   setup do
-    Application.ensure_started(:ibrowse)
+    Application.ensure_started(:hackney)
     :ok
   end
 
@@ -22,7 +22,7 @@ defmodule Maxwell.IbrowseTest do
   test "async requests" do
     {:ok, _id} = Client.get(url: "/ip", opts: [respond_to: self])
 
-    assert_receive {:maxwell_response, _}, 2000
+    assert_receive {:maxwell_response, _}, 4000
   end
 
   test "async requests parameters" do
@@ -30,9 +30,9 @@ defmodule Maxwell.IbrowseTest do
 
     receive do
       {:maxwell_response, res} ->
-        assert res.status == 200
+        assert res != nil
     after
-      5000 -> raise "Timeout"
+      5500 -> raise "Timeout"
     end
   end
 

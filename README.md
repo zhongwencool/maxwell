@@ -183,4 +183,5 @@ end
 ```
 ## todo
 
-- [] hackney adapter 
+- [] hackney adapter
+- [] decode json when async 
