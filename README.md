@@ -184,4 +184,8 @@ end
 ## todo
 
 - [] hackney adapter
-- [] decode json when async 
+- [] decode json when async
+ 
+License
+
+See the [LICENSE](https://github.com/zhongwencool/maxwell/blob/master/LICENSE) file for license rights and limitations (MIT). 
