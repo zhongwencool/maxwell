@@ -17,6 +17,7 @@ defmodule Maxwell.Mixfile do
 
   defp deps do
     [
+     {:mimerl, "~> 1.0.2"}, # for find multipart ctype
      {:ibrowse, github: "cmullaparthi/ibrowse", tag: "v4.2", optional: true},
      {:poison, github: "devinus/poison", tag: "2.1.0", optional: true},
      {:hackney, github: "benoitc/hackney", tag: "1.5.7", optiona: true}
