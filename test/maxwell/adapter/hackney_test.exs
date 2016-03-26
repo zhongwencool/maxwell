@@ -6,6 +6,9 @@ defmodule Maxwell.HackneyTest do
     middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org"
     middleware Maxwell.Middleware.Opts, [connect_timeout: 6000]
 
+    middleware Maxwell.Middleware.EncodeJson
+    middleware Maxwell.Middleware.DecodeJson
+
     adapter Maxwell.Adapter.Hackney
   end
 
@@ -19,18 +22,20 @@ defmodule Maxwell.HackneyTest do
     assert reponse.status == 200
   end
 
-  test "async requests" do
-    {:ok, _id} = Client.get(url: "/ip", opts: [respond_to: self])
+  test "encode decode json" do
+    {:ok, res} = Client.post(url: "/post",
+                            body: %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"})
+    assert res.body["json"] == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
 
-    assert_receive {:maxwell_response, _}, 4000
   end
 
-  test "async requests parameters" do
-    {:ok, _id} = Client.get(url: "http://httpbin.org/ip", opts: [respond_to: self])
+  # Streams n random bytes of binary data, accepts optional seed and chunk_size integer parameters.
+  test "async requests stream" do
+    {:ok, _id} = Client.get(url: "http://httpbin.org/stream-bytes/1000", opts: [respond_to: self])
 
     receive do
-      {:maxwell_response, res} ->
-        assert res != nil
+      {:maxwell_response, {:ok, res}} ->
+        assert is_binary(res.body) == true
     after
       5500 -> raise "Timeout"
     end

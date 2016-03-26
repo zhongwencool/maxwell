@@ -9,10 +9,11 @@ defmodule Maxwell.Middleware.DecodeRels do
   """
   def call(env, run, _) do
     env = run.(env)
+    link = env.headers['Link'] || env.headers["Link"]
 
-    if env.headers['Link'] do
+    if link do
       rels =
-      env.headers['Link']
+      link
       |> to_string
       |> String.split(",")
       |> Enum.map(&String.strip/1)

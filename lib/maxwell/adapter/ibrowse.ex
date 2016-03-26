@@ -8,56 +8,54 @@ defmodule Maxwell.Adapter.Ibrowse do
 
     Returns `{:ok, %Maxwell{}}` or `{:error, reason_term}` when synchronous request
 
-    Returns `{:ok, id_integer}` when asynchronous requests(options add [respond_to: target_self])
+    Returns `{:ok, ref_integer}` when asynchronous requests(options add [respond_to: target_self])
 
   """
   def call(env) do
     if target = env.opts[:respond_to] do
-
-      gatherer = spawn_link fn -> gather_response(env, target, nil, nil, nil) end
-
+      gatherer = spawn_link fn -> receive_response(env, target, nil, nil, nil) end
       opts = env.opts |> List.keyreplace(:respond_to, 0, {:stream_to, gatherer})
-      send_req(%{env |opts: opts})
-    else
-      with {:ok, status, headers, body} <- send_req(env),
-           env = format_response(env, status, headers, body),
-           do: {:ok, env}
+      env = %{env |opts: opts}
     end
+
+    env
+    |> send_req
+    |> format_response(env)
   end
 
-  defp send_req(env) do
-    url = env.url |> to_char_list
-    headers = env.headers |> Map.to_list
-    method = env.method
-    opts = env.opts
-    body = env.body || []
-    case :ibrowse.send_req(url, headers, method, body, opts) do
-      {:ibrowse_req_id, id} -> {:ok, id}
-      response -> response
-    end
+  defp send_req(%Maxwell{url: url, headers: headers, method: method, opts: opts, body: body}) do
+    url = url |> to_char_list
+    headers = headers |> Map.to_list
+    body = body || []
+    :ibrowse.send_req(url, headers, method, body, opts)
   end
 
-  defp gather_response(env, target, status, headers, body) do
+  defp receive_response(env, target, status, headers, body) do
     receive do
       {:ibrowse_async_headers, _, new_status, new_headers} ->
-        gather_response(env, target, new_status, new_headers, body)
+        receive_response(env, target, new_status, new_headers, body)
 
       {:ibrowse_async_response, _, append_body} ->
         new_body = if body, do: body <> append_body, else: append_body
-        gather_response(env, target, status, headers, new_body)
+        receive_response(env, target, status, headers, new_body)
 
       {:ibrowse_async_response_end, _} ->
-        response = format_response(env, status, headers, body)
-        send target, {:maxwell_response, response}
+        response = format_response({:ok, status, headers, body}, env)
+        send(target, {:maxwell_response, response})
     end
   end
 
-  defp format_response(env, status, headers, body) do
+  defp format_response({:ibrowse_req_id, id}, _env), do: {:ok, id}
+  defp format_response({:ok, status, headers, body}, env) do
     {status, _} = status |> to_string |> Integer.parse
     headers     = Enum.into(headers, %{})
-    %{env | status:   status,
-            headers:  headers,
-            body:     body}
+    {:ok, %{env |status:   status,
+                 headers:  headers,
+                 body:     body}
+    }
+  end
+  defp format_response({:error, _} = error, _env) do
+    error
   end
 
 end
