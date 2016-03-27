@@ -26,7 +26,7 @@ defmodule Maxwell.Adapter.Ibrowse do
   defp send_req(%Maxwell{url: url, headers: headers, method: method, opts: opts, body: body}) do
     url = url |> to_char_list
     headers = headers |> Map.to_list
-    body = body || []
+    {headers, body} = need_multipart_encode(headers, body)
     :ibrowse.send_req(url, headers, method, body, opts)
   end
 
@@ -57,5 +57,19 @@ defmodule Maxwell.Adapter.Ibrowse do
   defp format_response({:error, _} = error, _env) do
     error
   end
+
+  defp need_multipart_encode(headers, {:multipart, multipart}) do
+      boundary = Maxwell.Multipart.boundary
+      body =
+        {fn(true) ->
+          {body, _size} = Maxwell.Multipart.encode(boundary, multipart)
+          {:ok, body, false}
+         (false) -> :eof
+        end, true}
+    len = Maxwell.Multipart.len_mp_stream(boundary, multipart)
+    headers = [{'Content-Type', "multipart/form-data; boundary=#{boundary}"}, {'Content-Length', len}|headers]
+    {headers, body}
+  end
+  defp need_multipart_encode(headers, body), do: {headers, body || []}
 
 end

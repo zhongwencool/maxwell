@@ -4,7 +4,7 @@ defmodule Maxwell.IbrowseTest do
   defmodule Client do
     use Maxwell.Builder
     middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org"
-    middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
+    middleware Maxwell.Middleware.Opts, [connect_timeout: 5000]
     middleware Maxwell.Middleware.EncodeJson
     middleware Maxwell.Middleware.DecodeJson
 
@@ -12,6 +12,7 @@ defmodule Maxwell.IbrowseTest do
   end
 
   setup do
+    :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
     Application.ensure_started(:ibrowse)
     :ok
   end
@@ -38,6 +39,15 @@ defmodule Maxwell.IbrowseTest do
     after
       5500 -> raise "Timeout"
     end
+  end
+
+  test "mutilpart body" do
+    data =
+      [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh"}]]
+      |> Client.post!
+
+    assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+
   end
 
 end

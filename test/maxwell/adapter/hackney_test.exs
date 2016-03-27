@@ -41,4 +41,13 @@ defmodule Maxwell.HackneyTest do
     end
   end
 
+  test "mutilpart body" do
+    data =
+      [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh"}]]
+      |> Client.post!
+
+    assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+
+  end
+
 end

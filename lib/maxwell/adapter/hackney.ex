@@ -25,7 +25,7 @@ defmodule Maxwell.Adapter.Hackney do
 
   defp send_req(%Maxwell{url: url, headers: headers, method: method, opts: opts, body: body}) do
     headers = headers |> Map.to_list
-    body = body || []
+    body = body || ""
     :hackney.request(method, url, headers, body, opts)
   end
 

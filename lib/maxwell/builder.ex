@@ -51,6 +51,9 @@ defmodule Maxwell.Builder do
           if respond_to = maxwell|> Keyword.get(:respond_to, nil) do
             opts = [{:respond_to, respond_to} | opts]
           end
+          if multipart = maxwell|> Keyword.get(:multipart, nil) do
+            body = {:multipart, multipart}
+          end
 
           %Maxwell{
             method: unquote(method),
@@ -123,6 +126,9 @@ defmodule Maxwell.Builder do
 
           if respond_to = maxwell|> Keyword.get(:respond_to, nil) do
             opts = [{:respond_to, respond_to} | opts]
+          end
+          if multipart = maxwell|> Keyword.get(:multipart, nil) do
+            body = {:multipart, multipart}
           end
 
           %Maxwell{

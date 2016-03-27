@@ -15,14 +15,16 @@ defmodule Maxwell.Middleware.EncodeJson do
   """
   def call(env, run, encode_fun) do
     unless is_function(encode_fun), do: encode_fun = &Poison.encode/1
-    if env.body do
-      {:ok, body} = encode_fun.(env.body)
-      env = %{env | body: body}
-      headers = %{'Content-Type': 'application/json'}
-
-      Maxwell.Middleware.Headers.call(env, run, headers)
-    else
-      run.(env)
+    case env.body do
+      nil ->
+        run.(env)
+      {:multipart, _} ->
+        run.(env)
+      _ ->
+        {:ok, body} = encode_fun.(env.body)
+        env = %{env | body: body}
+        headers = %{'Content-Type': 'application/json'}
+        Maxwell.Middleware.Headers.call(env, run, headers)
     end
   end
 
