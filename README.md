@@ -5,7 +5,7 @@ Maxwell is an HTTP client which support for middleware and multiple adapters(ibr
 ## Basic usage
 
 ## request example
-```ex
+```ex 
 iex> Maxwell.get(url: "http://httpbin.org/ip")
 {:ok,
  %Maxwell{body: '{\n  "origin": "xx.xxx.xxx.xxx"\n}\n',
@@ -26,6 +26,7 @@ iex> Maxwell.post!(url: "http://httpbin.org/post", body: "foo_body")
  query:      request_query_map,
  body:       request_body_term,
  opts:       request_opts_keyword_list,
+ multipart:  request_multipart_list, # same as hackney 
  respond_to: request_async_pid]
 ```
 `h Maxwell.{method}` to see more information
@@ -85,7 +86,7 @@ GitHub.user_repos("zhonngwencool")
   2. Ensure maxwell is started before your application:
 ```ex
    def application do
-      [applications: [:maxwell]] # also add your adapter here 
+      [applications: [:maxwell]] # also add your adapter(ibrowse,hackney...) here 
    end
 ```
 ## Adapters
@@ -104,7 +105,20 @@ config :maxwell,
   default_adapter: Maxwell.Adapter.Ibrowse
 ```  
 
-NOTE: Remember to include adapter(ibrowse) in applications list.
+NOTE: Remember to include ibrowse(adapter) in applications list.
+### hackney
+
+Maxwell has built-in support for [hackney](https://github.com/benoitc/hackney) Erlang HTTP client.
+
+To use it simply include `adapter Mawell.Adapter.Hackney` line in your API client definition.
+global default adapter
+
+```ex 
+config :maxwell,
+  default_adapter: Maxwell.Adapter.Hackney
+```  
+
+NOTE: Remember to include hackney(adapter) in applications list.
 
 ## Middleware
 
@@ -118,7 +132,7 @@ NOTE: Remember to include adapter(ibrowse) in applications list.
 ### JSON
 NOTE: default requires [poison](https://github.com/devinus/poison) as dependency
 
-- `Maxwell.Middleware.EncodeJson` - endode request body as JSON, it will add %{'Content-Type': 'application/json'} to headers
+- `Maxwell.Middleware.EncodeJson` - endode request body as JSON, it will add `%{'Content-Type': 'application/json'}` to headers
 - `Maxwell.Middleware.DecodeJson` - decode response body as JSON
 
 Custom json library example 
@@ -181,11 +195,31 @@ receive do
   {:maxwell_response, res} -> res.status # => 200
 end
 ```
-## todo
 
-- [] hackney adapter
-- [] decode json when async
- 
+## Multipart
+```ex
+response = 
+  [url: "http://httpbin.org/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh"}]]
+  |> Client.post!
+# reponse.body["files"] is %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+
+```
+both ibrowse and hackney adapter support multipart
+
+`{:multipart: lists}`, lists support: 
+
+1. `{:file, path}`
+2. `{:file, path, extra_headers}`
+3. `{:file, path, disposition, extra_headers}`
+4. `{:mp_mixed, name, mixed_boundary}`
+5. `{:mp_mixed_eof, mixed_boundary}`
+6. `{name, bin_data}`
+7. `{name, bin_data, extra_headers}`
+8. `{name, bin_data, disposition, extra_headers}`
+
+All format support as hackney. 
+More [example](https://github.com/zhongwencool/maxwell/blob/master/test/maxwell/multipart_test.exs)
+
 License
 
 See the [LICENSE](https://github.com/zhongwencool/maxwell/blob/master/LICENSE) file for license rights and limitations (MIT). 

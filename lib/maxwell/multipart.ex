@@ -1,17 +1,17 @@
 defmodule Maxwell.Multipart do
 @moduledoc  """
-
+  Process mutipart for adapter
 """
   @doc """
    Receives lists list's member format:
     1. `{:file, path}`
-    @eof_size. `{:file, path, extra_headers}`
+    2. `{:file, path, extra_headers}`
     3. `{:file, path, disposition, extra_headers}`
     4. `{:mp_mixed, name, mixed_boundary}`
     5. `{:mp_mixed_eof, mixed_boundary}`
-    6. `{name, bin_data}'
-    7. `{name, bin_data, extra_headers}'
-    8. `{name, bin_data, disposition, extra_headers}'
+    6. `{name, bin_data}`
+    7. `{name, bin_data, extra_headers}`
+    8. `{name, bin_data, disposition, extra_headers}`
 
   Returns `{body_binary, size}`
 
@@ -25,12 +25,20 @@ defmodule Maxwell.Multipart do
 
   @doc """
    Return a random boundary(binary)
-   ```ex
+
+   ```
      "---------------------------mtynipxrmpegseog"
    ```
   """
   def boundary, do: "---------------------------" <> unique(16)
 
+  @doc """
+   Get the size of a mp stream. Useful to calculate the content-length of a full multipart stream and send it as an identity
+
+   Receives parameter as `Maxwell.Multipart.encode`
+
+   Return stream size(integer)
+  """
   def len_mp_stream(boundary, parts) do
     size =
       Enum.reduce(parts, 0,
@@ -183,7 +191,7 @@ defmodule Maxwell.Multipart do
     unique(size - 1, << acc::binary, random>>)
   end
 
-  def headers_to_binary(headers) when is_list(headers) do
+  defp headers_to_binary(headers) when is_list(headers) do
     headers =
       headers
       |> Enum.reduce([], fn(header, acc) -> [make_header(header) | acc] end)

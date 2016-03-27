@@ -2,7 +2,7 @@ defmodule Maxwell.Middleware.DecodeJson do
 @moduledoc  """
   Decode reponse's body to json when
 
-    1. Reponse header contain {'Content-Type', "application/json"} and body is binary
+    1. Reponse header contain `{'Content-Type', "application/json"}` and body is binary
 
     2. Reponse is list
 
