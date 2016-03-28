@@ -7,5 +7,11 @@ elixir:
 
 sudo: false
 
+#before_script:
+#    - "gunicorn httpbin:app&"
+#before_install:
+#  - sudo pip install -q httpbin
+#  - sudo pip install -q gunicorn
+
 script: "mix deps.get && mix compile && rm -rf .git && mix test"
 

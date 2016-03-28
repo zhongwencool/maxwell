@@ -66,5 +66,11 @@ defmodule Maxwell.HackneyTest do
      assert data.body["data"] == "{\"key\":\"value\"}"
   end
 
+  test "/delete" do
+    data =
+     [url: "/delete", body: %{"key" => "value"}]
+     |> Client.delete!
+     assert data.body["data"] == ""
+  end
 
 end
