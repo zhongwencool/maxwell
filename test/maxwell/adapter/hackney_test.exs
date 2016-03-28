@@ -58,5 +58,13 @@ defmodule Maxwell.HackneyTest do
      assert data.body["user-agent"] == "test"
   end
 
+  test "/put" do
+    data =
+     [url: "/put", body: %{"key" => "value"}]
+     |> Client.put!
+
+     assert data.body["data"] == "{\"key\":\"value\"}"
+  end
+
 
 end

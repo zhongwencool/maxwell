@@ -50,7 +50,7 @@ defmodule Maxwell.IbrowseTest do
 
   end
 
-test "user-agent header" do
+  test "user-agent header" do
     data =
      [url: "/user-agent", headers: %{"user-agent" => "test"}]
      |> Client.get!
@@ -58,5 +58,12 @@ test "user-agent header" do
      assert data.body["user-agent"] == "test"
   end
 
+  test "/put" do
+    data =
+     [url: "/put", body: %{"key" => "value"}]
+     |> Client.put!
+
+     assert data.body["data"] == "{\"key\":\"value\"}"
+  end
 
 end
