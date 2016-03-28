@@ -22,16 +22,23 @@ defmodule Maxwell.Middleware.DecodeJson do
       content_type = result.headers['Content-Type'] || result.headers["Content-Type"] ||''
       content_type = content_type |> to_string
 
-      if String.starts_with?(content_type, "application/json") && (is_binary(result.body) || is_list(result.body)) do
-        case decode_fun.(to_string(result.body)) do
-          {:ok, body}  -> {:ok, %{result | body: body}}
-          {:error, reason} -> {:error, {:decode_json_error, reason}}
+      case is_json_content(content_type, result.body) do
+        true ->
+          case decode_fun.(to_string(result.body)) do
+            {:ok, body}  -> {:ok, %{result | body: body}}
+            {:error, reason} -> {:error, {:decode_json_error, reason}}
+          end
+        false ->
+          {:ok, result}
         end
-      else
-        {:ok, result}
-      end
-
     end
+
+  end
+
+  def is_json_content(content_type, body) do
+    valid_types = ["application/json", "text/javascript"]
+    is_valid_type = Enum.find(valid_types, fn(x) -> String.starts_with?(content_type, x) end)
+    is_valid_type && (is_binary(body) || is_list(body))
   end
 
 end
