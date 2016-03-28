@@ -13,7 +13,7 @@ defmodule Maxwell.IbrowseTest do
 
   setup do
     :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
-    Application.ensure_started(:ibrowse)
+    {:ok, _} = Application.ensure_all_started(:ibrowse)
     :ok
   end
 

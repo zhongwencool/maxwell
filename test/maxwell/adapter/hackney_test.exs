@@ -13,7 +13,8 @@ defmodule Maxwell.HackneyTest do
   end
 
   setup do
-    Application.ensure_started(:hackney)
+    :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
+    {:ok, _} = Application.ensure_all_started(:hackney)
     :ok
   end
 
