@@ -1,9 +1,11 @@
-language: erlang
+language: elixir
 
 otp_release:
-  - 18.0
+  - 18.2.1
+elixir:
+  - 1.2.2
 
 sudo: false
 
-script: "mix compile && rm -rf .git && mix test"
+script: "mix deps.get && mix compile && rm -rf .git && mix test"
 
