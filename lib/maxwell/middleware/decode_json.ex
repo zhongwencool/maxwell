@@ -28,7 +28,7 @@ defmodule Maxwell.Middleware.DecodeJson do
             {:ok, body}  -> {:ok, %{result | body: body}}
             {:error, reason} -> {:error, {:decode_json_error, reason}}
           end
-        false ->
+        _ ->
           {:ok, result}
         end
     end
