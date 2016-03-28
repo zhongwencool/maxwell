@@ -139,9 +139,12 @@ NOTE: default requires [poison](https://github.com/devinus/poison) as dependency
 Custom json library example 
 
 ```ex
-middleware Maxwell.Middleware.EncodeJson &Poison.encode/1
-middleware Maxwell.Middleware.DecodeJson &Poison.decode/1
+@middleware Maxwell.Middleware.EncodeJson, [encode_func: &Poison.encode/1]  
+@middleware Maxwell.Middleware.DecodeJson [decode_func: &Poison.decode/1, valid_types: ["text/html"] ]
 ```
+Decode body if 'content-type' in ["text/html","application/json", "text/javascript"]
+
+Default only decode body when it's ["application/json", "text/javascript"]    
 
 ## Writing your own middleware
 

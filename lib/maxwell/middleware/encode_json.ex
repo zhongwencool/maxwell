@@ -10,15 +10,15 @@ defmodule Maxwell.Middleware.EncodeJson do
   use Maxwell.Builder ~(get)a
   @middleware Maxwell.Middleware.EncodeJson
   # or
-  @middleware Maxwell.Middleware.EncodeJson &other_json_lib.encode/1
+  @middleware Maxwell.Middleware.EncodeJson, encode_func: &other_json_lib.encode/1
   ```
   """
-  def call(env, run, encode_fun) do
-    unless is_function(encode_fun), do: encode_fun = &Poison.encode/1
+  def call(env, run, opts) do
+    encode_fun = opts[:encode_func] || &Poison.decode/1
     case env.body do
       nil ->
         run.(env)
-      {:multipart, _} ->
+      body when is_tuple(body) ->
         run.(env)
       _ ->
         {:ok, body} = encode_fun.(env.body)
