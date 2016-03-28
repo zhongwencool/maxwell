@@ -50,4 +50,13 @@ defmodule Maxwell.HackneyTest do
 
   end
 
+  test "user-agent header" do
+    data =
+     [url: "/user-agent", headers: %{"user-agent" => "test"}]
+     |> Client.get!
+
+     assert data.body["user-agent"] == "test"
+  end
+
+
 end
