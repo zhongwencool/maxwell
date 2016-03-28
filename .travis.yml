@@ -1,0 +1,9 @@
+language: erlang
+
+otp_release:
+  - 18.0
+
+sudo: false
+
+script: "mix compile && rm -rf .git && mix test"
+
