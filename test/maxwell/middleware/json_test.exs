@@ -4,8 +4,8 @@ defmodule JsonTest do
   defmodule Client do
     use Maxwell.Builder
 
-    middleware Maxwell.Middleware.EncodeJson, &Poison.encode/1
-    middleware Maxwell.Middleware.DecodeJson, &Poison.decode/1
+    middleware Maxwell.Middleware.EncodeJson, [encode_func: &Poison.encode/1]
+    middleware Maxwell.Middleware.DecodeJson, [decode_fun: &Poison.decode/1, valid_types: ["text/html"]]
 
     adapter fn (env) ->
       case env.url do
@@ -21,6 +21,9 @@ defmodule JsonTest do
         "/invalid-content-type" ->
           {:ok,
             %{env| status: 200, headers: %{'Content-Type' => 'text/plain'}, body: "hello"}}
+        "/use-defined-content-type" ->
+          {:ok,
+            %{env| status: 200, headers: %{'Content-Type' => 'text/html'}, body: "{\"value\": 124}"}}
       end
     end
   end
@@ -39,5 +42,9 @@ defmodule JsonTest do
 
   test "encode body as JSON" do
     assert Client.post!(url: "/encode", body: %{"foo" => "bar"}).body == %{"baz" => "bar"}
+  end
+
+  test "/use-defined-content-type" do
+    assert Client.post!(url: "/use-defined-content-type", body: %{"foo" => "bar"}).body == %{"value" => 124}
   end
 end

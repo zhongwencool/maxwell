@@ -14,7 +14,7 @@ defmodule Maxwell.Middleware.EncodeJson do
   ```
   """
   def call(env, run, opts) do
-    encode_fun = opts[:encode_func] || &Poison.decode/1
+    encode_fun = opts[:encode_func] || &Poison.encode/1
     case env.body do
       nil ->
         run.(env)
