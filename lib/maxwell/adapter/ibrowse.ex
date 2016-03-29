@@ -59,13 +59,13 @@ defmodule Maxwell.Adapter.Ibrowse do
   end
 
   defp need_multipart_encode(headers, {:multipart, multipart}) do
-      boundary = Maxwell.Multipart.boundary
-      body =
-        {fn(true) ->
-          {body, _size} = Maxwell.Multipart.encode(boundary, multipart)
-          {:ok, body, false}
+    boundary = Maxwell.Multipart.boundary
+    body =
+      {fn(true) ->
+           {body, _size} = Maxwell.Multipart.encode(boundary, multipart)
+           {:ok, body, false}
          (false) -> :eof
-        end, true}
+       end, true}
     len = Maxwell.Multipart.len_mp_stream(boundary, multipart)
     headers = [{'Content-Type', "multipart/form-data; boundary=#{boundary}"}, {'Content-Length', len}|headers]
     {headers, body}

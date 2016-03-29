@@ -8,7 +8,7 @@ defmodule Maxwell.IbrowseTest do
     middleware Maxwell.Middleware.EncodeJson
     middleware Maxwell.Middleware.DecodeJson
 
-    adapter Maxwell.Adapter.Ibrowse
+    # adapter Maxwell.Adapter.Ibrowse # test default adapter(ibrowse)
   end
 
   setup do
@@ -44,6 +44,15 @@ defmodule Maxwell.IbrowseTest do
   test "mutilpart body" do
     data =
       [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh"}]]
+      |> Client.post!
+
+    assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+
+  end
+
+  test "mutilpart body file extra headers" do
+    data =
+      [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]]
       |> Client.post!
 
     assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}

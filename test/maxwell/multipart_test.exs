@@ -111,4 +111,87 @@ defmodule MultipartTest do
 
   end
 
+  test "encode without boundary" do
+    file_path = "test/maxwell/multipart_test_file.sh"
+    {_body, size} = Maxwell.Multipart.encode([{:file, file_path}])
+    assert size == 279
+  end
+
+  test "mp_mixed stream len" do
+    boundary = Maxwell.Multipart.boundary
+    mixed_boundary = Maxwell.Multipart.boundary
+    size = Maxwell.Multipart.len_mp_stream(boundary, [{:mp_mixed, "test", mixed_boundary}])
+    assert size == 279
+  end
+
+  test "mp_mixed_eof stream len" do
+    boundary = Maxwell.Multipart.boundary
+    mixed_boundary = Maxwell.Multipart.boundary
+    size = Maxwell.Multipart.len_mp_stream(boundary, [{:mp_mixed_eof, mixed_boundary}])
+    assert size == 100
+  end
+
+  test "name binary stream len" do
+    boundary = Maxwell.Multipart.boundary
+    name = "test_name"
+    bin = "test_binary"
+    size = Maxwell.Multipart.len_mp_stream(boundary, [{name, bin}])
+    assert size == 221
+  end
+
+  test "name binary extra_headers stream len" do
+    boundary = Maxwell.Multipart.boundary
+    name = "test_name"
+    bin = "test_binary"
+    extra_headers = [{"Content-Type", "image/jpeg"}]
+    size = Maxwell.Multipart.len_mp_stream(boundary, [{name, bin, extra_headers}])
+    assert size == 207
+  end
+
+  test "name binary disposition extra_headers stream len" do
+    boundary = Maxwell.Multipart.boundary
+    name = "test_name"
+    bin = "test_binary"
+    extra_headers = [{"Content-Type", "image/jpeg"}]
+    disposition = {"form-data", [{"name", "content"}, {"testname", name}]}
+    size = Maxwell.Multipart.len_mp_stream(boundary, [{name, bin, disposition, extra_headers}])
+    assert size == 223
+  end
+
+  test "extra_header accept atom" do
+    boundary = Maxwell.Multipart.boundary
+    file_path = "test/maxwell/multipart_test_file.sh"
+    extra_headers = [{"Content-Type", "image/jpeg"|> String.to_atom}]
+    {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, extra_headers}])
+    # hackney = :hackney_multipart.encode_form([{:file, file_path, extra_headers}], boundary)
+    assert size == 273
+    assert String.starts_with?(body, "--" <> boundary) == true
+    assert String.ends_with?(body, boundary <> "--\r\n") == true
+    assert String.replace(body, boundary, "") == "--\r\ncontent-length: 47\r\ncontent-disposition: form-data; name=\"file\"; filename=\"multipart_test_file.sh\"\r\ncontent-type: image/jpeg\r\n\r\n#!/usr/bin/env bash\necho \"test multipart file\"\n\r\n----\r\n"
+  end
+
+  test "extra_header accept list" do
+    boundary = Maxwell.Multipart.boundary
+    file_path = "test/maxwell/multipart_test_file.sh"
+    extra_headers = [{"Content-Type", 'image/jpeg'}]
+    {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, extra_headers}])
+    # hackney = :hackney_multipart.encode_form([{:file, file_path, extra_headers}], boundary)
+    assert size == 273
+    assert String.starts_with?(body, "--" <> boundary) == true
+    assert String.ends_with?(body, boundary <> "--\r\n") == true
+    assert String.replace(body, boundary, "") == "--\r\ncontent-length: 47\r\ncontent-disposition: form-data; name=\"file\"; filename=\"multipart_test_file.sh\"\r\ncontent-type: image/jpeg\r\n\r\n#!/usr/bin/env bash\necho \"test multipart file\"\n\r\n----\r\n"
+  end
+
+  test "extra_header accept integer" do
+    boundary = Maxwell.Multipart.boundary
+    file_path = "test/maxwell/multipart_test_file.sh"
+    extra_headers = [{"integer", 12}]
+    {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, extra_headers}])
+    # hackney = :hackney_multipart.encode_form([{:file, file_path, extra_headers}], boundary)
+    assert size == 292
+    assert String.starts_with?(body, "--" <> boundary) == true
+    assert String.ends_with?(body, boundary <> "--\r\n") == true
+    assert String.replace(body, boundary, "") == "--\r\ninteger: 12\r\ncontent-length: 47\r\ncontent-disposition: form-data; name=\"file\"; filename=\"multipart_test_file.sh\"\r\ncontent-type: application/x-sh\r\n\r\n#!/usr/bin/env bash\necho \"test multipart file\"\n\r\n----\r\n"
+  end
+
 end

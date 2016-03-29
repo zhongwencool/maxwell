@@ -55,6 +55,8 @@ defmodule Maxwell.Multipart do
           ({:mp_mixed, name, mixed_boundary}, acc_size) ->
             {mp_header, _} = mp_mixed_header(name, mixed_boundary)
             acc_size + byte_size(mp_header) + @eof_size + byte_size(mp_eof(mixed_boundary))
+          ({:mp_mixed_eof, mixed_boundary}, acc_size) ->
+            acc_size + byte_size(mp_eof(mixed_boundary)) + @eof_size
           ({name, bin}, acc_size) when is_binary(bin) ->
             {mp_header, len} = mp_data_header(name, %{binary: bin}, boundary)
             acc_size + byte_size(mp_header) + len + @eof_size

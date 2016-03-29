@@ -42,9 +42,18 @@ defmodule Maxwell.HackneyTest do
     end
   end
 
-  test "mutilpart body" do
+  test "mutilpart body file" do
     data =
       [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh"}]]
+      |> Client.post!
+
+    assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+
+  end
+
+  test "mutilpart body file extra headers" do
+    data =
+      [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]]
       |> Client.post!
 
     assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
@@ -72,6 +81,18 @@ defmodule Maxwell.HackneyTest do
      [url: "/delete", body: %{"key" => "value"}]
      |> Client.delete!
      assert data.body["data"] == ""
+  end
+
+  test "http url not exist" do
+    data =
+     [url: "notexist", opts: [connect_timeout: 100000]]
+     |> Client.get
+     assert data == {:error, :nxdomain}
+  end
+
+  test "Head without body(test hackney.ex return {:ok, status, header})" do
+     data = Client.head!
+     assert data.body == ""
   end
 
 end
