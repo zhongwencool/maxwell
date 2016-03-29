@@ -7,11 +7,10 @@ elixir:
 
 sudo: false
 
-#before_script:
-#    - "gunicorn httpbin:app&"
-#before_install:
-#  - sudo pip install -q httpbin
-#  - sudo pip install -q gunicorn
-
-script: "mix deps.get && mix compile && rm -rf .git && mix test"
+before_script:
+  - MIX_ENV=test mix do deps.get
+script:
+  - MIX_ENV=test mix test
+after_script:
+  - MIX_ENV=test mix coveralls.travis --no-start
 

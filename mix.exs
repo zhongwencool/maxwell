@@ -7,6 +7,7 @@ defmodule Maxwell.Mixfile do
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     test_coverage: [tool: ExCoveralls],
      deps: deps]
   end
 
@@ -18,9 +19,10 @@ defmodule Maxwell.Mixfile do
   defp deps do
     [
      {:mimerl, "~> 1.0.2"}, # for find multipart ctype
-     {:ibrowse, github: "cmullaparthi/ibrowse", tag: "v4.2", optional: true, only: :test},
-     {:poison, github: "devinus/poison", tag: "2.1.0", optional: true, only: :test},
-     {:hackney, github: "benoitc/hackney", tag: "1.5.7", optiona: true, only: :test}
+     {:ibrowse, "~> 4.2", optional: true, only: :test},
+     {:poison, "~> 2.1", optional: true, only: :test},
+     {:hackney, "~> 1.6", optional: true, only: :test},
+     {:excoveralls, "~> 0.5.1", only: :test},
     ]
   end
 
