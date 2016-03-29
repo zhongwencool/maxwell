@@ -8,7 +8,7 @@ defmodule Maxwell.Adapter.Ibrowse do
 
     Returns `{:ok, %Maxwell{}}` or `{:error, reason_term}` when synchronous request
 
-    Returns `{:ok, ref_integer}` when asynchronous requests(options add [respond_to: target_self])
+    Returns `{:ok, ref_integer}` when asynchronous requests(options add [respond_to: target_pid])
 
   """
   def call(env) do
