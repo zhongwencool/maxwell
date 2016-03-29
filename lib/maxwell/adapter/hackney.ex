@@ -13,7 +13,7 @@ defmodule Maxwell.Adapter.Hackney do
   """
   def call(env) do
     if target = env.opts[:respond_to] do
-      gatherer = spawn_link fn -> receive_response(env, target) end
+      gatherer = spawn_link fn -> receive_response(env, target, nil , nil, nil) end
       opts = env.opts |> List.keyreplace(:respond_to, 0, {:stream_to, gatherer})
       env = %{env |opts: [:async| opts]}
     end
@@ -54,7 +54,6 @@ defmodule Maxwell.Adapter.Hackney do
 
 # todo deal redicrect
 # {:hackney_response, id, {redirect, to, headers}} when redirect in [:redirect, :see_other] ->
-  defp receive_response(env, target, status\\ nil, headers\\ nil, body\\ nil)
   defp receive_response(env, target, status, headers, body) do
     receive do
       {:hackney_response, _id, {:status, new_status, _reason}} ->
