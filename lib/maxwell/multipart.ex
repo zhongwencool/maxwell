@@ -256,7 +256,7 @@ defmodule Maxwell.Multipart do
   end
 
   defp join([], _Separator), do: ""
-  defp join([s], _separator), do: s
+  # defp join([s], _separator), do: s
   defp join(l, separator) do
    l
    |> Enum.reverse

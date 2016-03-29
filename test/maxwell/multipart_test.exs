@@ -46,7 +46,6 @@ defmodule MultipartTest do
     assert String.starts_with?(body, "--" <> boundary) == true
     assert String.ends_with?(body, boundary <> "--\r\n") == true
     assert String.replace(body, boundary, "") == "--\r\ncontent-length: 47\r\ncontent-disposition: form-data; name=content; filename=test/maxwell/multipart_test_file.sh\r\ncontent-type: image/jpeg\r\n\r\n#!/usr/bin/env bash\necho \"test multipart file\"\n\r\n----\r\n"
-
   end
 
   test "mp_mixed name mixedboudnary" do
@@ -115,6 +114,15 @@ defmodule MultipartTest do
     file_path = "test/maxwell/multipart_test_file.sh"
     {_body, size} = Maxwell.Multipart.encode([{:file, file_path}])
     assert size == 279
+  end
+
+  test "file disposition extra_headers stream len" do
+    boundary = Maxwell.Multipart.boundary
+    extra_headers = [{"Content-Type", "image/jpeg"}]
+    file_path = "test/maxwell/multipart_test_file.sh"
+    disposition = {"form-data", [{"name", "content"}]}
+    size = Maxwell.Multipart.len_mp_stream(boundary, [{:file, file_path, disposition, extra_headers}])
+    assert size == 239
   end
 
   test "mp_mixed stream len" do
