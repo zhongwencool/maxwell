@@ -25,7 +25,7 @@ defmodule Maxwell.Middleware.DecodeJson do
 
       case is_json_content(content_type, result.body, valid_content_types) do
         true ->
-          case decode_fun.(to_string(result.body)) do
+          case decode_fun.(result.body) do
             {:ok, body}  -> {:ok, %{result | body: body}}
             {:error, reason} -> {:error, {:decode_json_error, reason}}
           end

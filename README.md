@@ -98,7 +98,7 @@ Maxwell has support for different adapters that do the actual HTTP request proce
 
 Maxwell has built-in support for [ibrowse](https://github.com/cmullaparthi/ibrowse) Erlang HTTP client.
 
-To use it simply include `adapter Mawell.Adapter.Ibrowse` line in your API client definition.
+To use it simply include `adapter Maxwell.Adapter.Ibrowse` line in your API client definition.
 global default adapter
 
 ```ex 
@@ -111,7 +111,7 @@ NOTE: Remember to include ibrowse(adapter) in applications list.
 
 Maxwell has built-in support for [hackney](https://github.com/benoitc/hackney) Erlang HTTP client.
 
-To use it simply include `adapter Mawell.Adapter.Hackney` line in your API client definition.
+To use it simply include `adapter Maxwell.Adapter.Hackney` line in your API client definition.
 global default adapter
 
 ```ex 
@@ -180,8 +180,8 @@ and response logger middleware like this:
 ```ex
 defmodule Maxwell.Middleware.ResponseLogger do
   def call(env, run, _) do
-    res = run.(env)
-    IO.inspect res # print response env
+    res = run.(env) # the adapter always return {:ok, env}/{:ok, ref_id}/{error, reason}
+    IO.inspect res # print response
     res
   end
 end
