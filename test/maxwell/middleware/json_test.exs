@@ -48,3 +48,25 @@ defmodule JsonTest do
     assert Client.post!(url: "/use-defined-content-type", body: %{"foo" => "bar"}).body == %{"value" => 124}
   end
 end
+
+defmodule DecodeJsonTest do
+  use ExUnit.Case
+
+  defmodule Client do
+    use Maxwell.Builder, ~w(post)
+
+    middleware Maxwell.Middleware.EncodeJson, [content_type: "text/javascript"]
+    middleware Maxwell.Middleware.DecodeJson
+
+    adapter fn (env) -> {:ok, %{env|status: 200}} end
+
+  end
+
+  test "DecodeJsonTest add custom header" do
+    response = Client.post!(body: %{test: "test"})
+    assert response.headers == %{'Content-Type': "text/javascript"}
+    assert response.status == 200
+  end
+
+end
+

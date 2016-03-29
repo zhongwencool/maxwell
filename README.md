@@ -133,15 +133,17 @@ NOTE: Remember to include hackney(adapter) in applications list.
 ### JSON
 NOTE: default requires [poison](https://github.com/devinus/poison) as dependency
 
-- `Maxwell.Middleware.EncodeJson` - endode request body as JSON, it will add `%{'Content-Type': 'application/json'}` to headers
+- `Maxwell.Middleware.EncodeJson` - endode request body as JSON, it will add 'Content-Type' to headers
 - `Maxwell.Middleware.DecodeJson` - decode response body as JSON
 
 Custom json library example 
 
 ```ex
-@middleware Maxwell.Middleware.EncodeJson, [encode_func: &Poison.encode/1]  
+@middleware Maxwell.Middleware.EncodeJson, [encode_func: &Poison.encode/1, content_type: "text/javascript"]  
 @middleware Maxwell.Middleware.DecodeJson [decode_func: &Poison.decode/1, valid_types: ["text/html"] ]
 ```
+Encode body by encode_func then add %{'Content-Type': content_type} to headers(default content_type is "application/json")
+
 Decode body if 'content-type' in ["text/html","application/json", "text/javascript"]
 
 Default only decode body when it's ["application/json", "text/javascript"]    

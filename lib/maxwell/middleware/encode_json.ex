@@ -10,11 +10,12 @@ defmodule Maxwell.Middleware.EncodeJson do
   use Maxwell.Builder ~(get)a
   @middleware Maxwell.Middleware.EncodeJson
   # or
-  @middleware Maxwell.Middleware.EncodeJson, encode_func: &other_json_lib.encode/1
+  @middleware Maxwell.Middleware.EncodeJson, [content_type: "application/json", encode_func: &other_json_lib.encode/1]
   ```
   """
   def call(env, run, opts) do
     encode_fun = opts[:encode_func] || &Poison.encode/1
+    content_type = opts[:content_type] || "application/json"
     case env.body do
       nil ->
         run.(env)
@@ -23,7 +24,7 @@ defmodule Maxwell.Middleware.EncodeJson do
       _ ->
         {:ok, body} = encode_fun.(env.body)
         env = %{env | body: body}
-        headers = %{'Content-Type': 'application/json'}
+        headers = %{'Content-Type': content_type}
         Maxwell.Middleware.Headers.call(env, run, headers)
     end
   end
