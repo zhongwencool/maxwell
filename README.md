@@ -1,6 +1,8 @@
 # Maxwell
 
 [![Build Status](https://travis-ci.org/zhongwencool/maxwell.svg?branch=master)](https://travis-ci.org/zhongwencool/maxwell)
+[![Coveralls Coverage](https://img.shields.io/coveralls/zhongwencool/maxwell.svg)]((https://coveralls.io/github/zhongwencool/maxwell))
+
 Maxwell is an HTTP client which support for middleware and multiple adapters(ibrowse hackney...). It borrow idea from [tesla(elixir)](https://github.com/teamon/tesla) which base on [Faraday(ruby)](https://github.com/lostisland/faraday)
 
 ## Basic usage
