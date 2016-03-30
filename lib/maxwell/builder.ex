@@ -12,16 +12,15 @@ defmodule Maxwell.Builder do
         @doc """
           Method without body: #{unquote(method)}
 
-          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list]`
+          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list]` or `%Maxwell{}`
           
           Returns `{:ok, %Maxwell{}}` or `{:error, reason_term}`
           ## Examples
-               iex> [
-                      url:     request_url_string_or_char_list,
-                      headers: request_headers_map,
-                      query:   request_query_map,
-                      opts:    request_opts_keyword_list
-                    ] |> Maxwell.YourClient.Test.#{unquote(method)}
+               iex> url(request_url_string_or_char_list)
+                    |> query(request_query_map)
+                    |> headers(request_headers_map)
+                    |> opts(request_opts_keyword_list)
+                    Maxwell.YourClient.Test.#{unquote(method)}
 
                {:ok, %Maxwell{
                       headers: reponse_headers_map,
@@ -35,13 +34,17 @@ defmodule Maxwell.Builder do
           or
                 {:error, {:conn_failed, {:error, :nxdomain}}}
 
-          If adapter supports it, you can make asynchronous requests by passing `respond_to: pid` option:
+          You can make asynchronous requests by passing `respond_to: pid` option:
                 Maxwell.get(url: "http://example.org", respond_to: self)
                 receive do
                   {:maxwell_response, res} -> res.status # => 200
                 end
           """
         def unquote(method)(maxwell\\[])
+        def unquote(method)(maxwell = %Maxwell{body: body})when is_nil(body) do
+          %{maxwell| method: unquote(method)}
+          |> call_middleware
+        end
         def unquote(method)(maxwell)when is_list(maxwell) do
           url        = maxwell|> Keyword.get(:url, "")
           headers    = maxwell|> Keyword.get(:headers, %{})
@@ -66,13 +69,13 @@ defmodule Maxwell.Builder do
         @doc """
           Method without body: #{unquote(method_exception)}
 
-          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list]`
+          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list]` or `%Maxwell{}`
 
           Returns `%Maxwell{}` or raise `%MaxWell.Error{}`
 
           """
-        def unquote(method_exception)(maxwell\\[])
-        def unquote(method_exception)(maxwell) when is_list(maxwell) do
+        def unquote(method_exception)(maxwell\\%Maxwell{})
+        def unquote(method_exception)(maxwell) do
           case unquote(method)(maxwell) do
             {:ok, %Maxwell{} = result} ->
               result
@@ -89,17 +92,16 @@ defmodule Maxwell.Builder do
         @doc """
           Method: #{unquote(method)}
 
-          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list, body: body_term]`
+          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list, body: body_term]` or `%Maxwell{}`
 
           Returns `{:ok, %Maxwell{}}` or `{:error, reason}`
           ## Examples
-               iex> [
-                      url:     request_url_string,
-                      headers: request_headers_map,
-                      query:   request_query_map,
-                      body:    request_body_term,
-                      opts:    request_opts_keyword_list
-                    ] |> Maxwell.YourClient.#{unquote(method)}
+               iex> url(request_url_string_or_char_list)
+                    |> query(request_query_map)
+                    |> headers(request_headers_map)
+                    |> opts(request_opts_keyword_list)
+                    |> body(request_body_term)
+                    |> Maxwell.YourClient.#{unquote(method)}
 
                {:ok, %Maxwell{
                      headers: reponse_headers_map,
@@ -116,7 +118,11 @@ defmodule Maxwell.Builder do
                   {:maxwell_response, res} -> res.status # => 200
                 end
           """
-        def unquote(method)(maxwell\\[])
+        def unquote(method)(maxwell\\%Maxwell{})
+        def unquote(method)(maxwell = %Maxwell{}) do
+          %{maxwell| method: unquote(method)}
+          |> call_middleware
+        end
         def unquote(method)(maxwell)when is_list(maxwell) do
           url        = maxwell |> Keyword.get(:url, "")
           headers    = maxwell |> Keyword.get(:headers, %{})
@@ -143,13 +149,13 @@ defmodule Maxwell.Builder do
         @doc """
           Method: #{unquote(method_exception)}
 
-          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list, body: body_term]`
+          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list, body: body_term]` or `%Maxwell{}`
 
           Return `%Maxwell{}` or raise `%Maxwell.Error{}`
 
           """
-        def unquote(method_exception)(maxwell\\[])
-        def unquote(method_exception)(maxwell)when is_list(maxwell) do
+        def unquote(method_exception)(maxwell\\%Maxwell{})
+        def unquote(method_exception)(maxwell) do
           case unquote(method)(maxwell) do
             {:ok, %Maxwell{} = result} ->
               result
@@ -161,9 +167,42 @@ defmodule Maxwell.Builder do
       end
     end
 
+    help_methods =
+      quote do
+        def url(maxwell \\ %Maxwell{}, url)when is_binary(url) do
+          %{maxwell| url: url}
+        end
+        def query(maxwell \\ %Maxwell{}, query)when is_map(query) do
+          %{maxwell| url: Maxwell.Until.append_query_string(maxwell.url, query)}
+        end
+        def headers(maxwell \\ %Maxwell{}, headers)when is_map(headers) do
+          %{maxwell| headers: Map.merge(maxwell.headers, headers)}
+        end
+        def opts(maxwell \\ %Maxwell{}, opts)when is_list(opts) do
+          %{maxwell| opts: Keyword.merge(maxwell.opts, opts)}
+        end
+        def body(maxwell \\ %Maxwell{}, body) do
+          %{maxwell| body: body}
+        end
+        def multipart(maxwell \\ %Maxwell{}, multipart) do
+           %{maxwell| body: {:multipart, multipart}}
+        end
+        def respond_to(target_pid)when is_pid(target_pid) do
+          respond_to(%Maxwell{}, target_pid)
+        end
+        def respond_to(%Maxwell{} = maxwell) do
+          respond_to(maxwell, self)
+        end
+        def respond_to(maxwell, target_pid) do
+          unless target_pid, do: target_pid = self
+          %{maxwell| opts: Keyword.merge(maxwell.opts, [{:respond_to, target_pid}])}
+        end
+      end
+
     quote do
       unquote(method_defs)
       unquote(method_defs_with_body)
+      unquote(help_methods)
 
       import Maxwell.Middleware
       import Maxwell.Adapter

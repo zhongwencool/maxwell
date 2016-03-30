@@ -134,15 +134,10 @@ defmodule MiddlewareTest do
     middleware Maxwell.Middleware.DecodeJson
 
     adapter fn (env) ->
-      cond do
-        List.last(String.split(env.url, "/")) == "secret" ->
-          {:ok, %{env| status: 200, headers: %{}, body: env.headers['Authorization']}}
-        true ->
-          if env.body == "{\"key2\":201,\"key1\":101}" do
-           {:ok, %{env| status: 200, headers: %{'Content-Type' => "application/json"}, body: "{\"key2\":101,\"key1\":201}"}}
-          else
-            {:ok, %{env| status: 200, headers: %{'Content-Type' => "application/json"}, body: "{\"key2\":2,\"key1\":1}"}}
-          end
+      if env.body == "{\"key2\":201,\"key1\":101}" do
+        {:ok, %{env| status: 200, headers: %{'Content-Type' => "application/json"}, body: "{\"key2\":101,\"key1\":201}"}}
+      else
+        {:ok, %{env| status: 200, headers: %{'Content-Type' => "application/json"}, body: "{\"key2\":2,\"key1\":1}"}}
       end
     end
 
@@ -166,6 +161,60 @@ defmodule MiddlewareTest do
 
   test "make use of deodejson" do
     assert Client.post!().body == %{"key2" => 2, "key1" => 1}
+  end
+
+  defmodule TestHelpFunc do
+    use ExUnit.Case
+
+    use Maxwell.Builder, [:get, :post]
+
+    test "url" do
+     assert url("/test").url == "/test"
+    end
+
+    test "query" do
+     assert query(%{test: 1, test1: 2}).url == "?test=1&test1=2"
+     url = (url("/test") |> query(%{test: 1, test1: 2})).url
+     assert url == "/test?test=1&test1=2"
+    end
+
+    test "headers" do
+     assert headers(%{'Content-Lenth': 100}).headers == %{'Content-Lenth': 100}
+    end
+
+    test "opts" do
+      opts = opts([proxy: {"127.0.0.1", 4000}]).opts
+      assert opts[:proxy] == {"127.0.0.1", 4000}
+    end
+
+    test "body" do
+     assert body("i am a body").body == "i am a body"
+    end
+
+    test "multipart" do
+      assert multipart({:file, "test.sh"}).body == {:multipart, {:file, "test.sh"}}
+    end
+
+    test "repsond_to" do
+      opts = respond_to(self).opts
+      assert opts[:respond_to] == self
+    end
+
+    test "pipeline help" do
+      request =
+        url("test")
+        |> query(%{test: 1, test1: 2})
+        |> headers(%{'Content-Lenth': 100})
+        |> body("bodystreambinary")
+        |> opts([opts_test: true])
+
+      assert request.url == "test?test=1&test1=2"
+      assert request.headers ==  %{'Content-Lenth': 100}
+      assert request.body == "bodystreambinary"
+      assert request.opts == [opts_test: true]
+
+    end
+
   end
 
 end
