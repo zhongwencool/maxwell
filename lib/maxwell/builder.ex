@@ -20,7 +20,7 @@ defmodule Maxwell.Builder do
                     |> query(request_query_map)
                     |> headers(request_headers_map)
                     |> opts(request_opts_keyword_list)
-                    Maxwell.YourClient.Test.#{unquote(method)}
+                    |> YourClient.#{unquote(method)}
 
                {:ok, %Maxwell{
                       headers: reponse_headers_map,
@@ -81,7 +81,7 @@ defmodule Maxwell.Builder do
               result
             {:error, reason}  ->
               raise Maxwell.Error, value: reason,
-                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{maxwell[:url]}, module: #{__MODULE__}"
+                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{maxwell.url}, module: #{__MODULE__}"
           end
         end
       end
@@ -101,7 +101,7 @@ defmodule Maxwell.Builder do
                     |> headers(request_headers_map)
                     |> opts(request_opts_keyword_list)
                     |> body(request_body_term)
-                    |> Maxwell.YourClient.#{unquote(method)}
+                    |> YourClient.#{unquote(method)}
 
                {:ok, %Maxwell{
                      headers: reponse_headers_map,
@@ -161,7 +161,7 @@ defmodule Maxwell.Builder do
               result
             {:error, reason}  ->
               raise Maxwell.Error, value: reason,
-                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{maxwell[:url]}, module: #{__MODULE__}"
+                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{maxwell.url}, module: #{__MODULE__}"
           end
         end
       end

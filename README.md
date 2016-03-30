@@ -3,36 +3,65 @@
 [![Build Status](https://travis-ci.org/zhongwencool/maxwell.svg?branch=master)](https://travis-ci.org/zhongwencool/maxwell)
 [![Coveralls Coverage](https://img.shields.io/coveralls/zhongwencool/maxwell.svg)](https://coveralls.io/github/zhongwencool/maxwell)
 
-Maxwell is an HTTP client which support for middleware and multiple adapters(ibrowse hackney...). It borrow idea from [tesla(elixir)](https://github.com/teamon/tesla) which base on [Faraday(ruby)](https://github.com/lostisland/faraday)
+Maxwell is an HTTP client which support for middleware and multiple adapters(ibrowse,hackney,custom adapters). It has friendly API.  
 
-## Basic usage
+It borrow idea from [tesla(elixir)](https://github.com/teamon/tesla) which base on [Faraday(ruby)](https://github.com/lostisland/faraday)
 
-## request example
-```ex 
-iex> Maxwell.get(url: "http://httpbin.org/ip")
-{:ok,
- %Maxwell{body: '{\n  "origin": "xx.xxx.xxx.xxx"\n}\n',
-   headers: %{'Access-Control-Allow-Credentials' => 'true'},
-   method: :get, opts: [], status: 200, url: "http://httpbin.org/ip"}}
+## Creating API clients
 
-iex> Maxwell.post!(url: "http://httpbin.org/post", body: "foo_body")
-%Maxwell{body: '{\n  "args": {}, \n  "data": "foo_body_", \n  ...\n',
-  headers: %{'Access-Control-Allow-Credentials' => 'true'},
-  method: :post, opts: [], status: 200, url: "http://httpbin.org/post"}
-```
-> **Compare to using ibrowse's api **: [Compare Example](https://github.com/zhongwencool/maxwell/blob/master/examples/github_client.ex)
- 
-## Request parameters
+Use `Maxwell.Builder` module to create API wrappers.
+
 ```ex
-[url:        request_url_string,
- headers:    request_headers_map,
- query:      request_query_map,
- body:       request_body_term,
- opts:       request_opts_keyword_list,
- multipart:  request_multipart_list, # same as hackney 
- respond_to: request_async_pid]
+defmodule GitHub do
+  # create get/1, get!/1
+  use Maxwell.Builder, ~w(get patch)a
+
+  middleware Maxwell.Middleware.BaseUrl, "https://api.github.com"
+  middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
+  middleware Maxwell.Middleware.Headers, %{'Content-Type': "application/vnd.github.v3+json", 'User-Agent': 'zhongwenool'}
+  middleware Maxwell.Middleware.EncodeJson
+  middleware Maxwell.Middleware.DecodeJson
+
+  adapter Maxwell.Adapter.Ibrowse
+
+  # List public repositories for the specified user.
+  # :ibrowse.send_req('https://api.github.com/users/zhongwencool/repos', [\"Content-Type\": \"application/vnd.github.v3+json\", \"User-Agent\": 'zhongwenool'], :get, [], [connect_timeout: 3000])
+  def user_repos(username) do
+    url("/users/" <> username <> "/repos") |> get!
+  end
+
+  # Edit owner repositories
+  # :ibrowse.send_req('https://api.github.com/repos/owner/repo', [\"Content-Type\": \"application/vnd.github.v3+json\", \"User-Agent\": 'zhongwenool'], :patch, \"{\\\"name\\\":\\\"name\\\",\\\"description\\\":\\\"desc\\\"}\", [connect_timeout: 3000])"
+  def edit_repo_desc(owner, repo, name, desc) do
+    url("/repos/#{owner}/#{repo}")
+    |> body(%{name: name, description: desc})
+    |> patch!
+  end
+end
 ```
-`h Maxwell.{method}` to see more information
+It auto package all middleware's params(baseurl, opts, headers, encode_requet_body, decode_response_body) to adapter(ibrowse)
+
+More example see `h Maxwell`
+
+## Request helper functions
+```ex
+  url(request_url_string_or_char_list)
+  |> query(request_query_map)
+  |> headers(request_headers_map)
+  |> opts(request_opts_keyword_list)
+  |> body(request_body_term)
+  |> YourClient.{http_method} 
+```
+### Mulipart 
+```ex
+  multipart(maxwell \\ %Maxwell, request_multipart_list) -> new_maxwell # same as hackney   
+```
+More clear: [Mulipart format](#Mulitpart)
+### Asynchronous 
+```ex
+  respond_to(maxwell \\ %Maxwell, target_pid) -> new_maxwell   
+```
+More clear: [Asynchronous Request](#Asynchronous request)
 
 ## Reponse result 
 ```ex
@@ -48,34 +77,6 @@ iex> Maxwell.post!(url: "http://httpbin.org/post", body: "foo_body")
 # or
 {:error, reason_term} 
   
-```
-## Creating API clients
-
-Use `Maxwell.Builder` module to create API wrappers.
-
-```ex
-defmodule GitHub do
-  # create get/1, get!/1  
-  use Maxwell.Builder, ~w(get)a # or [:get]  or ["get"]
-  
-  middleware Maxwell.Middleware.BaseUrl, "https://api.github.com"
-  middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
-  middleware Maxwell.Middleware.Headers, %{'Content-Type': "application/vnd.github.v3+json", 'User-Agent': 'zhongwenool'}
-  middleware Maxwell.Middleware.DecodeJson  
-
-  adapter Maxwell.Adapter.Ibrowse
-
-  def user_repos(login) do
-    get(url: "/user/" <> login <> "/repos")
-  end
-end
-```
-
-Then use it like this:
-
-```ex
-GitHub.get(url: "/user/zhongwencool/repos")
-GitHub.user_repos("zhonngwencool")
 ```
 
 ## Installation
