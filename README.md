@@ -3,11 +3,11 @@
 [![Build Status](https://travis-ci.org/zhongwencool/maxwell.svg?branch=master)](https://travis-ci.org/zhongwencool/maxwell)
 [![Coveralls Coverage](https://img.shields.io/coveralls/zhongwencool/maxwell.svg)](https://coveralls.io/github/zhongwencool/maxwell)
 
-Maxwell is an HTTP client which support for middleware and multiple adapters(ibrowse,hackney,custom adapters). It has friendly API.  
+Mawell is an HTTP client that provides a common interface over many adapters (such as hackney, ibrowse) and embraces the concept of Rack middleware when processing the request/response cycle.
 
-It borrow idea from [tesla(elixir)](https://github.com/teamon/tesla) which base on [Faraday(ruby)](https://github.com/lostisland/faraday)
+It borrow idea from [tesla(elixir)](https://github.com/teamon/tesla) which losely base on [Faraday(ruby)](https://github.com/lostisland/faraday)
 
-## Creating API clients
+## Usage
 
 Use `Maxwell.Builder` module to create API wrappers.
 
@@ -39,7 +39,7 @@ defmodule GitHub do
   end
 end
 ```
-It auto package all middleware's params(baseurl, opts, headers, encode_requet_body, decode_response_body) to adapter(ibrowse)
+It auto package all middleware's params(url, query, headers, opts, encode_requet_body, decode_response_body) to adapter(ibrowse)
 
 More example see `h Maxwell`
 
@@ -50,18 +50,18 @@ More example see `h Maxwell`
   |> headers(request_headers_map)
   |> opts(request_opts_keyword_list)
   |> body(request_body_term)
-  |> YourClient.{http_method} 
+  |> YourClient.{http_method}! 
 ```
-### Mulipart 
+### Mulipart helper function 
 ```ex
   multipart(maxwell \\ %Maxwell, request_multipart_list) -> new_maxwell # same as hackney   
 ```
-More clear: [Mulipart format](#Mulitpart)
-### Asynchronous 
+More info: [Mulipart format](#Mulipart)
+### Asynchronous helper function 
 ```ex
   respond_to(maxwell \\ %Maxwell, target_pid) -> new_maxwell   
 ```
-More clear: [Asynchronous Request](#Asynchronous request)
+More info: [Asynchronous Request](#Asynchronous requests)
 
 ## Reponse result 
 ```ex
