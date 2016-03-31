@@ -141,7 +141,6 @@ defmodule Maxwell.Multipart do
       else
         file[:disposition]
       end
-
     ctype = :mimerl.filename(path)
     len = :filelib.file_size(path)
 
@@ -214,11 +213,6 @@ defmodule Maxwell.Multipart do
     name <> ": " <> value
    end
 
-  defp header_value(value, params) when is_list(value) do
-    value
-    |> value_to_binary
-    |> header_value(params)
-  end
   defp header_value(value, params) do
     params =
       params

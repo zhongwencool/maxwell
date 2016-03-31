@@ -45,6 +45,7 @@ defmodule Maxwell do
          def delete(username) do
            url("/delete") |> query(%{username: username}) |> opts([connect_timeout: 6000]) |> delete!
          end
+       end
   """
 
   defstruct url: "",

@@ -39,7 +39,7 @@ defmodule MultipartTest do
     boundary = Maxwell.Multipart.boundary
     file_path = "test/maxwell/multipart_test_file.sh"
     extra_headers = [{"Content-Type", "image/jpeg"}]
-    disposition = {"form-data", [{"name", "content"}, {"filename", file_path}]}
+    disposition = {'form-data', [{"name", "content"}, {"filename", file_path}]}
     {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, disposition, extra_headers}])
     # hackney = :hackney_multipart.encode_form([{:file, file_path, disposition, extra_headers}], boundary)
     assert size == 285
