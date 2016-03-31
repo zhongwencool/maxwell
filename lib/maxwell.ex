@@ -55,4 +55,6 @@ defmodule Maxwell do
             opts: [],
             status: nil
 
+  use Maxwell.Builder
+
 end

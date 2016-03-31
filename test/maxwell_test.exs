@@ -125,7 +125,7 @@ defmodule MiddlewareTest do
   use ExUnit.Case
 
   defmodule Client do
-    use Maxwell.Builder, ~w(get post)
+    use Maxwell.Builder, ["get", "post"]
 
     middleware Maxwell.Middleware.BaseUrl, "http://example.com"
     middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]

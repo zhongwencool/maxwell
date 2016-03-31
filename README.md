@@ -7,6 +7,24 @@ Mawell is an HTTP client that provides a common interface over many adapters (su
 
 It borrow idea from [tesla(elixir)](https://github.com/teamon/tesla) which losely base on [Faraday(ruby)](https://github.com/lostisland/faraday)
 
+We already have httpoison and httpotion, why we need another wrapper?
+
+I am trouble with define a lot of `process_url/1` `process_request_headers` `process_response_body` functions,
+
+but those functions almost the same in most cases, we don't need define then every time.
+
+the same operation steps:
+
+1. Put query and url encode together;
+2. Add headers
+3. Add body
+4. Need encode request body with json or multipart
+5. Accord reponse's header to decode response body by self
+  
+So Maxwell make those same steps into middlewares, it don't lose any flexible.
+
+[See the specific example here](https://gist.github.com/zhongwencool/6cd44df1acd699fc9c7159882ef3b597).
+
 ## Usage
 
 Use `Maxwell.Builder` module to create API wrappers.
