@@ -20,7 +20,8 @@ defmodule Maxwell.Middleware.DecodeJson do
     valid_content_types = opts[:valid_types] || []
     with {:ok, result = %Maxwell{}} <- run.(env) do
 
-      content_type = result.headers['Content-Type'] || result.headers["Content-Type"] ||''
+      content_type = result.headers['Content-Type'] || result.headers["Content-Type"]
+      || result.headers['content-type'] || result.headers["content-type"]||''
       content_type = content_type |> to_string
 
       case is_json_content(content_type, result.body, valid_content_types) do
