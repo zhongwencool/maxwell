@@ -83,11 +83,11 @@ defmodule Maxwell.HackneyTest do
      assert data.body["data"] == ""
   end
 
-  test "http url connect timeout" do
+  test "http url not exist" do
     data =
-     [url: "notexist", opts: [connect_timeout: 1000]]
+     [url: "notexist", opts: [connect_timeout: 10000]]
      |> Client.get
-    assert data == {:error, :connect_timeout}
+    assert data == {:error, :nxdomain}
   end
 
   test "Head without body(test hackney.ex return {:ok, status, header})" do
