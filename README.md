@@ -108,7 +108,7 @@ More info: [Asynchronous Request](#Asynchronous requests)
   2. Ensure maxwell is started before your application:
 ```ex
    def application do
-      [applications: [:maxwell]] # also add your adapter(ibrowse,hackney...) here 
+      [applications: [:maxwell]] # **also add your adapter(ibrowse,hackney...) here **
    end
 ```
 ## Adapters

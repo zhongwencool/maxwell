@@ -16,9 +16,9 @@ defmodule Maxwell.Adapter.Ibrowse do
       gatherer = spawn_link fn -> receive_response(env, target, nil, nil, nil) end
       opts = env.opts |> List.keyreplace(:respond_to, 0, {:stream_to, gatherer})
       env = %{env |opts: opts}
+    else
+      env
     end
-
-    env
     |> send_req
     |> format_response(env)
   end

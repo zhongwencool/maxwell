@@ -13,7 +13,7 @@ defmodule Maxwell.Builder do
           Method without body: #{unquote(method)}
 
           Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list]` or `%Maxwell{}`
-          
+
           Returns `{:ok, %Maxwell{}}` or `{:error, reason_term}`
           ## Examples
                iex> url(request_url_string_or_char_list)
@@ -51,11 +51,11 @@ defmodule Maxwell.Builder do
           query      = maxwell|> Keyword.get(:query, %{})
           opts       = maxwell|> Keyword.get(:opts, [])
 
+          opts =
           if respond_to = maxwell|> Keyword.get(:respond_to, nil) do
-            opts = [{:respond_to, respond_to} | opts]
-          end
-          if multipart = maxwell|> Keyword.get(:multipart, nil) do
-            body = {:multipart, multipart}
+            [{:respond_to, respond_to} | opts]
+          else
+            opts
           end
 
           %Maxwell{
@@ -130,11 +130,18 @@ defmodule Maxwell.Builder do
           opts       = maxwell |> Keyword.get(:opts, [])
           body       = maxwell |> Keyword.get(:body, %{})
 
+          opts = 
           if respond_to = maxwell|> Keyword.get(:respond_to, nil) do
-            opts = [{:respond_to, respond_to} | opts]
+            [{:respond_to, respond_to} | opts]
+          else
+            opts
           end
+
+          body = 
           if multipart = maxwell|> Keyword.get(:multipart, nil) do
-            body = {:multipart, multipart}
+            {:multipart, multipart}
+          else
+            body
           end
 
           %Maxwell{
@@ -194,7 +201,7 @@ defmodule Maxwell.Builder do
           respond_to(maxwell, self)
         end
         def respond_to(maxwell, target_pid) do
-          unless target_pid, do: target_pid = self
+          target_pid = unless target_pid, do: self, else: target_pid
           %{maxwell| opts: Keyword.merge(maxwell.opts, [{:respond_to, target_pid}])}
         end
       end
