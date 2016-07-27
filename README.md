@@ -3,31 +3,32 @@
 [![Build Status](https://travis-ci.org/zhongwencool/maxwell.svg?branch=master)](https://travis-ci.org/zhongwencool/maxwell)
 [![Coveralls Coverage](https://img.shields.io/coveralls/zhongwencool/maxwell.svg)](https://coveralls.io/github/zhongwencool/maxwell)
 
-Maxwell is a HTTP client that provides a common interface over many adapters (such as hackney, ibrowse) and embraces the concept of Rack middleware when processing the request/response cycle.
+Maxwell is an HTTP client that provides a common interface over many adapters (such as hackney, ibrowse) and embraces the concept of Rack middleware when processing the request/response cycle.
 
-It borrow idea from [tesla(elixir)](https://github.com/teamon/tesla) which losely base on [Faraday(ruby)](https://github.com/lostisland/faraday)
+It borrows the idea from [tesla(elixir)](https://github.com/teamon/tesla) which is loosely based on [Faraday(ruby)](https://github.com/lostisland/faraday)
 
-We already have httpoison and httpotion, why we need another wrapper?
+We already have httpoison and httpotion, why do we need another wrapper?
 
-I am trouble with define a lot of `process_url/1` `process_request_headers` `process_response_body` functions,
+In every application I have to define `process_url/1` `process_request_headers` `process_response_body` functions.
 
-but those functions almost the same in most cases, we don't need define then every time.
+But these functions can be the same in most cases, which we don't need to define every time.
 
-the same operation steps:
+The operations usually follow the following steps:
 
-1. Put query and url encode together;
+1. Put query and url encode together
 2. Add headers
 3. Add body
-4. Need encode request body with json or multipart
-5. Accord reponse's header to decode response body by self
-  
-So Maxwell make those same steps into middlewares, it don't lose any flexible.
+4. Encode request body with json or multipart
+5. Record response's header to decode response body by self
 
-[See the specific example here](https://gist.github.com/zhongwencool/6cd44df1acd699fc9c7159882ef3b597).
+So Maxwell makes those same steps into middlewares, without losing any flexibility.
+
+[See the specific example here](
+  https://gist.github.com/zhongwencool/6cd44df1acd699fc9c7159882ef3b597).
 
 ## Usage
 
-Use `Maxwell.Builder` module to create API wrappers.
+Use `Maxwell.Builder` module to create the API wrappers.
 
 ```ex
 defmodule GitHub do
@@ -57,9 +58,9 @@ defmodule GitHub do
   end
 end
 ```
-It auto package all middleware's params(url, query, headers, opts, encode_requet_body, decode_response_body) to adapter(ibrowse)
+It auto-packages all middleware's params (url, query, headers, opts, encode_request_body, decode_response_body) to adapter (ibrowse)
 
-More example see `h Maxwell`
+For more examples see `h Maxwell`
 
 ## Request helper functions
 ```ex
@@ -68,20 +69,20 @@ More example see `h Maxwell`
   |> headers(request_headers_map)
   |> opts(request_opts_keyword_list)
   |> body(request_body_term)
-  |> YourClient.{http_method}! 
+  |> YourClient.{http_method}!
 ```
-### Mulipart helper function 
+### Multipart helper function
 ```ex
   multipart(maxwell \\ %Maxwell, request_multipart_list) -> new_maxwell # same as hackney   
 ```
-More info: [Mulipart format](#Mulipart)
-### Asynchronous helper function 
+More info: [Multipart format](#Multipart)
+### Asynchronous helper function
 ```ex
   respond_to(maxwell \\ %Maxwell, target_pid) -> new_maxwell   
 ```
 More info: [Asynchronous Request](#Asynchronous requests)
 
-## Reponse result 
+## Response result
 ```ex
 {:ok,
   %Maxwell{
@@ -93,8 +94,8 @@ More info: [Asynchronous Request](#Asynchronous requests)
   }}
 
 # or
-{:error, reason_term} 
-  
+{:error, reason_term}
+
 ```
 
 ## Installation
@@ -105,7 +106,7 @@ More info: [Asynchronous Request](#Asynchronous requests)
      [{:maxwell, github: "zhongwencool/maxwell", branch: master}]
    end
 ```
-  2. Ensure maxwell is started before your application:
+  2. Ensure maxwell has started before your application:
 ```ex
    def application do
       [applications: [:maxwell]] # **also add your adapter(ibrowse,hackney...) here **
@@ -122,7 +123,7 @@ Maxwell has built-in support for [ibrowse](https://github.com/cmullaparthi/ibrow
 To use it simply include `adapter Maxwell.Adapter.Ibrowse` line in your API client definition.
 global default adapter
 
-```ex 
+```ex
 config :maxwell,
   default_adapter: Maxwell.Adapter.Ibrowse
 ```  
@@ -135,12 +136,12 @@ Maxwell has built-in support for [hackney](https://github.com/benoitc/hackney) E
 To use it simply include `adapter Maxwell.Adapter.Hackney` line in your API client definition.
 global default adapter
 
-```ex 
+```ex
 config :maxwell,
   default_adapter: Maxwell.Adapter.Hackney
 ```  
 
-NOTE: Remember to include hackney(adapter) in applications list.
+NOTE: Remember to include hackney (adapter) in applications list.
 
 ## Middleware
 
@@ -152,18 +153,18 @@ NOTE: Remember to include hackney(adapter) in applications list.
 - `Maxwell.Middleware.DecodeRels` - decode reponse rels
 
 ### JSON
-NOTE: default requires [poison](https://github.com/devinus/poison) as dependency
+NOTE: Default requires [poison](https://github.com/devinus/poison) as dependency
 
-- `Maxwell.Middleware.EncodeJson` - endode request body as JSON, it will add 'Content-Type' to headers
+- `Maxwell.Middleware.EncodeJson` - encdode request body as JSON, it will add 'Content-Type' to headers
 - `Maxwell.Middleware.DecodeJson` - decode response body as JSON
 
-Custom json library example 
+Custom JSON library example
 
 ```ex
 @middleware Maxwell.Middleware.EncodeJson, [encode_func: &Poison.encode/1, content_type: "text/javascript"]  
 @middleware Maxwell.Middleware.DecodeJson [decode_func: &Poison.decode/1, valid_types: ["text/html"] ]
 ```
-Encode body by encode_func then add %{'Content-Type': content_type} to headers(default content_type is "application/json")
+Encode body by encode_func then add %{'Content-Type': content_type} to headers (default content_type is "application/json")
 
 Decode body if 'content-type' in ["text/html","application/json", "text/javascript"]
 
@@ -212,7 +213,7 @@ end
 
 ## Asynchronous requests
 
-If adapter supports it, you can make asynchronous requests by passing `respond_to: pid` option:
+If the adapter supports it, you can make asynchronous requests by passing `respond_to: pid` option:
 
 ```ex
 
@@ -225,7 +226,7 @@ end
 
 ## Multipart
 ```ex
-response = 
+response =
   [url: "http://httpbin.org/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh"}]]
   |> Client.post!
 # reponse.body["files"] is %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
@@ -233,7 +234,7 @@ response =
 ```
 both ibrowse and hackney adapter support multipart
 
-`{:multipart: lists}`, lists support: 
+`{:multipart: lists}`, lists support:
 
 1. `{:file, path}`
 2. `{:file, path, extra_headers}`
@@ -244,9 +245,9 @@ both ibrowse and hackney adapter support multipart
 7. `{name, bin_data, extra_headers}`
 8. `{name, bin_data, disposition, extra_headers}`
 
-All format support as hackney. 
-More [example](https://github.com/zhongwencool/maxwell/blob/master/test/maxwell/multipart_test.exs)
+All formats supported by hackney.
+See more [examples](https://github.com/zhongwencool/maxwell/blob/master/test/maxwell/multipart_test.exs).
 
 License
 
-See the [LICENSE](https://github.com/zhongwencool/maxwell/blob/master/LICENSE) file for license rights and limitations (MIT). 
+See the [LICENSE](https://github.com/zhongwencool/maxwell/blob/master/LICENSE) file for license rights and limitations (MIT).
