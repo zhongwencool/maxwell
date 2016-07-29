@@ -103,7 +103,7 @@ More info: [Asynchronous Request](#Asynchronous requests)
   1. Add maxwell to your list of dependencies in `mix.exs`:
 ```ex
    def deps do
-     [{:maxwell, github: "zhongwencool/maxwell", branch: master}]
+     [{:maxwell, github: "zhongwencool/maxwell", branch: "master"}]
    end
 ```
   2. Ensure maxwell has started before your application:
