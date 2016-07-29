@@ -220,7 +220,8 @@ If the adapter supports it, you can make asynchronous requests by passing `respo
 Maxwell.get(url: "http://example.org", respond_to: self)
 
 receive do
-  {:maxwell_response, res} -> res.status # => 200
+  {:maxwell_response, {:ok, res}} -> res.status # => 200
+  {:maxwell_response, {:error, reason, env}} -> env # the request env
 end
 ```
 
