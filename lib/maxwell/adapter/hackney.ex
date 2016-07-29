@@ -12,13 +12,15 @@ defmodule Maxwell.Adapter.Hackney do
 
   """
   def call(env) do
-    if target = env.opts[:respond_to] do
+    env = if target = env.opts[:respond_to] do
       gatherer = spawn_link fn -> receive_response(env, target, nil , nil, nil) end
       opts = env.opts |> List.keyreplace(:respond_to, 0, {:stream_to, gatherer})
-      env = %{env |opts: [:async| opts]}
+      %{env |opts: [:async| opts]}
     else
       env
     end
+
+    env
     |> send_req
     |> format_response(env)
   end
