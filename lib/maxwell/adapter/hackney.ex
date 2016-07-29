@@ -60,8 +60,8 @@ defmodule Maxwell.Adapter.Hackney do
         receive_response(env, target, new_status, headers, body)
       {:hackney_response, _id, {:headers, new_headers}} ->
         receive_response(env, target, status, new_headers, body)
-      {:hackney_response, _id, {:error, _reason} = error} ->
-        send(target, {:maxwell_response, error})
+      {:hackney_response, _id, {:error, reason}} ->
+        send(target, {:maxwell_response, {:error, reason, env}})
       {:hackney_response, _id, :done} ->
         response =
           {:ok, status, headers, body}
