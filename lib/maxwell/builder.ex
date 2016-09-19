@@ -224,7 +224,7 @@ defmodule Maxwell.Builder do
       nil ->
         quote do
           defp call_adapter(env) do
-            Maxwell.Until.default_adapter.call(env) # default
+            unquote(Maxwell.Until.default_adapter).call(env) # default
           end
         end
       {:fn, _, _} = adapter ->
