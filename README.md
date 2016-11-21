@@ -150,11 +150,12 @@ NOTE: Remember to include hackney (adapter) in applications list.
 - `Maxwell.Middleware.BaseUrl` - set base url for all request
 - `Maxwell.Middleware.Headers` - set request headers
 - `Maxwell.Middleware.Opts` - set options for all request
-- `Maxwell.Middleware.DecodeRels` - decode reponse rels
+- `Maxwell.Middleware.Rels` - decode reponse rels
 
 ### JSON
 NOTE: Default requires [poison](https://github.com/devinus/poison) as dependency
 
+- `Maxwell.Middleware.Json` - encode/decode response body as JSON
 - `Maxwell.Middleware.EncodeJson` - encdode request body as JSON, it will add 'Content-Type' to headers
 - `Maxwell.Middleware.DecodeJson` - decode response body as JSON
 

@@ -4,14 +4,14 @@ defmodule HeaderTest do
 
   test "Base.Middleware.Headers" do
     env =
-      call(Maxwell.Middleware.Headers,
+      request(Maxwell.Middleware.Headers,
         %{headers: %{}},
         %{'Content-Type' => 'text/plain'})
     assert env.headers == %{'Content-Type' => 'text/plain'}
   end
 
   test "Merge.Middleware.Headers" do
-    env = call(Maxwell.Middleware.Headers,
+    env = request(Maxwell.Middleware.Headers,
       %{headers: %{'Content-Type' => "application/json"}},
       %{'Content-Type' => 'text/plain'})
     assert env.headers == %{'Content-Type' => "application/json"}

@@ -3,11 +3,11 @@ defmodule BaseUrlTest do
   import Maxwell.TestHelper
 
   test "Base Middleware.BaseUrl" do
-    env = call(Maxwell.Middleware.BaseUrl, %{url: "/path"}, "http://example.com")
+    env = request(Maxwell.Middleware.BaseUrl, %{url: "/path"}, "http://example.com")
     assert env.url == "http://example.com/path"
   end
   test "Merge http Middleware.BaseUrl" do
-    env = call(Maxwell.Middleware.BaseUrl, %{url: "http://see_me.com/path"}, "http://can_not_seen.com/")
+    env = request(Maxwell.Middleware.BaseUrl, %{url: "http://see_me.com/path"}, "http://can_not_seen.com/")
     assert env.url == "http://see_me.com/path"
   end
 

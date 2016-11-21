@@ -13,10 +13,12 @@ defmodule Maxwell.Middleware.Opts do
   end
   ```
   """
-  def call(env, run, opts) do
+  use Maxwell.Middleware
+
+  def request(env, opts) do
     new_opts = Keyword.merge(opts, env.opts)
     %{env | opts: new_opts}
-    |> run.()
   end
 
 end
+

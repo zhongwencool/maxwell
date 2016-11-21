@@ -245,22 +245,41 @@ defmodule Maxwell.Builder do
   end
 
   defp generate_call_middleware(env) do
-    reduced =
-      Module.get_attribute(env.module, :middleware)
-      |> Enum.reduce(
-         quote do
-           call_adapter(env)
-         end,
-         fn({mid, args}, acc) ->
-           args = Macro.escape(args)
-           quote do
-             unquote(mid).call(env, fn(env) -> unquote(acc) end, unquote(args))
-           end
-         end)
-
+    middlewarelist =
+      env.module
+      |> Module.get_attribute(:middleware)
+      |> Enum.reverse
+    requests =
+      Enum.reduce(middlewarelist,
+        quote do
+          env
+        end,
+        fn({module, opts}, acc) ->
+          opts = Macro.escape(opts)
+          quote do
+            unquote(module).request(env, unquote(opts), fn(env) -> unquote(acc) end)
+          end
+        end)
+    adapter =
+      quote do
+      call_adapter(env)
+    end
+    responses =
+      Enum.reduce(middlewarelist,
+        quote do
+          env
+        end,
+        fn({module, opts}, acc) ->
+          opts = Macro.escape(opts)
+          quote do
+            unquote(module).response(env, unquote(opts), fn(env) -> unquote(acc) end)
+          end
+        end)
     quote do
       defp call_middleware(env) do
-        unquote(reduced)
+        env = unquote(requests)
+        env = unquote(adapter)
+        unquote(responses)
       end
     end
   end
@@ -273,3 +292,12 @@ defmodule Maxwell.Builder do
   end
 
 end
+
+defmodule T do
+  def code(module) do
+    path = :code.which(module)
+    {:ok,{_,[{:abstract_code,{_,ac}}]}} = :beam_lib.chunks(path, [:abstract_code])
+      :erl_prettypr.format(:erl_syntax.form_list(ac))
+  end
+end
+
