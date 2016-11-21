@@ -56,9 +56,5 @@ defmodule Maxwell do
             status: nil
 
   use Maxwell.Builder, ~w(get)a
-  middleware Maxwell.Middleware.BaseUrl, "https://api.github.com"
-  middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
-  middleware Maxwell.Middleware.Headers, %{'Content-Type': "application/vnd.github.v3+json", 'User-Agent': 'zhongwenool'}
-  middleware Maxwell.Middleware.Json
 
 end

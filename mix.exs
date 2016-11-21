@@ -17,13 +17,17 @@ defmodule Maxwell.Mixfile do
        licenses: ["MIT"]
      ],
      test_coverage: [tool: ExCoveralls],
+     xref: [exclude: [Poison, Maxwell.Adapter.Ibrowse]],
      deps: deps]
   end
 
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger]]
+    [applications: applications(Mix.env)]
   end
+
+  defp applications(:test), do: [:logger, :poison, :ibrowse, :hackney]
+  defp applications(_), do: [:logger]
 
   defp deps do
     [
