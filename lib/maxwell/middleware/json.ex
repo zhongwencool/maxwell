@@ -13,7 +13,7 @@ defmodule Maxwell.Middleware.Json do
   @middleware Maxwell.Middleware.Json
   # or
   @middleware Maxwell.Middleware.Json, [encode_content_type: "application/json", encode_func: &other_json_lib.encode/1,
-                                        decode_content_types: ["yourowntype"],   decode_func: &other_json_lib.encode/1]
+  decode_content_types: ["yourowntype"],   decode_func: &other_json_lib.encode/1]
   ```
   """
   use Maxwell.Middleware
@@ -28,7 +28,7 @@ defmodule Maxwell.Middleware.Json do
 end
 
 defmodule Maxwell.Middleware.EncodeJson do
-@moduledoc  """
+  @moduledoc  """
   Encode request's body to json when request's body is not nil
 
   It will auto add `%{'Content-Type': 'application/json'}` to request's headers
@@ -42,7 +42,7 @@ defmodule Maxwell.Middleware.EncodeJson do
   @middleware Maxwell.Middleware.EncodeJson, [encode_content_type: "application/json", encode_func: &other_json_lib.encode/1]
   ```
   """
-use Maxwell.Middleware
+  use Maxwell.Middleware
 
   def request(env, opts) do
     encode_fun = opts[:encode_func] || &Poison.encode/1
@@ -63,12 +63,12 @@ use Maxwell.Middleware
 end
 
 defmodule Maxwell.Middleware.DecodeJson do
-@moduledoc  """
+  @moduledoc  """
   Decode reponse's body to json when
 
-    1. Reponse header contain `{'Content-Type', "application/json"}` and body is binary
+  1. Reponse header contain `{'Content-Type', "application/json"}` and body is binary
 
-    2. Reponse is list
+  2. Reponse is list
 
   Default json_lib is Poison
   ```ex
@@ -79,7 +79,7 @@ defmodule Maxwell.Middleware.DecodeJson do
   @middleware Maxwell.Middleware.DecodeJson, [decode_content_types: ["text/javascript"], decode_func: &other_json_lib.decode/1]
   ```
   """
-use Maxwell.Middleware
+  use Maxwell.Middleware
 
   def response(response, opts) do
     decode_fun = opts[:decode_func] || &Poison.decode/1
@@ -98,7 +98,7 @@ use Maxwell.Middleware
           end
         _ ->
           {:ok, result}
-        end
+      end
     end
 
   end
