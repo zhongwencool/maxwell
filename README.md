@@ -90,7 +90,7 @@ More info: [Asynchronous Request](#Asynchronous requests)
     status:  reponse_http_status_integer,
     body:    reponse_body_term,
     opts:    request_opts_keyword_list,
-    url:     request_urlwithquery_string,    
+    url:     request_urlwithquery_string,
   }}
 
 # or
@@ -103,7 +103,7 @@ More info: [Asynchronous Request](#Asynchronous requests)
   1. Add maxwell to your list of dependencies in `mix.exs`:
 ```ex
    def deps do
-     [{:maxwell, "~> 1.0.2"}]
+     [{:maxwell, "~> 1.1.0"}]
    end
 ```
   2. Ensure maxwell has started before your application:
