@@ -23,7 +23,13 @@ defmodule JsonTest do
             %{env| status: 200, headers: %{'Content-Type' => 'text/plain'}, body: "hello"}}
         "/use-defined-content-type" ->
           {:ok,
-            %{env| status: 200, headers: %{'Content-Type' => 'text/html'}, body: "{\"value\": 124}"}}
+           %{env| status: 200, headers: %{'Content-Type' => 'text/html'}, body: "{\"value\": 124}"}};
+        "/not_found_404" ->
+          {:ok, %{env|status: 404, body: "404 Not Found"}};
+        "/redirection_301" ->
+          {:ok, %{env|status: 301, body: "301 Moved Permanently"}};
+        "/error" ->
+          {:error, "hahahaha"}
       end
     end
   end
@@ -46,6 +52,18 @@ defmodule JsonTest do
 
   test "/use-defined-content-type" do
     assert Client.post!(url: "/use-defined-content-type", body: %{"foo" => "bar"}).body == %{"value" => 124}
+  end
+
+  test "404 NOT FOUND" do
+    assert Client.post!(url: "/not_found_404", body: %{"foo" => "bar"}).status == 404
+  end
+
+  test "301 Moved Permanently" do
+    assert Client.post!(url: "/redirection_301", body: %{"foo" => "bar"}).status == 301
+  end
+
+  test "error" do
+    assert Client.post(url: "/error", body: %{"foo" => "bar"}) == {:error, "hahahaha"}
   end
 end
 

@@ -15,16 +15,14 @@ defmodule Maxwell.Middleware.Logger do
   use Maxwell.Middleware
   require Logger
 
-  def request(env, opts) do
-    "REQUEST: "
-    |> Kernel.<>(format_message(env))
-    |> Logger.info
+  def request(env, _opts) do
+    Logger.info("REQUEST: " <> (format_message(env)))
     env
   end
-  def response(result, log_fun) do
+  def response(result, _opts) do
     case result do
       {:error, reason} ->
-        format_reason = :io_lib.format("~p", [reason])
+        format_reason = :io_lib.format("~p", [reason]) |> to_string
         Logger.error("RESPONSE ERROR: " <> format_reason)
       {:ok, env} ->
         message = "RESPONSE: " <> format_message(env)
@@ -46,11 +44,11 @@ defmodule Maxwell.Middleware.Logger do
              end
     header = case Map.equal?(env.headers, %{}) do
                true -> ""
-               false -> :io_lib.format("~p", [env.headers])
+               false -> :io_lib.format("~p", [env.headers]) |> to_string
              end
     options = case env.opts do
                 [] -> ""
-                options -> :io_lib.format("~p", [options])
+                options -> :io_lib.format("~p", [options]) |> to_string
               end
     "#{method} #{env.url} #{header} #{options} #{status}"
   end
