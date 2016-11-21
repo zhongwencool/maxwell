@@ -4,7 +4,7 @@ defmodule JsonTest do
   defmodule Client do
     use Maxwell.Builder
 
-    middleware Maxwell.Middleware.Json, [encode_func: &Poison.encode/1, decode_fun: &Poison.decode/1, valid_types: ["text/html"]]
+    middleware Maxwell.Middleware.Json, [encode_func: &Poison.encode/1, decode_fun: &Poison.decode/1, decode_content_types: ["text/html"], encode_content_type: "application/json"]
 
     adapter fn (env) ->
       case env.url do
@@ -54,7 +54,7 @@ defmodule DecodeJsonTest do
   defmodule Client do
     use Maxwell.Builder, ~w(post)
 
-    middleware Maxwell.Middleware.EncodeJson, [content_type: "text/javascript"]
+    middleware Maxwell.Middleware.EncodeJson, [encode_content_type: "text/javascript"]
     middleware Maxwell.Middleware.DecodeJson
 
     adapter fn (env) -> {:ok, %{env|status: 200}} end
