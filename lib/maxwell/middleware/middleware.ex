@@ -3,14 +3,19 @@ defmodule Maxwell.Middleware do
   Example see `Maxwell.Middleware.BaseUrl`
   """
 
-  @doc """
-   ```
-    @middleware Middleware.Module, opts\\[]
-   ```
-  """
-  defmacro middleware(middleware, opts\\[]) do
+  @type opts :: any
+  @type next_fn :: (Maxwell.t -> Maxwell.t)
+
+  @callback init(opts) :: opts
+  @callback call(Maxwell.t, next_fn, opts) :: Maxwell.t
+
+  defmacro __using__(_opts) do
     quote do
-      @middleware {unquote(middleware), unquote(opts)}
+      @behaviour Maxwell.Middleware
+
+      def init(opts), do: opts
+
+      defoverridable [init: 1]
     end
   end
 end

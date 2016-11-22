@@ -15,6 +15,8 @@ defmodule Maxwell.Middleware.DecodeJson do
   @middleware Maxwell.Middleware.DecodeJson, [valid_types: "text/javascript", decode_func: &other_json_lib.decode/1]
   ```
   """
+  use Maxwell.Middleware
+  
   def call(env, run, opts) do
     decode_fun = opts[:decode_func] || &Poison.decode/1
     valid_content_types = opts[:valid_types] || []
