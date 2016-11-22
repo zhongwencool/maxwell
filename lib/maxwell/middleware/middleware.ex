@@ -8,6 +8,7 @@ defmodule Maxwell.Middleware do
     @middleware Middleware.Module, opts\\[]
    ```
   """
+  @callback call(env :: map(), next :: any(), opts :: term()) :: map()
   @callback request(env :: map(), opts :: term()) :: map()
   @callback response(result :: {:ok, map()}| {:error, reason :: term()}, opts :: term()) :: {:ok, map()} | {:error, reason :: term()}
 
@@ -22,6 +23,13 @@ defmodule Maxwell.Middleware do
       @behaviour Maxwell.Middleware
 
       @doc false
+      def call(env, next, opts) do
+        env = request(env, opts)
+        env = next.(env)
+        response(env, opts)
+      end
+
+      @doc false
       def request(env, opts) do
         env
       end
@@ -31,19 +39,7 @@ defmodule Maxwell.Middleware do
         env
       end
 
-      @doc false
-      def request(env, opts, fun) do
-        env = fun.(env)
-        request(env, opts)
-      end
-
-      @doc false
-      def response(env, opts, fun) do
-        env = fun.(env)
-        response(env, opts)
-      end
-
-      defoverridable [request: 2, response: 2] end
+      defoverridable [request: 2, response: 2, call: 3] end
   end
 end
 

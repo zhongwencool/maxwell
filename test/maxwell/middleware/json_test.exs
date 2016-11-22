@@ -6,6 +6,7 @@ defmodule JsonTest do
 
     middleware Maxwell.Middleware.Json, [encode_func: &Poison.encode/1, decode_fun: &Poison.decode/1, decode_content_types: ["text/html"], encode_content_type: "application/json"]
     middleware Maxwell.Middleware.Logger
+    middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
 
     adapter fn (env) ->
       case env.url do
