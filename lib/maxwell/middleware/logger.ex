@@ -15,42 +15,44 @@ defmodule Maxwell.Middleware.Logger do
   use Maxwell.Middleware
   require Logger
 
-  def request(env, _opts) do
-    Logger.info("REQUEST: " <> (format_message(env)))
-    env
-  end
-  def response(result, _opts) do
-    case result do
-      {:error, reason} ->
-        format_reason = :io_lib.format("~p", [reason]) |> to_string
-        Logger.error("RESPONSE ERROR: " <> format_reason)
-      {:ok, env} ->
-        message = "RESPONSE: " <> format_message(env)
-        cond do
-          env.status >= 400 -> Logger.error message
-          env.status >= 300 -> Logger.warn message
-          true              -> Logger.info message
-        end
-    end
-    result
+  def init(opts) do
+    level = Keyword.get(opts, :log_level, :info)
+    log_body_max_length = Keyword.get(opts, :log_body_max_length, 500)
+    {level, log_body_max_length}
   end
 
-  defp format_message(env) do
+  def call(request_env, next_fn, {level, log_body_max_length}) do
+    start_time = :os.timestamp()
+    new_result = next_fn.(request_env)
+    case new_result do
+      {:error, reason} ->
+        error_reason = :io_lib.format("~p", [reason]) |> to_string
+        method = request_env.method |> to_string |> String.upcase
+        Logger.log(level, "#{method} #{request_env.url} #{IO.ANSI.red}ERROR: " <> error_reason)
+      {:ok, response_env} ->
+        finish_time = :os.timestamp()
+        duration = :timer.now_diff(finish_time, start_time)
+        duration_ms = :io_lib.format("~.3f", [duration / 10000])
+        log_response_message(response_env, duration_ms, level, log_body_max_length)
+    end
+    new_result
+  end
+
+  defp log_response_message(env, ms, level, log_body_max_length) do
     method = env.method |> to_string |> String.upcase
-    status = case env.status do
-               nil -> "";
-               200 -> "#{IO.ANSI.green} => 200"
-               status1 -> " => #{status1}"
-             end
-    header = case Map.equal?(env.headers, %{}) do
-               true -> ""
-               false -> :io_lib.format("~p", [env.headers]) |> to_string
-             end
-    options = case env.opts do
-                [] -> ""
-                options -> :io_lib.format("~p", [options]) |> to_string
-              end
-    "#{method} #{env.url} #{header} #{options} #{status}"
+    color = case env.status do
+              status when status < 300 -> IO.ANSI.green
+              status when status < 400 -> IO.ANSI.yellow
+              _ -> IO.ANSI.red
+            end
+    headers = Enum.reduce(env.headers, "", fn({x, y}, acc) -> acc <> "\n#{x}:#{y}" end)
+    body = case env.body do
+             body when is_list(body) or is_binary(body) -> to_string(env.body)
+             body -> :io_lib.format("~p", [body]) |> to_string
+           end
+           |> String.slice(0, log_body_max_length)
+    message = "#{method} #{env.url}\n<#{color}#{env.status}(#{ms}ms)#{IO.ANSI.reset}\n<#{headers}\n<#{body}"
+    Logger.log(level, message)
   end
 
 end

@@ -38,8 +38,7 @@ defmodule GitHub do
   middleware Maxwell.Middleware.BaseUrl, "https://api.github.com"
   middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
   middleware Maxwell.Middleware.Headers, %{'Content-Type': "application/vnd.github.v3+json", 'User-Agent': 'zhongwenool'}
-  middleware Maxwell.Middleware.EncodeJson
-  middleware Maxwell.Middleware.DecodeJson
+  middleware Maxwell.Middleware.Json
 
   adapter Maxwell.Adapter.Ibrowse
 
