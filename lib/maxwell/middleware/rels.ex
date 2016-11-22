@@ -1,18 +1,16 @@
-defmodule Maxwell.Middleware.DecodeRels do
-@moduledoc  """
+defmodule Maxwell.Middleware.Rels do
+  @moduledoc  """
   Decode reponse's body's rels
   ```ex
   # Client.ex
   use Maxwell.Builder ~(get)a
-  @middleware Maxwell.Middleware.DecodeRels
+  @middleware Maxwell.Middleware.Rels
   ```
   """
-
   use Maxwell.Middleware
-  def call(env, run, _) do
-    env = run.(env)
-    link = env.headers['Link'] || env.headers["Link"]
 
+  def response(env, _opts) do
+    link = env.headers['Link'] || env.headers["Link"]
     if link do
       rels =
       link
@@ -34,3 +32,4 @@ defmodule Maxwell.Middleware.DecodeRels do
   end
 
 end
+

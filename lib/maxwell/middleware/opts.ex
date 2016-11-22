@@ -1,5 +1,5 @@
 defmodule Maxwell.Middleware.Opts do
-@moduledoc  """
+  @moduledoc  """
   Passthrough adapter's options (keyword list) to adapter's options
 
   ```ex
@@ -14,10 +14,11 @@ defmodule Maxwell.Middleware.Opts do
   ```
   """
   use Maxwell.Middleware
-  def call(env, run, opts) do
+
+  def request(env, opts) do
     new_opts = Keyword.merge(opts, env.opts)
     %{env | opts: new_opts}
-    |> run.()
   end
 
 end
+

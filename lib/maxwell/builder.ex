@@ -243,26 +243,25 @@ defmodule Maxwell.Builder do
          raise "Adapter must be Module or fn(env) -> env end"
     end
   end
-
   defp generate_call_middleware(env) do
     reduced =
       Module.get_attribute(env.module, :middleware)
       |> Enum.reduce(
-         quote do
-           call_adapter(env)
-         end,
-         fn({mid, args}, acc) ->
-           args = Macro.escape(args)
-           quote do
-             unquote(mid).call(env, fn(env) -> unquote(acc) end, unquote(args))
-           end
-         end)
-
-    quote do
-      defp call_middleware(env) do
-        unquote(reduced)
+      quote do
+      call_adapter(env)
+    end,
+    fn({mid, args}, acc) ->
+      args = Macro.escape(args)
+      quote do
+        unquote(mid).call(env, fn(env) -> unquote(acc) end, unquote(args))
       end
-    end
+    end)
+
+      quote do
+        defp call_middleware(env) do
+          unquote(reduced)
+        end
+      end
   end
 
   defmacro __before_compile__(env) do
@@ -273,3 +272,4 @@ defmodule Maxwell.Builder do
   end
 
 end
+

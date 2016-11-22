@@ -4,7 +4,7 @@ defmodule RelsTest do
 
   test "Header Without Link Middleware Rels" do
     env =
-      call(Maxwell.Middleware.DecodeRels,
+      response(Maxwell.Middleware.Rels,
         %{headers: %{}},
         [])
     assert env == %{headers: %{}}
@@ -12,7 +12,7 @@ defmodule RelsTest do
 
   test "Header With Link Middleware Rels and match" do
     env =
-      call(Maxwell.Middleware.DecodeRels,
+      response(Maxwell.Middleware.Rels,
         %{headers: %{'Link' => "<http://localhost/users?page=1>; rel=test1, <http://localhost/users?page=2>; rel=test2, <http://localhost/users?page=3>; rel=test3"}},
         [])
     assert Map.get(env.rels, "test1") == "<http://localhost/users?page=1>"
@@ -22,7 +22,7 @@ defmodule RelsTest do
 
   test "Header With Link Middleware Rels and don't match" do
     env =
-      call(Maxwell.Middleware.DecodeRels,
+      response(Maxwell.Middleware.Rels,
         %{headers: %{'Link' => "lkdfjldkjfdwrongformat"}},
         [])
 
@@ -30,3 +30,4 @@ defmodule RelsTest do
   end
 
 end
+

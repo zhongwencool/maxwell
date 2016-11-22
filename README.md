@@ -38,8 +38,7 @@ defmodule GitHub do
   middleware Maxwell.Middleware.BaseUrl, "https://api.github.com"
   middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
   middleware Maxwell.Middleware.Headers, %{'Content-Type': "application/vnd.github.v3+json", 'User-Agent': 'zhongwenool'}
-  middleware Maxwell.Middleware.EncodeJson
-  middleware Maxwell.Middleware.DecodeJson
+  middleware Maxwell.Middleware.Json
 
   adapter Maxwell.Adapter.Ibrowse
 
@@ -90,7 +89,7 @@ More info: [Asynchronous Request](#Asynchronous requests)
     status:  reponse_http_status_integer,
     body:    reponse_body_term,
     opts:    request_opts_keyword_list,
-    url:     request_urlwithquery_string,    
+    url:     request_urlwithquery_string,
   }}
 
 # or
@@ -103,7 +102,7 @@ More info: [Asynchronous Request](#Asynchronous requests)
   1. Add maxwell to your list of dependencies in `mix.exs`:
 ```ex
    def deps do
-     [{:maxwell, "~> 1.0.2"}]
+     [{:maxwell, "~> 1.1.0"}]
    end
 ```
   2. Ensure maxwell has started before your application:
@@ -150,11 +149,12 @@ NOTE: Remember to include hackney (adapter) in applications list.
 - `Maxwell.Middleware.BaseUrl` - set base url for all request
 - `Maxwell.Middleware.Headers` - set request headers
 - `Maxwell.Middleware.Opts` - set options for all request
-- `Maxwell.Middleware.DecodeRels` - decode reponse rels
+- `Maxwell.Middleware.Rels` - decode reponse rels
 
 ### JSON
 NOTE: Default requires [poison](https://github.com/devinus/poison) as dependency
 
+- `Maxwell.Middleware.Json` - encode/decode response body as JSON
 - `Maxwell.Middleware.EncodeJson` - encdode request body as JSON, it will add 'Content-Type' to headers
 - `Maxwell.Middleware.DecodeJson` - decode response body as JSON
 

@@ -4,8 +4,9 @@ defmodule JsonTest do
   defmodule Client do
     use Maxwell.Builder
 
-    middleware Maxwell.Middleware.EncodeJson, [encode_func: &Poison.encode/1]
-    middleware Maxwell.Middleware.DecodeJson, [decode_fun: &Poison.decode/1, valid_types: ["text/html"]]
+    middleware Maxwell.Middleware.Json, [encode_func: &Poison.encode/1, decode_fun: &Poison.decode/1, decode_content_types: ["text/html"], encode_content_type: "application/json"]
+    middleware Maxwell.Middleware.Logger
+    middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
 
     adapter fn (env) ->
       case env.url do
@@ -23,7 +24,13 @@ defmodule JsonTest do
             %{env| status: 200, headers: %{'Content-Type' => 'text/plain'}, body: "hello"}}
         "/use-defined-content-type" ->
           {:ok,
-            %{env| status: 200, headers: %{'Content-Type' => 'text/html'}, body: "{\"value\": 124}"}}
+           %{env| status: 200, headers: %{'Content-Type' => 'text/html'}, body: "{\"value\": 124}"}};
+        "/not_found_404" ->
+          {:ok, %{env|status: 404, body: "404 Not Found"}};
+        "/redirection_301" ->
+          {:ok, %{env|status: 301, body: "301 Moved Permanently"}};
+        "/error" ->
+          {:error, "hahahaha"}
       end
     end
   end
@@ -47,6 +54,18 @@ defmodule JsonTest do
   test "/use-defined-content-type" do
     assert Client.post!(url: "/use-defined-content-type", body: %{"foo" => "bar"}).body == %{"value" => 124}
   end
+
+  test "404 NOT FOUND" do
+    assert Client.post!(url: "/not_found_404", body: %{"foo" => "bar"}).status == 404
+  end
+
+  test "301 Moved Permanently" do
+    assert Client.post!(url: "/redirection_301", body: %{"foo" => "bar"}).status == 301
+  end
+
+  test "error" do
+    assert Client.post(url: "/error", body: %{"foo" => "bar"}) == {:error, "hahahaha"}
+  end
 end
 
 defmodule DecodeJsonTest do
@@ -55,7 +74,7 @@ defmodule DecodeJsonTest do
   defmodule Client do
     use Maxwell.Builder, ~w(post)
 
-    middleware Maxwell.Middleware.EncodeJson, [content_type: "text/javascript"]
+    middleware Maxwell.Middleware.EncodeJson, [encode_content_type: "text/javascript"]
     middleware Maxwell.Middleware.DecodeJson
 
     adapter fn (env) -> {:ok, %{env|status: 200}} end

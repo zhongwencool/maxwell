@@ -1,7 +1,10 @@
 
 defmodule Maxwell.TestHelper do
-  def call(mid, env, opts) do
-    mid.call(env, fn x -> x end, opts)
+  def request(mid, env, opts) do
+    mid.request(env, opts)
+  end
+  def response(mid, env, opts) do
+    mid.response(env, opts)
   end
 end
 

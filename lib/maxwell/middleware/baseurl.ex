@@ -1,5 +1,5 @@
 defmodule Maxwell.Middleware.BaseUrl do
-@moduledoc  """
+  @moduledoc  """
   ```ex
   #Client.ex
   use Maxwell.Builder ~(get)a
@@ -30,13 +30,14 @@ defmodule Maxwell.Middleware.BaseUrl do
   ```
   """
   use Maxwell.Middleware
-  def call(env, run, base_url) do
-   unless Regex.match?(~r/^https?:\/\//, env.url) do
-     %{env | url: base_url <> env.url}
-   else
-     env
-   end
-   |> run.()
+
+  def request(env, base_url) do
+    unless Regex.match?(~r/^https?:\/\//, env.url) do
+      %{env | url: base_url <> env.url}
+    else
+      env
+    end
   end
 
 end
+
