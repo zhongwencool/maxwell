@@ -13,6 +13,7 @@ defmodule Maxwell.Middleware.EncodeJson do
   @middleware Maxwell.Middleware.EncodeJson, [content_type: "application/json", encode_func: &other_json_lib.encode/1]
   ```
   """
+  use Maxwell.Middleware
   def call(env, run, opts) do
     encode_fun = opts[:encode_func] || &Poison.encode/1
     content_type = opts[:content_type] || "application/json"

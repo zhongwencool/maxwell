@@ -3,24 +3,6 @@ defmodule Maxwell.Adapter do
   Example see `Maxwell.Adapter.Ibrowse`
   """
 
-  @doc """
-  ```
-  # module
-  @adapter Adapter.Module
-  # or function
-  @adapter fn(env = %Maxwell{}) -> {:ok, env = %Maxwell{}} / {:error, term()} end
-  ```
-  """
-  defmacro adapter({:fn, _, _} = ad) do
-    escaped = Macro.escape(ad)
-    quote do
-      @adapter unquote(escaped)
-    end
-  end
-  defmacro adapter(adapter) do
-    quote do
-      @adapter unquote(adapter)
-    end
-  end
-
+  @type return_t :: {:ok, Maxwell.t} | {:ok, reference} | {:error, any}
+  @callback call(Maxwell.t) :: return_t
 end
