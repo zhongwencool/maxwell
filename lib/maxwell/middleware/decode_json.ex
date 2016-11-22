@@ -10,9 +10,9 @@ defmodule Maxwell.Middleware.DecodeJson do
   ```ex
   # Client.ex
   use Maxwell.Builder ~(get)a
-  @middleware Maxwell.Middleware.DecodeJson
+  middleware Maxwell.Middleware.DecodeJson
   # or
-  @middleware Maxwell.Middleware.DecodeJson, [valid_types: "text/javascript", decode_func: &other_json_lib.decode/1]
+  middleware Maxwell.Middleware.DecodeJson, [valid_types: ["text/javascript"], decode_func: &other_json_lib.decode/1]
   ```
   """
   use Maxwell.Middleware
