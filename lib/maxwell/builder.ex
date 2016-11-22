@@ -130,14 +130,14 @@ defmodule Maxwell.Builder do
           opts       = maxwell |> Keyword.get(:opts, [])
           body       = maxwell |> Keyword.get(:body, %{})
 
-          opts = 
+          opts =
           if respond_to = maxwell|> Keyword.get(:respond_to, nil) do
             [{:respond_to, respond_to} | opts]
           else
             opts
           end
 
-          body = 
+          body =
           if multipart = maxwell|> Keyword.get(:multipart, nil) do
             {:multipart, multipart}
           else
@@ -211,8 +211,8 @@ defmodule Maxwell.Builder do
       unquote(method_defs_with_body)
       unquote(help_methods)
 
-      import Maxwell.Middleware
-      import Maxwell.Adapter
+      import Maxwell.Builder.Middleware
+      import Maxwell.Builder.Adapter
 
       Module.register_attribute(__MODULE__, :middleware, accumulate: true)
       @before_compile Maxwell.Builder

@@ -1,5 +1,5 @@
 defmodule Maxwell.Middleware.Opts do
-@moduledoc  """
+  @moduledoc  """
   Passthrough adapter's options (keyword list) to adapter's options
 
   ```ex

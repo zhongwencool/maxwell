@@ -48,6 +48,15 @@ defmodule Maxwell do
        end
   """
 
+  @type t :: %__MODULE__{
+    url: String.t,
+    method: String.t,
+    headers: Map.t,
+    body: binary,
+    opts: Keyword.t,
+    status: integer
+  }
+
   defstruct url: "",
             method: nil,
             headers: %{},

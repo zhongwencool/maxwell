@@ -1,5 +1,5 @@
 defmodule Maxwell.Middleware.Rels do
-@moduledoc  """
+  @moduledoc  """
   Decode reponse's body's rels
   ```ex
   # Client.ex
@@ -7,7 +7,7 @@ defmodule Maxwell.Middleware.Rels do
   @middleware Maxwell.Middleware.Rels
   ```
   """
-use Maxwell.Middleware
+  use Maxwell.Middleware
 
   def response(env, _opts) do
     link = env.headers['Link'] || env.headers["Link"]

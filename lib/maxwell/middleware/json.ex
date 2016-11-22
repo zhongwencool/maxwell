@@ -110,3 +110,4 @@ defmodule Maxwell.Middleware.DecodeJson do
   end
 
 end
+

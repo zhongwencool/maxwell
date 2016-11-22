@@ -1,5 +1,5 @@
 defmodule Maxwell.Middleware.Headers do
-@moduledoc  """
+  @moduledoc  """
   Add fixed headers to request's headers
 
   ```ex
@@ -13,7 +13,8 @@ defmodule Maxwell.Middleware.Headers do
   end
   ```
   """
-use Maxwell.Middleware
+
+  use Maxwell.Middleware
 
   def request(env, headers) do
     headers = Map.merge(headers, env.headers)
@@ -21,3 +22,4 @@ use Maxwell.Middleware
   end
 
 end
+
