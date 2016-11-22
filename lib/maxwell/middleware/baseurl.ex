@@ -29,6 +29,7 @@ defmodule Maxwell.Middleware.BaseUrl do
   end
   ```
   """
+  use Maxwell.Middleware
   def call(env, run, base_url) do
    unless Regex.match?(~r/^https?:\/\//, env.url) do
      %{env | url: base_url <> env.url}
