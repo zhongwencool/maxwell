@@ -7,6 +7,8 @@ defmodule Maxwell.Middleware.DecodeRels do
   @middleware Maxwell.Middleware.DecodeRels
   ```
   """
+
+  use Maxwell.Middleware
   def call(env, run, _) do
     env = run.(env)
     link = env.headers['Link'] || env.headers["Link"]

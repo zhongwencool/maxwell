@@ -13,6 +13,7 @@ defmodule Maxwell.Middleware.Headers do
   end
   ```
   """
+  use Maxwell.Middleware
   def call(env, run, headers) do
     headers = Map.merge(headers, env.headers)
     %{env | headers: headers}

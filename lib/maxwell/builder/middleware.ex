@@ -10,7 +10,7 @@ defmodule Maxwell.Builder.Middleware do
   """
   defmacro middleware(middleware, opts\\[]) do
     quote do
-      @middleware {unquote(middleware), unquote(opts)}
+      @middleware {unquote(middleware), unquote(middleware).init(unquote(opts))}
     end
   end
 
