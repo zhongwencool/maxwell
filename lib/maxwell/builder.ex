@@ -219,57 +219,71 @@ defmodule Maxwell.Builder do
     end
   end
 
-  defp generate_call_adapter(env) do
-    case Module.get_attribute(env.module, :adapter) do
-      nil ->
-        quote do
-          defp call_adapter(env) do
-            unquote(Maxwell.Until.default_adapter).call(env) # default
-          end
-        end
-      {:fn, _, _} = adapter ->
-        quote do
-          defp call_adapter(env) do
-            unquote(adapter).(env)
-          end
-        end
-      mod when is_atom(mod) ->
-        quote do
-          defp call_adapter(env) do
-            unquote(mod).call(env)
-          end
-        end
-       _ ->
-         raise "Adapter must be Module or fn(env) -> env end"
+  defp generate_call_adapter(module) do
+    adapter = Module.get_attribute(module, :adapter)
+    env = quote do: env
+    adapter_call = quote_adapter_call(adapter, env)
+    quote do
+      defp call_adapter(unquote(env)) do
+        unquote(adapter_call)
+      end
     end
   end
-  defp generate_call_middleware(env) do
-    reduced =
-      Module.get_attribute(env.module, :middleware)
-      |> Enum.reduce(
-      quote do
-      call_adapter(env)
-    end,
-    fn({mid, args}, acc) ->
-      args = Macro.escape(args)
-      quote do
-        unquote(mid).call(env, fn(env) -> unquote(acc) end, unquote(args))
-      end
-    end)
 
-      quote do
-        defp call_middleware(env) do
-          unquote(reduced)
-        end
+  defp generate_call_middleware(module) do
+    env = quote do: env
+    call_adapter = quote do: call_adapter(unquote(env))
+    middleware = Module.get_attribute(module, :middleware)
+    middleware_call = middleware |> Enum.reduce(call_adapter, &quote_middleware_call(env, &1, &2))
+    quote do
+      defp call_middleware(unquote(env)) do
+        unquote(middleware_call)
       end
+    end
+  end
+
+  defp quote_middleware_call(env, {mid, args}, acc) do
+    quote do
+      unquote(mid).call(unquote(env), fn(unquote(env)) -> unquote(acc) end, unquote(Macro.escape(args)))
+    end
+  end
+
+  defp quote_adapter_call(nil, env) do
+    quote do
+      unquote(Maxwell.Until.default_adapter).call(unquote(env))
+    end
+  end
+
+  defp quote_adapter_call({:fn, _, _} = adapter, env) do
+    quote do
+      unquote(adapter).(unquote(env))
+    end
+  end
+
+  defp quote_adapter_call(mod, env) when is_atom(mod) do
+    case Atom.to_char_list(mod) do
+      ~c"Elixir." ++ _ ->
+        # delegate to an elixir module
+        quote do
+          unquote(mod).call(unquote(env))
+        end
+      _ ->
+        # delegate to a local call
+        quote do
+          unquote(mod)(unquote(env))
+        end
+    end
+  end
+
+  defp quote_adapter_call(_, _) do
+    raise "Adapter must be Module, fn(env) -> env or atom end"
   end
 
   defmacro __before_compile__(env) do
     [
-      generate_call_adapter(env),
-      generate_call_middleware(env),
+      generate_call_adapter(env.module),
+      generate_call_middleware(env.module),
     ]
   end
 
 end
-

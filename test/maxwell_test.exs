@@ -10,6 +10,16 @@ defmodule MaxwellTest do
     end
   end
 
+  defmodule ClientWithLocalAdapterFun do
+    use Maxwell.Builder
+
+    adapter :handle
+
+    def handle(env) do
+      {:ok, %{env | status: 201, headers: %{}, body: "function adapter"}}
+    end
+  end
+
   defmodule ModuleAdapter do
     def call(env) do
       {:ok, %{env | status: 202}}
@@ -30,6 +40,11 @@ defmodule MaxwellTest do
   test "client with adapter as module" do
     {:ok, result} = ClientWithAdapterMod.get()
     assert result.status == 202
+  end
+
+  test "client with local method" do
+    {:ok, result} = ClientWithLocalAdapterFun.get()
+    assert result.status == 201
   end
 
   defmodule Client do
