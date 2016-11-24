@@ -188,7 +188,7 @@ defmodule Maxwell.Multipart do
   defp unique(size, acc\\"")
   defp unique(0, acc), do: acc
   defp unique(size, acc) do
-    random = ?a + :random.uniform(?z - ?a)
+    random = Enum.random(?a..?z)
     unique(size - 1, << acc::binary, random>>)
   end
 
