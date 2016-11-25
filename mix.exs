@@ -39,7 +39,7 @@ defmodule Maxwell.Mixfile do
       {:ex_doc, ">= 0.11.4", only: [:dev]},
       {:markdown, github: "devinus/markdown", only: [:dev]},
       {:cmark, "~> 0.6", only: [:dev]},
-      {:inch_ex, only: :docs},
+      {:inch_ex, "~> 0.5.4", only: :docs},
     ]
   end
 

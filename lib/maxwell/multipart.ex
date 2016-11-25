@@ -185,11 +185,11 @@ defmodule Maxwell.Multipart do
 
   defp mp_header(headers, boundary), do: "--" <> boundary <> "\r\n" <> (headers_to_binary(headers))
 
-  defp unique(size, acc\\"")
-  defp unique(0, acc), do: acc
+  defp unique(size, acc\\[])
+  defp unique(0, acc), do: acc |> :erlang.list_to_binary
   defp unique(size, acc) do
     random = Enum.random(?a..?z)
-    unique(size - 1, << acc::binary, random>>)
+    unique(size - 1, [random | acc])
   end
 
   defp headers_to_binary(headers) when is_list(headers) do
