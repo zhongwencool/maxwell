@@ -1,23 +1,25 @@
-defmodule Maxwell.Until do
+defmodule Maxwell.Builder.Until do
+  @moduledoc  """
+  Utils for build
+  """
 
-  def append_query_string(url, query) do
-    if query != %{} do
-      query_string = URI.encode_query(query)
-      if url |> String.contains?("?") do
-        url <> "&" <> query_string
-      else
-        url <> "?" <> query_string
-      end
-    else
-      url
-    end
-
-  end
-
+  @doc """
+  Global default adapter.
+  ```ex
+    config :maxwell,
+    default_adapter: Maxwell.Adapter.Hackney
+  ```
+  """
   def default_adapter do
     Application.get_env(:maxwell, :default_adapter, Maxwell.Adapter.Ibrowse)
   end
 
+  @doc """
+  Generate Http method functions
+  ```ex
+    [:get, :head, :delete, :trace, :options, :post, :put, :patch]
+  ```
+  """
   def adjust_method_format(methods, default_methods) do
     case methods do
       [] ->
@@ -33,13 +35,17 @@ defmodule Maxwell.Until do
     end
   end
 
-  def is_allow_methods(methods, allow_methods) do
-   Enum.each(methods,
-     fn(method) ->
+  @doc """
+    Check method is allowed
+  """
+  def allow_methods?(methods, allow_methods) do
+    Enum.each(methods,
+      fn(method) ->
         unless method in allow_methods do
-        raise "http methods don't support #{method}"
-     end
-   end)
+          raise "http methods don't support #{method}"
+        end
+      end)
   end
 
 end
+

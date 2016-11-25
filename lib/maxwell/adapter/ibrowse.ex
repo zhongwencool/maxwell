@@ -5,9 +5,9 @@ if Code.ensure_loaded?(:ibrowse) do
     """
 
     @doc """
-    Receives `%Maxwell{}`
+    Receives `%Maxwell.Conn{}`
 
-    Returns `{:ok, %Maxwell{}}` or `{:error, reason_term}` when synchronous request
+    Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term}` when synchronous request
 
     Returns `{:ok, ref_integer}` when asynchronous requests(options add [respond_to: target_pid])
 
@@ -24,7 +24,7 @@ if Code.ensure_loaded?(:ibrowse) do
       |> format_response(env)
     end
 
-    defp send_req(%Maxwell{url: url, headers: headers, method: method, opts: opts, body: body}) do
+    defp send_req(%Maxwell.Conn{url: url, headers: headers, method: method, opts: opts, body: body}) do
       url = url |> to_char_list
       headers = headers |> Map.to_list
       {headers, body} = need_multipart_encode(headers, body)

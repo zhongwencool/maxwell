@@ -135,16 +135,11 @@ defmodule Maxwell.Multipart do
   defp mp_file_header(file, boundary) do
     path = file[:path]
     file_name = path |> :filename.basename |> to_string
-    {disposition, params} =
-      unless file[:disposition] do
-        {"form-data", [{"name", "\"file\""}, {"filename", "\"" <> file_name <> "\""}]}
-      else
-        file[:disposition]
-      end
+    {disposition, params} = file[:disposition]|| {"form-data", [{"name", "\"file\""}, {"filename", "\"" <> file_name <> "\""}]}
     ctype = :mimerl.filename(path)
     len = :filelib.file_size(path)
 
-    extra_headers = unless file[:extra_headers], do: [], else: file[:extra_headers]
+    extra_headers = file[:extra_headers]|| []
     extra_headers = extra_headers |>  Enum.map(fn({k, v}) -> {String.downcase(k), v} end)
 
     headers =
@@ -166,13 +161,8 @@ defmodule Maxwell.Multipart do
   defp mp_eof(boundary), do: "--" <>  boundary <> "--\r\n"
 
   defp mp_data_header(name, data, boundary) do
-    {disposition, params} =
-      unless data[:disposition] do
-        {"form-data", [{"name", "\"" <> name <> "\""}]}
-      else
-        data[:disposition]
-      end
-    extra_headers = unless data[:extra_headers], do: [], else: data[:extra_headers]
+    {disposition, params} = data[:disposition]|| {"form-data", [{"name", "\"" <> name <> "\""}]}
+    extra_headers = data[:extra_headers]|| []
     extra_headers = extra_headers |>  Enum.map(fn({k, v}) -> {String.downcase(k), v} end)
     ctype = :mimerl.filename(name)
     len = byte_size(data[:binary])

@@ -1,20 +1,21 @@
 defmodule Maxwell.Builder do
-    @http_methods [:get, :head, :delete, :trace, :options, :post, :put, :patch]
-    @method_without_body [{:get!, :get}, {:head!, :head}, {:delete!, :delete}, {:trace!, :trace}, {:options!, :options}]
-    @method_with_body [{:post!, :post}, {:put!, :put}, {:patch!, :patch}]
+  @moduledoc false
+  @http_methods [:get, :head, :delete, :trace, :options, :post, :put, :patch]
+  @method_without_body [{:get!, :get}, {:head!, :head}, {:delete!, :delete}, {:trace!, :trace}, {:options!, :options}]
+  @method_with_body [{:post!, :post}, {:put!, :put}, {:patch!, :patch}]
 
   defmacro __using__(methods) do
-    methods = Maxwell.Until.adjust_method_format(methods, @http_methods)
-    Maxwell.Until.is_allow_methods(methods, @http_methods)
+    methods = Maxwell.Builder.Until.adjust_method_format(methods, @http_methods)
+    Maxwell.Builder.Until.allow_methods?(methods, @http_methods)
 
     method_defs = for {method_exception, method} <- @method_without_body, method in methods do
       quote location: :keep do
         @doc """
           Method without body: #{unquote(method)}
 
-          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list]` or `%Maxwell{}`
+          Receives `%Maxwell.Conn{}`
 
-          Returns `{:ok, %Maxwell{}}` or `{:error, reason_term}`
+          Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term}`
           ## Examples
                iex> url(request_url_string_or_char_list)
                     |> query(request_query_map)
@@ -22,7 +23,7 @@ defmodule Maxwell.Builder do
                     |> opts(request_opts_keyword_list)
                     |> YourClient.#{unquote(method)}
 
-               {:ok, %Maxwell{
+               {:ok, %Maxwell.Conn{
                       headers: reponse_headers_map,
                       status:  reponse_http_status_integer,
                       body:    reponse_body_term,
@@ -41,7 +42,7 @@ defmodule Maxwell.Builder do
                 end
           """
         def unquote(method)(maxwell\\[])
-        def unquote(method)(maxwell = %Maxwell{body: body})when is_nil(body) do
+        def unquote(method)(maxwell = %Maxwell.Conn{body: body})when is_nil(body) do
           %{maxwell| method: unquote(method)}
           |> call_middleware
         end
@@ -58,26 +59,26 @@ defmodule Maxwell.Builder do
             opts
           end
 
-          %Maxwell{
+          %Maxwell.Conn{
             method: unquote(method),
             headers: headers,
             opts: opts,
-            url: Maxwell.Until.append_query_string(url, query)
+            url: Maxwell.Conn.append_query_string(url, query)
           }
           |> call_middleware
         end
         @doc """
           Method without body: #{unquote(method_exception)}
 
-          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list]` or `%Maxwell{}`
+          Receives `%Maxwell.Conn{}`
 
-          Returns `%Maxwell{}` or raise `%MaxWell.Error{}`
+          Returns `%Maxwell.Conn{}` or raise `%MaxWell.Error{}`
 
           """
-        def unquote(method_exception)(maxwell\\%Maxwell{})
+        def unquote(method_exception)(maxwell\\%Maxwell.Conn{})
         def unquote(method_exception)(maxwell) do
           case unquote(method)(maxwell) do
-            {:ok, %Maxwell{} = result} ->
+            {:ok, %Maxwell.Conn{} = result} ->
               result
             {:error, reason}  ->
               raise Maxwell.Error, value: reason,
@@ -92,9 +93,9 @@ defmodule Maxwell.Builder do
         @doc """
           Method: #{unquote(method)}
 
-          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list, body: body_term]` or `%Maxwell{}`
+          Receives `%Maxwell.Conn{}`
 
-          Returns `{:ok, %Maxwell{}}` or `{:error, reason}`
+          Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason}`
           ## Examples
                iex> url(request_url_string_or_char_list)
                     |> query(request_query_map)
@@ -103,7 +104,7 @@ defmodule Maxwell.Builder do
                     |> body(request_body_term)
                     |> YourClient.#{unquote(method)}
 
-               {:ok, %Maxwell{
+               {:ok, %Maxwell.Conn{
                      headers: reponse_headers_map,
                      status:  reponse_http_status_integer,
                      body:    reponse_body_term,
@@ -118,8 +119,8 @@ defmodule Maxwell.Builder do
                   {:maxwell_response, res} -> res.status # => 200
                 end
           """
-        def unquote(method)(maxwell\\%Maxwell{})
-        def unquote(method)(maxwell = %Maxwell{}) do
+        def unquote(method)(maxwell\\%Maxwell.Conn{})
+        def unquote(method)(maxwell = %Maxwell.Conn{}) do
           %{maxwell| method: unquote(method)}
           |> call_middleware
         end
@@ -144,27 +145,27 @@ defmodule Maxwell.Builder do
             body
           end
 
-          %Maxwell{
+          %Maxwell.Conn{
             method: unquote(method),
             headers: headers,
             opts: opts,
             body: body,
-            url: Maxwell.Until.append_query_string(url, query)
+            url: Maxwell.Conn.append_query_string(url, query)
           }
           |> call_middleware
         end
         @doc """
           Method: #{unquote(method_exception)}
 
-          Receives `[url: url_string, headers: headers_map, query: query_map, opts: opts_keyword_list, body: body_term]` or `%Maxwell{}`
+          Receives `%Maxwell.Conn{}`
 
-          Return `%Maxwell{}` or raise `%Maxwell.Error{}`
+          Return `%Maxwell.Conn{}` or raise `%Maxwell.Error{}`
 
           """
-        def unquote(method_exception)(maxwell\\%Maxwell{})
+        def unquote(method_exception)(maxwell\\%Maxwell.Conn{})
         def unquote(method_exception)(maxwell) do
           case unquote(method)(maxwell) do
-            {:ok, %Maxwell{} = result} ->
+            {:ok, %Maxwell.Conn{} = result} ->
               result
             {:error, reason}  ->
               raise Maxwell.Error, value: reason,
@@ -174,45 +175,13 @@ defmodule Maxwell.Builder do
       end
     end
 
-    help_methods =
-      quote do
-        def url(maxwell \\ %Maxwell{}, url)when is_binary(url) do
-          %{maxwell| url: url}
-        end
-        def query(maxwell \\ %Maxwell{}, query)when is_map(query) do
-          %{maxwell| url: Maxwell.Until.append_query_string(maxwell.url, query)}
-        end
-        def headers(maxwell \\ %Maxwell{}, headers)when is_map(headers) do
-          %{maxwell| headers: Map.merge(maxwell.headers, headers)}
-        end
-        def opts(maxwell \\ %Maxwell{}, opts)when is_list(opts) do
-          %{maxwell| opts: Keyword.merge(maxwell.opts, opts)}
-        end
-        def body(maxwell \\ %Maxwell{}, body) do
-          %{maxwell| body: body}
-        end
-        def multipart(maxwell \\ %Maxwell{}, multipart) do
-           %{maxwell| body: {:multipart, multipart}}
-        end
-        def respond_to(target_pid)when is_pid(target_pid) do
-          respond_to(%Maxwell{}, target_pid)
-        end
-        def respond_to(%Maxwell{} = maxwell) do
-          respond_to(maxwell, self)
-        end
-        def respond_to(maxwell, target_pid) do
-          target_pid = unless target_pid, do: self, else: target_pid
-          %{maxwell| opts: Keyword.merge(maxwell.opts, [{:respond_to, target_pid}])}
-        end
-      end
-
     quote do
       unquote(method_defs)
       unquote(method_defs_with_body)
-      unquote(help_methods)
 
       import Maxwell.Builder.Middleware
       import Maxwell.Builder.Adapter
+      import Maxwell.Conn
 
       Module.register_attribute(__MODULE__, :middleware, accumulate: true)
       @before_compile Maxwell.Builder
@@ -250,7 +219,7 @@ defmodule Maxwell.Builder do
 
   defp quote_adapter_call(nil, env) do
     quote do
-      unquote(Maxwell.Until.default_adapter).call(unquote(env))
+      unquote(Maxwell.Builder.Until.default_adapter).call(unquote(env))
     end
   end
 
@@ -287,3 +256,4 @@ defmodule Maxwell.Builder do
   end
 
 end
+

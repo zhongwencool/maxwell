@@ -9,7 +9,7 @@ defmodule Maxwell.Middleware.Opts do
 
   def request do
     # opts is [connect_timeout: 5000, cookie: "xxxxcookieyyyy"]
-    [opts: [cookie: "xxxxcookieyyyy"]]|> get!
+    opts([cookie: "xxxxcookieyyyy"])|> get!
   end
   ```
   """

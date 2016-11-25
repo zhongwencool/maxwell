@@ -1,21 +1,17 @@
 defmodule Maxwell do
   @moduledoc  """
        defmodule Client do
-
          use Maxwell.Builder, ~w(get post put)a
          adapter Maxwell.Adapter.Ibrowse
 
          middleware Maxwell.Middleware.BaseUrl,   "http://example.com"
          middleware Maxwell.Middleware.Opts,      [connect_timeout: 1000]
          middleware Maxwell.Middleware.Headers,   %{'User-Agent' => "zhongwencool"}
-         middleware Maxwell.Middleware.EncodeJson
-         middleware Maxwell.Middleware.DecodeJson
+         middleware Maxwell.Middleware.Json
 
          # get home page
          # curl --header "User-Agent: zhongwencool" http://example.com
-         def home do
-           get!
-         end
+         def home, do: get!
 
          # get help info with path
          # curl --header "User-Agent: zhongwencool" http://example.com/help
@@ -47,23 +43,7 @@ defmodule Maxwell do
          end
        end
   """
-
-  @type t :: %__MODULE__{
-    url: String.t,
-    method: String.t,
-    headers: Map.t,
-    body: binary,
-    opts: Keyword.t,
-    status: integer
-  }
-
-  defstruct url: "",
-            method: nil,
-            headers: %{},
-            body: nil,
-            opts: [],
-            status: nil
-
   use Maxwell.Builder
 
 end
+
