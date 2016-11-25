@@ -1,10 +1,12 @@
 defmodule Maxwell.Builder.Adapter do
-  @doc """
+  @moduledoc """
   ```
   # module
   @adapter Adapter.Module
   # or function
-  @adapter fn(env = %Maxwell{}) -> {:ok, env = %Maxwell{}} / {:error, term()} end
+  @adapter fn(env = %Maxwell.Conn{}) -> {:ok, env = %Maxwell.Conn{}} / {:error, term()} end
+  # or local function
+  @adapter FunName
   ```
   """
   defmacro adapter({:fn, _, _} = ad) do

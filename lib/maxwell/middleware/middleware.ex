@@ -36,5 +36,6 @@ defmodule Maxwell.Middleware do
 
       defoverridable [request: 2, response: 2, call: 3, init: 1] end
   end
+  
 end
 

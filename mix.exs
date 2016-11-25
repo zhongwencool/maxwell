@@ -12,7 +12,7 @@ defmodule Maxwell.Mixfile do
        links: %{"GitHub" => "https://github.com/zhongwencool/maxwell"},
        files: ~w(lib LICENSE mix.exs README.md),
        description: """
-       Maxwell is an HTTP client that provides a common interface over many adapters (such as hackney, ibrowse) and embraces the concept of Rack middleware when processing the request/response cycle.
+       Maxwell is an HTTP client adapter.
        """,
        licenses: ["MIT"]
      ],

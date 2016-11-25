@@ -13,16 +13,41 @@ defmodule Maxwell.Middleware.Json do
   @middleware Maxwell.Middleware.Json
   # or
   @middleware Maxwell.Middleware.Json, [encode_content_type: "application/json", encode_func: &other_json_lib.encode/1,
-  decode_content_types: ["yourowntype"],   decode_func: &other_json_lib.encode/1]
+  decode_content_types: ["yourowntype"],   decode_func: &other_json_lib.decode/1]
   ```
   """
   use Maxwell.Middleware
-
-  def request(env, opts) do
-    Maxwell.Middleware.EncodeJson.request(env, opts)
+  def init(opts) do
+    check_opts(opts)
+    encode_func = opts[:encode_func]|| &Poison.encode/1
+    decode_content_type = opts[:encode_content_type] || "application/json"
+    decode_func = opts[:decode_func] || &Poison.decode/1
+    decode_content_types =  opts[:decode_content_types] || []
+    {{encode_func, decode_content_type},
+     {decode_func, decode_content_types}}
   end
-  def response(env, opts) do
-    Maxwell.Middleware.DecodeJson.response(env, opts)
+
+  def request(env, {encode_opts, _decode_opts}) do
+    Maxwell.Middleware.EncodeJson.request(env, encode_opts)
+  end
+  def response(env, {_encode_opts, decode_opts}) do
+    Maxwell.Middleware.DecodeJson.response(env, decode_opts)
+  end
+
+  defp check_opts(opts) do
+    for {key, value} <-opts do
+      case key do
+        :encode_func ->
+          unless is_function(value, 1), do: raise "Json Middleware :encode_func only accpect function/1";
+        :encode_content_type ->
+          unless is_binary(value), do: raise "Json Middleware :encode_content_types only accpect string";
+        :decode_func ->
+          unless is_function(value, 1), do: raise "Json Middleware :decode_func only accpect function/1"
+        :decode_content_types ->
+          unless is_list(value), do: raise "Json Middleware :decode_content_types only accpect lists"
+        _ -> raise "Json Middleware Options don't accpect #{key}"
+      end
+    end
   end
 
 end
@@ -44,19 +69,34 @@ defmodule Maxwell.Middleware.EncodeJson do
   """
   use Maxwell.Middleware
 
-  def request(env, opts) do
-    encode_fun = opts[:encode_func] || &Poison.encode/1
+  def init(opts) do
+    check_opts(opts)
+    encode_func = opts[:encode_func]|| &Poison.encode/1
     content_type = opts[:encode_content_type] || "application/json"
+    {encode_func, content_type}
+  end
+
+  def request(env, {encode_func, content_type}) do
     case env.body do
-      nil ->
-        env
-      body when is_tuple(body) ->
-        env
+      nil -> env
+      body when is_tuple(body) -> env
       _ ->
-        {:ok, body} = encode_fun.(env.body)
+        {:ok, body} = encode_func.(env.body)
         env = %{env | body: body}
         headers = %{'Content-Type': content_type}
         Maxwell.Middleware.Headers.request(env, headers)
+    end
+  end
+
+  defp check_opts(opts) do
+    for {key, value} <-opts do
+      case key do
+        :encode_func ->
+          unless is_function(value, 1), do: raise "EncodeJson :encode_func only accpect function/1";
+        :encode_content_type ->
+          unless is_binary(value), do: raise "EncodeJson :encode_content_types only accpect string";
+        _ -> raise "EncodeJson Options don't accpect #{key} (:encode_func and :encode_content_type)"
+      end
     end
   end
 
@@ -80,12 +120,14 @@ defmodule Maxwell.Middleware.DecodeJson do
   ```
   """
   use Maxwell.Middleware
+  def init(opts) do
+    check_opts(opts)
+    {opts[:decode_func] || &Poison.decode/1,
+     opts[:decode_content_types] || []}
+  end
 
-  def response(response, opts) do
-    decode_fun = opts[:decode_func] || &Poison.decode/1
-    valid_content_types = opts[:decode_content_types] || []
-    with {:ok, result = %Maxwell{}} <- response do
-
+  def response(response, {decode_fun, valid_content_types}) do
+    with {:ok, result = %Maxwell.Conn{}} <- response do
       content_type = result.headers['Content-Type'] || result.headers["Content-Type"]
       || result.headers['content-type'] || result.headers["content-type"]||''
       content_type = content_type |> to_string
@@ -103,10 +145,23 @@ defmodule Maxwell.Middleware.DecodeJson do
 
   end
 
-  def is_json_content(content_type, body, valid_types) do
+  defp is_json_content(content_type, body, valid_types) do
     valid_types = ["application/json", "text/javascript"| valid_types]
     is_valid_type = Enum.find(valid_types, fn(x) -> String.starts_with?(content_type, x) end)
     is_valid_type && (is_binary(body) || is_list(body))
+  end
+
+  defp check_opts(opts) do
+    for {key, value} <-opts do
+      case key do
+        :decode_func ->
+          unless is_function(value, 1), do: raise "DecodeJson :decode_func only accpect function/1"
+        :decode_content_types ->
+          unless is_list(value), do: raise "DecodeJson :decode_content_types only accpect lists"
+        _ ->
+          raise "DecodeJson Options don't accpect #{key} (:decode_func and :decode_content_types)"
+      end
+    end
   end
 
 end
