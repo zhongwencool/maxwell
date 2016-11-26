@@ -60,7 +60,7 @@ if Code.ensure_loaded?(:ibrowse) do
     end
 
     defp need_multipart_encode(headers, {:multipart, multipart}) do
-      boundary = Maxwell.Multipart.boundary
+      boundary = Maxwell.Multipart.new_boundary
       body =
     {fn(true) ->
       {body, _size} = Maxwell.Multipart.encode(boundary, multipart)

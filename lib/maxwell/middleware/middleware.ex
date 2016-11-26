@@ -4,11 +4,12 @@ defmodule Maxwell.Middleware do
   """
 
   @type opts :: any
-  @type next_fn :: (Maxwell.t -> Maxwell.t)
+  @type next_fn :: (Maxwell.Conn.t -> Maxwell.Conn.t)
   @callback init(opts) :: opts
-  @callback call(Maxwell.t, next_fn, opts) :: Maxwell.t
-  @callback request(Maxwell.t, opts :: term()) :: Maxwell.t
-  @callback response(result :: {:ok, Maxwell.t}| {:error, reason :: term()}, opts :: term()) :: {:ok, Maxwell.t} | {:error, reason :: term()}
+  @callback call(Maxwell.Conn.t, next_fn, opts) :: Maxwell.Conn.t
+  @callback request(Maxwell.Conn.t, opts :: term()) :: Maxwell.Conn.t
+  @callback response(result :: {:ok, Maxwell.Conn.t} | {:error,reason :: term()}, opts :: term())::
+  {:ok, Maxwell.Conn.t} | {:error, reason :: term()}
 
   defmacro __using__(_opts) do
     quote location: :keep do
@@ -36,6 +37,6 @@ defmodule Maxwell.Middleware do
 
       defoverridable [request: 2, response: 2, call: 3, init: 1] end
   end
-  
+
 end
 

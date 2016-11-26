@@ -7,13 +7,13 @@ defmodule MultipartTest do
   end
 
   test "Boundary" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     assert byte_size(boundary) == 43
     assert String.valid?(boundary) == true
   end
 
   test "File base" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     file_path = "test/maxwell/multipart_test_file.sh"
     {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path}])
     #hackney = :hackney_multipart.encode_form([{:file, file_path}], boundary)
@@ -24,7 +24,7 @@ defmodule MultipartTest do
   end
 
   test "File ExtraHeaders" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     file_path = "test/maxwell/multipart_test_file.sh"
     extra_headers = [{"Content-Type", "image/jpeg"}]
     {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, extra_headers}])
@@ -36,7 +36,7 @@ defmodule MultipartTest do
   end
 
   test "File Disposition" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     file_path = "test/maxwell/multipart_test_file.sh"
     extra_headers = [{"Content-Type", "image/jpeg"}]
     disposition = {'form-data', [{"name", "content"}, {"filename", file_path}]}
@@ -49,9 +49,9 @@ defmodule MultipartTest do
   end
 
   test "mp_mixed name mixedboudnary" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     name = "mp_mixed_test_name"
-    mixed_boundary = Maxwell.Multipart.boundary
+    mixed_boundary = Maxwell.Multipart.new_boundary
     # hackney = :hackney_multipart.encode_form([{:mp_mixed, name, mixed_boundary}], boundary)
     {body, size} = Maxwell.Multipart.encode(boundary, [{:mp_mixed, name, mixed_boundary}])
     body1 = "--#{mixed_boundary}\r\nContent-Disposition: form-data; name=\"mp_mixed_test_name\"\r\nContent-Type: multipart/mixed; boundary=#{mixed_boundary}\r\n\r\n\r\n--#{boundary}--\r\n"
@@ -61,8 +61,8 @@ defmodule MultipartTest do
   end
 
   test "mp_mixed_eof mixedboudnary" do
-    boundary = Maxwell.Multipart.boundary
-    mixed_boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
+    mixed_boundary = Maxwell.Multipart.new_boundary
     # hackney = :hackney_multipart.encode_form([{:mp_mixed_eof, mixed_boundary}], boundary)
     {body, size} = Maxwell.Multipart.encode(boundary, [{:mp_mixed_eof, mixed_boundary}])
     body1 = "--#{mixed_boundary}--\r\n\r\n--#{boundary}--\r\n"
@@ -72,7 +72,7 @@ defmodule MultipartTest do
   end
 
   test "name binary" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     name = "test_name"
     bin = "test_binary"
     # hackney = :hackney_multipart.encode_form([{name, bin}], boundary)
@@ -84,7 +84,7 @@ defmodule MultipartTest do
   end
 
   test "name binary extraheaders" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     name = "test_name"
     bin = "test_binary"
     extra_headers = [{"Content-Type", "image/jpeg"}]
@@ -97,7 +97,7 @@ defmodule MultipartTest do
   end
 
   test "name binary extraheaders disposition" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     name = "test_name"
     bin = "test_binary"
     extra_headers = [{"Content-Type", "image/jpeg"}]
@@ -117,7 +117,7 @@ defmodule MultipartTest do
   end
 
   test "file disposition extra_headers stream len" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     extra_headers = [{"Content-Type", "image/jpeg"}]
     file_path = "test/maxwell/multipart_test_file.sh"
     disposition = {"form-data", [{"name", "content"}]}
@@ -126,21 +126,21 @@ defmodule MultipartTest do
   end
 
   test "mp_mixed stream len" do
-    boundary = Maxwell.Multipart.boundary
-    mixed_boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
+    mixed_boundary = Maxwell.Multipart.new_boundary
     size = Maxwell.Multipart.len_mp_stream(boundary, [{:mp_mixed, "test", mixed_boundary}])
     assert size == 279
   end
 
   test "mp_mixed_eof stream len" do
-    boundary = Maxwell.Multipart.boundary
-    mixed_boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
+    mixed_boundary = Maxwell.Multipart.new_boundary
     size = Maxwell.Multipart.len_mp_stream(boundary, [{:mp_mixed_eof, mixed_boundary}])
     assert size == 100
   end
 
   test "name binary stream len" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     name = "test_name"
     bin = "test_binary"
     size = Maxwell.Multipart.len_mp_stream(boundary, [{name, bin}])
@@ -148,7 +148,7 @@ defmodule MultipartTest do
   end
 
   test "name binary extra_headers stream len" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     name = "test_name"
     bin = "test_binary"
     extra_headers = [{"Content-Type", "image/jpeg"}]
@@ -157,7 +157,7 @@ defmodule MultipartTest do
   end
 
   test "name binary disposition extra_headers stream len" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     name = "test_name"
     bin = "test_binary"
     extra_headers = [{"Content-Type", "image/jpeg"}]
@@ -167,7 +167,7 @@ defmodule MultipartTest do
   end
 
   test "extra_header accept atom" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     file_path = "test/maxwell/multipart_test_file.sh"
     extra_headers = [{"Content-Type", "image/jpeg"|> String.to_atom}]
     {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, extra_headers}])
@@ -179,7 +179,7 @@ defmodule MultipartTest do
   end
 
   test "extra_header accept list" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     file_path = "test/maxwell/multipart_test_file.sh"
     extra_headers = [{"Content-Type", 'image/jpeg'}]
     {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, extra_headers}])
@@ -191,7 +191,7 @@ defmodule MultipartTest do
   end
 
   test "extra_header accept integer" do
-    boundary = Maxwell.Multipart.boundary
+    boundary = Maxwell.Multipart.new_boundary
     file_path = "test/maxwell/multipart_test_file.sh"
     extra_headers = [{"integer", 12}]
     {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, extra_headers}])

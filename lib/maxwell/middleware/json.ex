@@ -19,7 +19,7 @@ defmodule Maxwell.Middleware.Json do
   use Maxwell.Middleware
   def init(opts) do
     check_opts(opts)
-    encode_func = opts[:encode_func]|| &Poison.encode/1
+    encode_func = opts[:encode_func] || &Poison.encode/1
     decode_content_type = opts[:encode_content_type] || "application/json"
     decode_func = opts[:decode_func] || &Poison.decode/1
     decode_content_types =  opts[:decode_content_types] || []
@@ -35,7 +35,7 @@ defmodule Maxwell.Middleware.Json do
   end
 
   defp check_opts(opts) do
-    for {key, value} <-opts do
+    for {key, value} <- opts do
       case key do
         :encode_func ->
           unless is_function(value, 1), do: raise(ArgumentError, "Json Middleware :encode_func only accpect function/1");
@@ -71,7 +71,7 @@ defmodule Maxwell.Middleware.EncodeJson do
 
   def init(opts) do
     check_opts(opts)
-    encode_func = opts[:encode_func]|| &Poison.encode/1
+    encode_func = opts[:encode_func] || &Poison.encode/1
     content_type = opts[:encode_content_type] || "application/json"
     {encode_func, content_type}
   end
@@ -89,7 +89,7 @@ defmodule Maxwell.Middleware.EncodeJson do
   end
 
   defp check_opts(opts) do
-    for {key, value} <-opts do
+    for {key, value} <- opts do
       case key do
         :encode_func ->
           unless is_function(value, 1), do: raise(ArgumentError, "EncodeJson :encode_func only accpect function/1");
@@ -129,7 +129,7 @@ defmodule Maxwell.Middleware.DecodeJson do
   def response(response, {decode_fun, valid_content_types}) do
     with {:ok, result = %Maxwell.Conn{}} <- response do
       content_type = result.headers['Content-Type'] || result.headers["Content-Type"]
-      || result.headers['content-type'] || result.headers["content-type"]||''
+      || result.headers['content-type'] || result.headers["content-type"] || ''
       content_type = content_type |> to_string
 
       case is_json_content(content_type, result.body, valid_content_types) do
@@ -152,7 +152,7 @@ defmodule Maxwell.Middleware.DecodeJson do
   end
 
   defp check_opts(opts) do
-    for {key, value} <-opts do
+    for {key, value} <- opts do
       case key do
         :decode_func ->
           unless is_function(value, 1), do: raise(ArgumentError, "DecodeJson :decode_func only accpect function/1");
