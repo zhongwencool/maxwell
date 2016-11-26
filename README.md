@@ -6,7 +6,7 @@
 
 Maxwell is an HTTP client that provides a common interface over many adapters.
 
-[Documentation for Plug is available online](https://hexdocs.pm/maxwell).
+[Documentation for Maxwell is available online](https://hexdocs.pm/maxwell).
 
 [See the specific example here](https://gist.github.com/zhongwencool/6cd44df1acd699fc9c7159882ef3b597).
 
