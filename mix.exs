@@ -40,6 +40,7 @@ defmodule Maxwell.Mixfile do
       {:markdown, github: "devinus/markdown", only: [:dev]},
       {:cmark, "~> 0.6", only: [:dev]},
       {:inch_ex, "~> 0.5.4", only: :docs},
+      {:credo, "~> 0.5", only: [:dev]},
     ]
   end
 

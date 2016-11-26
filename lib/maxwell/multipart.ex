@@ -18,7 +18,7 @@ defmodule Maxwell.Multipart do
   """
   @eof_size 2
 
-  def encode(parts), do: encode(boundary, parts)
+  def encode(parts), do: encode(new_boundary, parts)
   def encode(boundary, parts)when is_list(parts) do
     encode_form(parts, boundary, "", 0)
   end
@@ -30,7 +30,7 @@ defmodule Maxwell.Multipart do
      "---------------------------mtynipxrmpegseog"
    ```
   """
-  def boundary, do: "---------------------------" <> unique(16)
+  def new_boundary, do: "---------------------------" <> unique(16)
 
   @doc """
    Get the size of a mp stream. Useful to calculate the content-length of a full multipart stream and send it as an identity
@@ -135,11 +135,11 @@ defmodule Maxwell.Multipart do
   defp mp_file_header(file, boundary) do
     path = file[:path]
     file_name = path |> :filename.basename |> to_string
-    {disposition, params} = file[:disposition]|| {"form-data", [{"name", "\"file\""}, {"filename", "\"" <> file_name <> "\""}]}
+    {disposition, params} = file[:disposition] || {"form-data", [{"name", "\"file\""}, {"filename", "\"" <> file_name <> "\""}]}
     ctype = :mimerl.filename(path)
     len = :filelib.file_size(path)
 
-    extra_headers = file[:extra_headers]|| []
+    extra_headers = file[:extra_headers] || []
     extra_headers = extra_headers |>  Enum.map(fn({k, v}) -> {String.downcase(k), v} end)
 
     headers =
@@ -161,8 +161,8 @@ defmodule Maxwell.Multipart do
   defp mp_eof(boundary), do: "--" <>  boundary <> "--\r\n"
 
   defp mp_data_header(name, data, boundary) do
-    {disposition, params} = data[:disposition]|| {"form-data", [{"name", "\"" <> name <> "\""}]}
-    extra_headers = data[:extra_headers]|| []
+    {disposition, params} = data[:disposition] || {"form-data", [{"name", "\"" <> name <> "\""}]}
+    extra_headers = data[:extra_headers] || []
     extra_headers = extra_headers |>  Enum.map(fn({k, v}) -> {String.downcase(k), v} end)
     ctype = :mimerl.filename(name)
     len = byte_size(data[:binary])
@@ -175,7 +175,7 @@ defmodule Maxwell.Multipart do
 
   defp mp_header(headers, boundary), do: "--" <> boundary <> "\r\n" <> (headers_to_binary(headers))
 
-  defp unique(size, acc\\[])
+  defp unique(size, acc \\ [])
   defp unique(0, acc), do: acc |> :erlang.list_to_binary
   defp unique(size, acc) do
     random = Enum.random(?a..?z)

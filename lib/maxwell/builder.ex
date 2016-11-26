@@ -41,24 +41,22 @@ defmodule Maxwell.Builder do
                   {:maxwell_response, res} -> res.status # => 200
                 end
           """
-        def unquote(method)(maxwell\\[])
-        def unquote(method)(maxwell = %Maxwell.Conn{body: body})when is_nil(body) do
-          %{maxwell| method: unquote(method)}
+        def unquote(method)(conn \\ [])
+        def unquote(method)(conn = %Maxwell.Conn{body: body})when is_nil(body) do
+          %{conn| method: unquote(method)}
           |> call_middleware
         end
         def unquote(method)(maxwell)when is_list(maxwell) do
-          url        = maxwell|> Keyword.get(:url, "")
-          headers    = maxwell|> Keyword.get(:headers, %{})
-          query      = maxwell|> Keyword.get(:query, %{})
-          opts       = maxwell|> Keyword.get(:opts, [])
-
+          url        = maxwell[:url] || ""
+          headers    = maxwell[:headers] || %{}
+          query      = maxwell[:query] || %{}
+          opts       = maxwell[:opts] || []
           opts =
-          if respond_to = maxwell|> Keyword.get(:respond_to, nil) do
+          if respond_to = maxwell[:respond_to] do
             [{:respond_to, respond_to} | opts]
           else
             opts
           end
-
           %Maxwell.Conn{
             method: unquote(method),
             headers: headers,
@@ -67,6 +65,7 @@ defmodule Maxwell.Builder do
           }
           |> call_middleware
         end
+
         @doc """
           Method without body: #{unquote(method_exception)}
 
@@ -75,14 +74,14 @@ defmodule Maxwell.Builder do
           Returns `%Maxwell.Conn{}` or raise `%MaxWell.Error{}`
 
           """
-        def unquote(method_exception)(maxwell\\%Maxwell.Conn{})
-        def unquote(method_exception)(maxwell) do
-          case unquote(method)(maxwell) do
+        def unquote(method_exception)(conn \\ %Maxwell.Conn{})
+        def unquote(method_exception)(conn) do
+          case unquote(method)(conn) do
             {:ok, %Maxwell.Conn{} = result} ->
               result
             {:error, reason}  ->
               raise Maxwell.Error, value: reason,
-                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{maxwell.url}, module: #{__MODULE__}"
+                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{conn.url}, module: #{__MODULE__}"
           end
         end
       end
@@ -119,32 +118,29 @@ defmodule Maxwell.Builder do
                   {:maxwell_response, res} -> res.status # => 200
                 end
           """
-        def unquote(method)(maxwell\\%Maxwell.Conn{})
-        def unquote(method)(maxwell = %Maxwell.Conn{}) do
-          %{maxwell| method: unquote(method)}
+        def unquote(method)(conn \\ %Maxwell.Conn{})
+        def unquote(method)(conn = %Maxwell.Conn{}) do
+          %{conn| method: unquote(method)}
           |> call_middleware
         end
         def unquote(method)(maxwell)when is_list(maxwell) do
-          url        = maxwell |> Keyword.get(:url, "")
-          headers    = maxwell |> Keyword.get(:headers, %{})
-          query      = maxwell |> Keyword.get(:query, %{})
-          opts       = maxwell |> Keyword.get(:opts, [])
-          body       = maxwell |> Keyword.get(:body, %{})
-
+          url        = maxwell[:url] || ""
+          headers    = maxwell[:headers] || %{}
+          query      = maxwell[:query] || %{}
+          opts       = maxwell[:opts] || []
+          body       = maxwell[:body] || %{}
           opts =
-          if respond_to = maxwell|> Keyword.get(:respond_to, nil) do
+          if respond_to = maxwell[:respond_to] do
             [{:respond_to, respond_to} | opts]
           else
             opts
           end
-
           body =
-          if multipart = maxwell|> Keyword.get(:multipart, nil) do
+          if multipart = maxwell[:multipart] do
             {:multipart, multipart}
           else
             body
           end
-
           %Maxwell.Conn{
             method: unquote(method),
             headers: headers,
@@ -162,14 +158,14 @@ defmodule Maxwell.Builder do
           Return `%Maxwell.Conn{}` or raise `%Maxwell.Error{}`
 
           """
-        def unquote(method_exception)(maxwell\\%Maxwell.Conn{})
-        def unquote(method_exception)(maxwell) do
-          case unquote(method)(maxwell) do
+        def unquote(method_exception)(conn \\ %Maxwell.Conn{})
+        def unquote(method_exception)(conn) do
+          case unquote(method)(conn) do
             {:ok, %Maxwell.Conn{} = result} ->
               result
             {:error, reason}  ->
               raise Maxwell.Error, value: reason,
-                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{maxwell.url}, module: #{__MODULE__}"
+                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{conn.url}, module: #{__MODULE__}"
           end
         end
       end
