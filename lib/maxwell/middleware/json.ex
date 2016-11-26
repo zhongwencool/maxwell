@@ -38,14 +38,14 @@ defmodule Maxwell.Middleware.Json do
     for {key, value} <-opts do
       case key do
         :encode_func ->
-          unless is_function(value, 1), do: raise "Json Middleware :encode_func only accpect function/1";
+          unless is_function(value, 1), do: raise(ArgumentError, "Json Middleware :encode_func only accpect function/1");
         :encode_content_type ->
-          unless is_binary(value), do: raise "Json Middleware :encode_content_types only accpect string";
+          unless is_binary(value), do: raise(ArgumentError, "Json Middleware :encode_content_types only accpect string");
         :decode_func ->
-          unless is_function(value, 1), do: raise "Json Middleware :decode_func only accpect function/1"
+          unless is_function(value, 1), do: raise(ArgumentError, "Json Middleware :decode_func only accpect function/1");
         :decode_content_types ->
-          unless is_list(value), do: raise "Json Middleware :decode_content_types only accpect lists"
-        _ -> raise "Json Middleware Options don't accpect #{key}"
+          unless is_list(value), do: raise(ArgumentError, "Json Middleware :decode_content_types only accpect lists");
+        _ -> raise(ArgumentError, "Json Middleware Options don't accpect #{key}")
       end
     end
   end
@@ -92,10 +92,10 @@ defmodule Maxwell.Middleware.EncodeJson do
     for {key, value} <-opts do
       case key do
         :encode_func ->
-          unless is_function(value, 1), do: raise "EncodeJson :encode_func only accpect function/1";
+          unless is_function(value, 1), do: raise(ArgumentError, "EncodeJson :encode_func only accpect function/1");
         :encode_content_type ->
-          unless is_binary(value), do: raise "EncodeJson :encode_content_types only accpect string";
-        _ -> raise "EncodeJson Options don't accpect #{key} (:encode_func and :encode_content_type)"
+          unless is_binary(value), do: raise(ArgumentError, "EncodeJson :encode_content_types only accpect string");
+        _ -> raise(ArgumentError, "EncodeJson Options don't accpect #{key} (:encode_func and :encode_content_type)")
       end
     end
   end
@@ -155,14 +155,13 @@ defmodule Maxwell.Middleware.DecodeJson do
     for {key, value} <-opts do
       case key do
         :decode_func ->
-          unless is_function(value, 1), do: raise "DecodeJson :decode_func only accpect function/1"
+          unless is_function(value, 1), do: raise(ArgumentError, "DecodeJson :decode_func only accpect function/1");
         :decode_content_types ->
-          unless is_list(value), do: raise "DecodeJson :decode_content_types only accpect lists"
+          unless is_list(value), do: raise(ArgumentError, "DecodeJson :decode_content_types only accpect lists");
         _ ->
-          raise "DecodeJson Options don't accpect #{key} (:decode_func and :decode_content_types)"
+          raise(ArgumentError, "DecodeJson Options don't accpect #{key} (:decode_func and :decode_content_types)")
       end
     end
   end
 
 end
-

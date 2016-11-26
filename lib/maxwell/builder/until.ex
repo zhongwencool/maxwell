@@ -48,4 +48,3 @@ defmodule Maxwell.Builder.Until do
   end
 
 end
-
