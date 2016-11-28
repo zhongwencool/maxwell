@@ -1,5 +1,13 @@
 defmodule Maxwell do
   @moduledoc  """
+  1. Make a direct request
+  ```ex
+    Maxwell.Conn.url("http://httpbin.org/ip")|>Maxwell.get!|>(fn(conn) -> conn.body end).()|> Poison.decode!
+  ```
+  All helper functions are in `Maxwell.Conn`
+  2. Create API client
+
+
        defmodule Client do
          use Maxwell.Builder, ~w(get post put)a
          adapter Maxwell.Adapter.Ibrowse
