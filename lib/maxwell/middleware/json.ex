@@ -122,8 +122,7 @@ defmodule Maxwell.Middleware.DecodeJson do
   use Maxwell.Middleware
   def init(opts) do
     check_opts(opts)
-    {opts[:decode_func] || &Poison.decode/1,
-     opts[:decode_content_types] || []}
+    {opts[:decode_func] || &Poison.decode/1, opts[:decode_content_types] || []}
   end
 
   def response(response, {decode_fun, valid_content_types}) do
@@ -131,7 +130,6 @@ defmodule Maxwell.Middleware.DecodeJson do
       content_type = result.headers['Content-Type'] || result.headers["Content-Type"]
       || result.headers['content-type'] || result.headers["content-type"] || ''
       content_type = content_type |> to_string
-
       case is_json_content(content_type, result.body, valid_content_types) do
         true ->
           case decode_fun.(result.body) do

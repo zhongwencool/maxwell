@@ -31,7 +31,7 @@ defmodule Maxwell.Builder.Until do
       [method|_] when is_binary(method) ->
         methods |> Enum.map(&String.to_atom/1)
       _ ->
-        raise "http methods format must be [:get] or [\"get\"] or ~w(get) or ~w(get)a #{methods}"
+        raise ArgumentError, "http methods format must be [:get] or [\"get\"] or ~w(get) or ~w(get)a #{methods}"
     end
   end
 
@@ -42,9 +42,10 @@ defmodule Maxwell.Builder.Until do
     Enum.each(methods,
       fn(method) ->
         unless method in allow_methods do
-          raise "http methods don't support #{method}"
+          raise ArgumentError, "http methods don't support #{method}"
         end
       end)
   end
 
 end
+

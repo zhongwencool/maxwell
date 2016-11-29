@@ -2,7 +2,7 @@ defmodule BuilderExceptionTest do
   use ExUnit.Case
 
   test "Builder Method Exception Test" do
-    assert_raise RuntimeError, "http methods don't support gett", fn ->
+    assert_raise ArgumentError, "http methods don't support gett", fn ->
       Code.eval_string """
       defmodule T do
         use Maxwell.Builder, ~w(gett)
@@ -12,7 +12,7 @@ defmodule BuilderExceptionTest do
   end
 
   test "Builder Method Format integer " do
-    assert_raise RuntimeError, "http methods format must be [:get] or [\"get\"] or ~w(get) or ~w(get)a 12345", fn ->
+    assert_raise ArgumentError, "http methods format must be [:get] or [\"get\"] or ~w(get) or ~w(get)a 12345", fn ->
       Code.eval_string """
       defmodule T do
         use Maxwell.Builder, 12345
@@ -22,11 +22,10 @@ defmodule BuilderExceptionTest do
   end
 
   test "Builder Adapter Exception Test" do
-    assert_raise RuntimeError, "Adapter must be Module or fn(env) -> env end", fn ->
+    assert_raise ArgumentError, "Adapter must be Module, fn(env) -> env end or atom", fn ->
       Code.eval_string """
         defmodule TAdapter do
           use Maxwell.Builder, ~w(get)
-
           adapter 1
         end
       """
@@ -54,5 +53,5 @@ defmodule BuilderExceptionTest do
       """
     end
   end
-
 end
+
