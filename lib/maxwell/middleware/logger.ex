@@ -59,9 +59,9 @@ defmodule Maxwell.Middleware.Logger do
     for {key, value} <- opts do
       case key do
         :log_level ->
-          unless is_atom(value), do: raise(ArgumentError, "Json Middleware :log_level only accpect atom");
+          unless is_atom(value), do: raise(ArgumentError, "Logger Middleware :log_level only accpect atom");
         :log_body_max_len ->
-          unless is_integer(value), do: raise(ArgumentError, "Json Middleware :log_body_max_len only accpect integer");
+          unless is_integer(value), do: raise(ArgumentError, "Logger Middleware :log_body_max_len only accpect integer");
         _ -> raise(ArgumentError, "Logger Middleware Options don't accpect #{key} (:log_body_max_len, :log_level)")
       end
     end

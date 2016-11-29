@@ -215,6 +215,11 @@ defmodule MiddlewareTest do
       assert opts[:respond_to] == self
     end
 
+    test "repsond_to self" do
+      opts = respond_to(%Maxwell.Conn{}).opts
+      assert opts[:respond_to] == self
+    end
+
     test "pipeline help" do
       request =
         url("test")
