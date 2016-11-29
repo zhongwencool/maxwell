@@ -241,7 +241,7 @@ defmodule Maxwell.Builder do
   end
 
   defp quote_adapter_call(_, _) do
-    raise ArgumentError, "Adapter must be Module, fn(env) -> env or atom end"
+    raise ArgumentError, "Adapter must be Module, fn(env) -> env end or atom"
   end
 
   defmacro __before_compile__(env) do
