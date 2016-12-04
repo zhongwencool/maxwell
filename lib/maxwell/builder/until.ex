@@ -1,10 +1,11 @@
 defmodule Maxwell.Builder.Until do
   @moduledoc  """
-  Utils for build
+  Utils for builder
   """
 
   @doc """
   Global default adapter.
+  ## Example
   ```ex
     config :maxwell,
     default_adapter: Maxwell.Adapter.Hackney
@@ -15,36 +16,38 @@ defmodule Maxwell.Builder.Until do
   end
 
   @doc """
-  Generate Http method functions
+  Serialize http method to atom lists
+    * `methods` - http methods list, for example: ~w(get), [:get], ["get"]
+    * `default_methods` - all http method lists.
+  ## Example
   ```ex
     [:get, :head, :delete, :trace, :options, :post, :put, :patch]
   ```
   """
-  def adjust_method_format(methods, default_methods) do
-    case methods do
-      [] ->
-        default_methods
-      {:sigil_w, _, [{:<<>>, _, [methods_str]}, _]} ->
-        methods_str |> String.split(" ") |> Enum.map(&String.to_atom/1)
-      [method| _] when is_atom(method) ->
-        methods
-      [method|_] when is_binary(method) ->
-        methods |> Enum.map(&String.to_atom/1)
-      _ ->
-        raise ArgumentError, "http methods format must be [:get] or [\"get\"] or ~w(get) or ~w(get)a #{methods}"
-    end
+  def serialize_method_to_atom([], default_methods), do: default_methods
+  def serialize_method_to_atom(methods = [atom|_], _)when is_atom(atom), do: methods
+  def serialize_method_to_atom({:sigil_w, _, [{:<<>>, _, [methods_str]}, _]}, _) do
+    methods_str |> String.split(" ") |> Enum.map(&String.to_atom/1)
+  end
+  def serialize_method_to_atom(methods = [str|_], _)when is_binary(str) do
+    for method <- methods, do: String.to_atom(method)
+  end
+  def serialize_method_to_atom(methods, _) do
+    raise ArgumentError, "http methods format must be [:get] or [\"get\"] or ~w(get) or ~w(get)a #{methods}"
   end
 
   @doc """
-    Check method is allowed
+  Make sure all `methods` in `allow_methods`.
+  ## Example
+    ```ex
+    iex> allow_methods?([:Get], [:post, :head, :get])
+    ** (ArgumentError) http methods don't support Get
+    ```
   """
-  def allow_methods?(methods, allow_methods) do
-    Enum.each(methods,
-      fn(method) ->
-        unless method in allow_methods do
-          raise ArgumentError, "http methods don't support #{method}"
-        end
-      end)
+  def allow_methods?([], _allow_methods), do: true
+  def allow_methods?([method|methods], allow_methods) do
+    unless method in allow_methods, do: raise ArgumentError, "http methods don't support #{method}"
+    allow_methods?(methods, allow_methods)
   end
 
 end

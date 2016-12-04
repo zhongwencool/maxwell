@@ -11,8 +11,8 @@ defmodule Maxwell.Middleware.BaseUrl do
   end
 
   def request(path) do
-    # http{s}://example.com/path"
-    url(path) |> Client.get!
+    # http{s}://example.com/\#\{path\}"
+    put_path(path) |> Client.get!
   end
 
   def request_other() do
@@ -24,7 +24,7 @@ defmodule Maxwell.Middleware.BaseUrl do
 
   ```ex
   def request(url, query)when is_map(query) do
-    url(url) |> query(query) |> Client.get!
+    url(url) |> put_query_string(query) |> Client.get!
   end
   ```
   """
@@ -34,7 +34,7 @@ defmodule Maxwell.Middleware.BaseUrl do
     if Regex.match?(~r/^https?:\/\//, env.url) do
       env
     else
-      %{env | url: base_url <> env.url}
+      %{env | url: base_url}
     end
   end
 

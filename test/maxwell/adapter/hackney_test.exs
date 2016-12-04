@@ -6,10 +6,45 @@ defmodule Maxwell.HackneyTest do
     middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org"
     middleware Maxwell.Middleware.Opts, [connect_timeout: 6000]
 
-    middleware Maxwell.Middleware.EncodeJson
-    middleware Maxwell.Middleware.DecodeJson
+    middleware Maxwell.Middleware.Json
 
     adapter Maxwell.Adapter.Hackney
+
+    def get_ip do
+      put_path("/ip")
+      |> get!
+    end
+    def encode_decode_json(body) do
+      "/post"
+      |> put_path
+      |> put_req_body(body)
+      |> post!
+      |> get_resp_body("json")
+    end
+
+    def user_agent(user_agent) do
+      "/user-agent"
+      |> put_path
+      |> put_req_header("user-agent", user_agent)
+      |> get!
+      |> get_resp_body("user-agent")
+    end
+
+    def put_json(json) do
+      "/put"
+      |> put_path
+      |> put_req_body(json)
+      |> put!
+      |> get_resp_body("data")
+    end
+
+    def delete_test() do
+      "/delete"
+      |> put_path
+      |> delete!
+      |> get_resp_body("data")
+    end
+
   end
 
   setup do
@@ -18,81 +53,72 @@ defmodule Maxwell.HackneyTest do
     :ok
   end
 
+  alias Maxwell.Conn
   test "sync request" do
-    {:ok, reponse} = Client.get(url: "/ip")
-    assert reponse.status == 200
+    assert Client.get_ip |> Conn.get_status == 200
   end
 
   test "encode decode json" do
-    {:ok, res} = Client.post(url: "/post",
-                            body: %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"})
-    assert res.body["json"] == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
+    res = Client.encode_decode_json(%{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"})
+    assert res == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
 
   end
 
   # Streams n random bytes of binary data, accepts optional seed and chunk_size integer parameters.
-  test "async requests stream" do
-    {:ok, _id} = Client.get(url: "http://httpbin.org/stream-bytes/1000", opts: [respond_to: self])
+  #test "async requests stream" do
+  #  {:ok, _id} = Client.get(url: "http://httpbin.org/stream-bytes/1000", opts: [respond_to: self])
 
-    receive do
-      {:maxwell_response, {:ok, res}} ->
-        assert is_binary(res.body) == true
-    after
-      5500 -> raise "Timeout"
-    end
-  end
+  #  receive do
+  #    {:maxwell_response, {:ok, res}} ->
+  #      assert is_binary(res.body) == true
+  #  after
+  #    5500 -> raise "Timeout"
+  #  end
+  #end
 
-  test "mutilpart body file" do
-    data =
-      [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh"}]]
-      |> Client.post!
+  #test "mutilpart body file" do
+  #  data =
+  #    [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh"}]]
+  #    |> Client.post!
 
-    assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+  #  assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
 
-  end
+  # end
 
-  test "mutilpart body file extra headers" do
-    data =
-      [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]]
-      |> Client.post!
+  # test "mutilpart body file extra headers" do
+  #  data =
+  #    [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]]
+  #    |> Client.post!
 
-    assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+  #  assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
 
-  end
+  # end
 
   test "user-agent header" do
-    data =
-     [url: "/user-agent", headers: %{"user-agent" => "test"}]
-     |> Client.get!
-
-     assert data.body["user-agent"] == "test"
+    assert Client.user_agent("test") == "test"
   end
 
   test "/put" do
-    data =
-     [url: "/put", body: %{"key" => "value"}]
-     |> Client.put!
-
-     assert data.body["data"] == "{\"key\":\"value\"}"
+    assert Client.put_json(%{"key" => "value"}) == "{\"key\":\"value\"}"
   end
 
   test "/delete" do
-    data =
-     [url: "/delete", body: %{"key" => "value"}]
-     |> Client.delete!
-     assert data.body["data"] == ""
+    assert Client.delete_test() == ""
   end
 
   test "http url not exist" do
-    data =
-     [url: "notexist", opts: [connect_timeout: 10000]]
-     |> Client.get
-    assert data == {:error, :nxdomain}
+    {:error, :nxdomain, conn} =
+      "notexist"
+      |> Maxwell.Conn.put_path
+      |> Maxwell.Conn.put_option(:connect_timeout, 10000)
+      |> Client.get
+    assert conn.state == :error
   end
 
   test "Head without body(test hackney.ex return {:ok, status, header})" do
      data = Client.head!
-     assert data.body == ""
+     assert data.resp_body == ""
   end
 
 end
+

@@ -9,62 +9,92 @@ defmodule JsonTest do
     middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
 
     adapter fn (env) ->
-      case env.url do
+      env = %{env|state: :sent}
+      case env.path do
         "/decode" ->
           {:ok,
-            %{env| status: 200, headers: %{'Content-Type' => 'application/json'}, body: "{\"value\": 123}"}}
+            %{env| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: "{\"value\": 123}"}}
         "/encode" ->
           {:ok,
-            %{env| status: 200, headers: %{'Content-Type' => 'application/json'}, body: env.body |> String.replace("foo", "baz")}}
+            %{env| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: env.req_body |> String.replace("foo", "baz")}}
         "/empty" ->
           {:ok,
-            %{env| status: 200, headers: %{'Content-Type' => 'application/json'}, body: nil}}
+            %{env| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: nil}}
         "/invalid-content-type" ->
           {:ok,
-            %{env| status: 200, headers: %{'Content-Type' => 'text/plain'}, body: "hello"}}
+            %{env| status: 200, resp_headers: %{"Content-Type" => "text/plain"}, resp_body: "hello"}}
         "/use-defined-content-type" ->
           {:ok,
-           %{env| status: 200, headers: %{'Content-Type' => 'text/html'}, body: "{\"value\": 124}"}};
+           %{env| status: 200, resp_headers: %{"Content-Type" => "text/html"}, resp_body: "{\"value\": 124}"}};
         "/not_found_404" ->
-          {:ok, %{env|status: 404, body: "404 Not Found"}};
+          {:ok, %{env|status: 404, resp_body: "404 Not Found"}};
         "/redirection_301" ->
-          {:ok, %{env|status: 301, body: "301 Moved Permanently"}};
+          {:ok, %{env|status: 301, resp_body: "301 Moved Permanently"}};
         "/error" ->
           {:error, "hahahaha"}
       end
     end
   end
 
+  alias Maxwell.Conn
   test "decode JSON body" do
-    assert Client.get!(url: "/decode").body == %{"value" => 123}
+    assert Conn.put_path("/decode") |> Client.get!|> Conn.get_resp_body == %{"value" => 123}
   end
 
   test "do not decode empty body" do
-    assert Client.get!(url: "/empty").body == nil
+    assert Conn.put_path("/empty") |> Client.get!|> Conn.get_resp_body == nil
   end
 
   test "decode only if Content-Type is application/json" do
-    assert Client.get!(url: "/invalid-content-type").body == "hello"
+    assert "/invalid-content-type" |> Conn.put_path |> Client.get!|> Conn.get_resp_body == "hello"
   end
 
   test "encode body as JSON" do
-    assert Client.post!(url: "/encode", body: %{"foo" => "bar"}).body == %{"baz" => "bar"}
+    body =
+      "/encode"
+      |> Conn.put_path
+      |> Conn.put_req_body(%{"foo" => "bar"})
+      |> Client.post!
+      |> Conn.get_resp_body
+    assert body == %{"baz" => "bar"}
   end
 
   test "/use-defined-content-type" do
-    assert Client.post!(url: "/use-defined-content-type", body: %{"foo" => "bar"}).body == %{"value" => 124}
+    body =
+      "/use-defined-content-type"
+      |> Conn.put_path
+      |> Conn.put_req_body(%{"foo" => "bar"})
+      |> Client.post!
+      |> Conn.get_resp_body
+    assert body == %{"value" => 124}
   end
 
   test "404 NOT FOUND" do
-    assert Client.post!(url: "/not_found_404", body: %{"foo" => "bar"}).status == 404
+    {:ok, conn} =
+      "/not_found_404"
+      |> Conn.put_path
+      |> Conn.put_req_body(%{"foo" => "bar"})
+      |> Client.post
+    assert Conn.get_status(conn) == 404
   end
 
   test "301 Moved Permanently" do
-    assert Client.post!(url: "/redirection_301", body: %{"foo" => "bar"}).status == 301
+    {:ok, conn} =
+      "/redirection_301"
+      |> Conn.put_path
+      |> Conn.put_req_body(%{"foo" => "bar"})
+      |> Client.post
+
+    assert Conn.get_status(conn) == 301
   end
 
   test "error" do
-    assert Client.post(url: "/error", body: %{"foo" => "bar"}) == {:error, "hahahaha"}
+    result =
+      "/error"
+      |> Conn.put_path
+      |> Conn.put_req_body(%{"foo" => "bar"})
+      |> Client.post
+    assert result == {:error, "hahahaha"}
   end
 end
 
@@ -77,20 +107,24 @@ defmodule DecodeJsonTest do
     middleware Maxwell.Middleware.EncodeJson, [encode_content_type: "text/javascript"]
     middleware Maxwell.Middleware.DecodeJson
 
-    adapter fn (env) -> {:ok, %{env|status: 200}} end
+    adapter fn (env) -> {:ok, %{env|status: 200,
+                                state: :sent,
+                                resp_headers: %{"Content-Type" => "text/javascript"},
+                                resp_body: "{\"value\": 124}"}} end
 
   end
 
+  alias Maxwell.Conn
   test "DecodeJsonTest add custom header" do
-    response = Client.post!(body: %{test: "test"})
-    assert response.headers == %{'Content-Type': "text/javascript"}
-    assert response.status == 200
+    response = %{test: "test"} |> Conn.put_req_body |> Client.post!
+    assert Conn.get_resp_header(response) == %{"Content-Type" => "text/javascript"}
+    assert Conn.get_status(response) == 200
   end
 
   test "JsonTest with invalid options encode_func" do
     assert_raise ArgumentError, "Json Middleware :encode_func only accpect function/1", fn ->
       Code.eval_string """
-      defmodule TAtom do
+      defmodule TAtom1 do
       use Maxwell.Builder, [:get, :post]
       middleware Maxwell.Middleware.Json, [encode_func: :atom]
       end
@@ -102,7 +136,7 @@ defmodule DecodeJsonTest do
   test "JsonTest with invalid options encode_content_type" do
     assert_raise ArgumentError, "Json Middleware :encode_content_types only accpect string", fn ->
       Code.eval_string """
-      defmodule TAtom do
+      defmodule TAtom2 do
       use Maxwell.Builder, [:get, :post]
       middleware Maxwell.Middleware.Json, [encode_content_type: :atom]
       end
@@ -114,7 +148,7 @@ defmodule DecodeJsonTest do
   test "JsonTest with invalid options decode_func" do
     assert_raise ArgumentError, "Json Middleware :decode_func only accpect function/1", fn ->
       Code.eval_string """
-      defmodule TAtom do
+      defmodule TAtom3 do
       use Maxwell.Builder, [:get, :post]
       middleware Maxwell.Middleware.Json, [decode_func: 123]
       end
@@ -126,7 +160,7 @@ defmodule DecodeJsonTest do
   test "JsonTest with invalid options decode_content_types" do
     assert_raise ArgumentError, "Json Middleware :decode_content_types only accpect lists", fn ->
       Code.eval_string """
-      defmodule TAtom do
+      defmodule TAtom4 do
       use Maxwell.Builder, [:get, :post]
       middleware Maxwell.Middleware.Json, [decode_content_types: "application/json"]
       end
@@ -138,7 +172,7 @@ defmodule DecodeJsonTest do
   test "JsonTest with wrong options" do
     assert_raise ArgumentError, "Json Middleware Options don't accpect wrong_option", fn ->
       Code.eval_string """
-      defmodule TAtom do
+      defmodule TAtom5 do
       use Maxwell.Builder, [:get, :post]
       middleware Maxwell.Middleware.Json, [wrong_option: "application/json"]
       end
@@ -150,7 +184,7 @@ defmodule DecodeJsonTest do
   test "EncodeJsonTest with invalid options encode_func " do
     assert_raise ArgumentError, "EncodeJson :encode_func only accpect function/1", fn ->
       Code.eval_string """
-      defmodule TAtom do
+      defmodule TAtom6 do
       use Maxwell.Builder, [:get, :post]
       middleware Maxwell.Middleware.EncodeJson, [encode_func: "application/json"]
       end
@@ -162,7 +196,7 @@ defmodule DecodeJsonTest do
   test "EncodeJsonTest with invalid options encode_content_type" do
     assert_raise ArgumentError, "EncodeJson :encode_content_types only accpect string", fn ->
       Code.eval_string """
-      defmodule TAtom do
+      defmodule TAtom7 do
       use Maxwell.Builder, [:get, :post]
       middleware Maxwell.Middleware.EncodeJson, [encode_content_type: 1234]
       end
@@ -174,7 +208,7 @@ defmodule DecodeJsonTest do
   test "EncodeJsonTest with wrong option" do
     assert_raise ArgumentError, "EncodeJson Options don't accpect wrong_option (:encode_func and :encode_content_type)", fn ->
       Code.eval_string """
-      defmodule TAtom do
+      defmodule TAtom8 do
       use Maxwell.Builder, [:get, :post]
       middleware Maxwell.Middleware.EncodeJson, [wrong_option: 1234]
       end
@@ -186,7 +220,7 @@ defmodule DecodeJsonTest do
   test "DecodeJsonTest with invalid options decode_func " do
     assert_raise ArgumentError, "DecodeJson :decode_func only accpect function/1", fn ->
       Code.eval_string """
-      defmodule TAtom do
+      defmodule TAtom9 do
       use Maxwell.Builder, [:get, :post]
       middleware Maxwell.Middleware.DecodeJson, [decode_func: "application/json"]
       end
@@ -198,7 +232,7 @@ defmodule DecodeJsonTest do
   test "DecodeJsonTest with invalid options decode_content_types" do
     assert_raise ArgumentError, "DecodeJson :decode_content_types only accpect lists", fn ->
       Code.eval_string """
-      defmodule TAtom do
+      defmodule TAtom10 do
       use Maxwell.Builder, [:get, :post]
       middleware Maxwell.Middleware.DecodeJson, [decode_content_types: 1234]
       end
@@ -210,7 +244,7 @@ defmodule DecodeJsonTest do
   test "DecodeJsonTest with wrong option" do
     assert_raise ArgumentError, "DecodeJson Options don't accpect wrong_option (:decode_func and :decode_content_types)", fn ->
       Code.eval_string """
-      defmodule TAtom do
+      defmodule TAtom11 do
       use Maxwell.Builder, [:get, :post]
       middleware Maxwell.Middleware.DecodeJson, [wrong_option: 1234]
       end

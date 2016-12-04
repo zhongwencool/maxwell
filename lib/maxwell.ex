@@ -53,5 +53,12 @@ defmodule Maxwell do
   """
   use Maxwell.Builder
 
+  middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org/"
+  middleware Maxwell.Middleware.Logger
+  middleware Maxwell.Middleware.Json
+
+  def test(path) do
+    put_path(path) |> get!
+  end
 end
 

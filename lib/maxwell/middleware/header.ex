@@ -16,10 +16,9 @@ defmodule Maxwell.Middleware.Headers do
 
   use Maxwell.Middleware
 
-  def request(env, headers) do
-    headers = Map.merge(headers, env.headers)
-    %{env | headers: headers}
+  def request(conn, req_headers) do
+    headers = Map.merge(req_headers, conn.req_headers)
+    %{conn | req_headers: headers}
   end
-
 end
 

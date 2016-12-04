@@ -27,11 +27,11 @@ defmodule Maxwell.Middleware.Json do
      {decode_func, decode_content_types}}
   end
 
-  def request(env, {encode_opts, _decode_opts}) do
-    Maxwell.Middleware.EncodeJson.request(env, encode_opts)
+  def request(conn, {encode_opts, _decode_opts}) do
+    Maxwell.Middleware.EncodeJson.request(conn, encode_opts)
   end
-  def response(env, {_encode_opts, decode_opts}) do
-    Maxwell.Middleware.DecodeJson.response(env, decode_opts)
+  def response(conn, {_encode_opts, decode_opts}) do
+    Maxwell.Middleware.DecodeJson.response(conn, decode_opts)
   end
 
   defp check_opts(opts) do
@@ -76,15 +76,15 @@ defmodule Maxwell.Middleware.EncodeJson do
     {encode_func, content_type}
   end
 
-  def request(env, {encode_func, content_type}) do
-    case env.body do
-      nil -> env
-      body when is_tuple(body) -> env
+  def request(conn, {encode_func, content_type}) do
+    case conn.req_body do
+      nil -> conn
+      req_body when is_tuple(req_body) -> conn
       _ ->
-        {:ok, body} = encode_func.(env.body)
-        env = %{env | body: body}
-        headers = %{'Content-Type': content_type}
-        Maxwell.Middleware.Headers.request(env, headers)
+        {:ok, req_body} = encode_func.(conn.req_body)
+        conn = %{conn | req_body: req_body}
+        headers = %{"content-type" => content_type}
+        Maxwell.Middleware.Headers.request(conn, headers)
     end
   end
 
@@ -126,18 +126,19 @@ defmodule Maxwell.Middleware.DecodeJson do
   end
 
   def response(response, {decode_fun, valid_content_types}) do
-    with {:ok, result = %Maxwell.Conn{}} <- response do
-      content_type = result.headers['Content-Type'] || result.headers["Content-Type"]
-      || result.headers['content-type'] || result.headers["content-type"] || ''
+    with {:ok, conn = %Maxwell.Conn{}} <- response do
+      headers = conn.resp_headers
+      content_type = headers['Content-Type'] || headers["Content-Type"]
+      || headers['content-type'] || headers["content-type"] || ''
       content_type = content_type |> to_string
-      case is_json_content(content_type, result.body, valid_content_types) do
+      case is_json_content(content_type, conn.resp_body, valid_content_types) do
         true ->
-          case decode_fun.(result.body) do
-            {:ok, body}  -> {:ok, %{result | body: body}}
-            {:error, reason} -> {:error, {:decode_json_error, reason}}
+          case decode_fun.(conn.resp_body) do
+            {:ok, resp_body}  -> {:ok, %{conn | resp_body: resp_body}}
+            {:error, reason} -> {:error, {:decode_json_error, reason}, conn}
           end
         _ ->
-          {:ok, result}
+          {:ok, conn}
       end
     end
 

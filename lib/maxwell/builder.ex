@@ -1,87 +1,111 @@
 defmodule Maxwell.Builder do
-  @moduledoc false
+  @moduledoc """
+  Conveniences for building maxwell
+  This module can be `use`-d into a module in order to build
+  middleware pipeline:
+      defmodule Client do
+        use Maxwell.Builder, ~w(get post put)a
+        adapter Maxwell.Adapter.Ibrowse
+
+        middleware Maxwell.Middleware.BaseUrl,   "http://example.com"
+        middleware Maxwell.Middleware.Opts,      [connect_timeout: 1000]
+        middleware Maxwell.Middleware.Headers,   %{'User-Agent' => "zhongwencool"}
+        middleware Maxwell.Middleware.Json
+
+        # get home page
+        # curl --header "User-Agent: zhongwencool" http://example.com
+        def home, do: get!
+
+        # get help info with path
+        # curl --header "User-Agent: zhongwencool" http://example.com/help
+        def get_help do
+          put_path("/help) |> get!
+        end
+
+        # get user info with query
+        # curl --header "User-Agent: zhongwencool" http://example.com/user?name=username
+        def get_user_info(username) do
+          put_path("/user") |> query(%{name: username}) |> get!
+        end
+
+        # post user login with json
+        # curl -H "Content-Type: application/json" -X POST -d '{"username":"xyz","password":"xyz"}' http://example.com/login
+        def login(username, password) do
+          url("/login") |> body(%{username: username, password: password}) |> post!
+        end
+
+  `Maxwell.Builder` also imports the `Maxwell.Conn` module, making functions like
+  `put_req_header/3` available.
+
+  ## Options
+  When used, the following options are accepted by `Maxwell.Builder`:
+    * `~w(get)a` - only create `get/1` and `get!/1` functions,
+    default is `~w(get head delete trace options post put patch)a`
+
+  """
   @http_methods [:get, :head, :delete, :trace, :options, :post, :put, :patch]
   @method_without_body [{:get!, :get}, {:head!, :head}, {:delete!, :delete}, {:trace!, :trace}, {:options!, :options}]
   @method_with_body [{:post!, :post}, {:put!, :put}, {:patch!, :patch}]
 
   defmacro __using__(methods) do
-    methods = Maxwell.Builder.Until.adjust_method_format(methods, @http_methods)
+    methods = Maxwell.Builder.Until.serialize_method_to_atom(methods, @http_methods)
     Maxwell.Builder.Until.allow_methods?(methods, @http_methods)
 
     method_defs = for {method_exception, method} <- @method_without_body, method in methods do
       quote location: :keep do
         @doc """
-          Method without body: #{unquote(method)}
+        Method #{unquote(method)} without request body.
 
-          Receives `%Maxwell.Conn{}`
+          * `conn` - `%Maxwell.Conn{}`
 
-          Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term}`
-          ## Examples
-               iex> url(request_url_string_or_char_list)
-                    |> query(request_query_map)
-                    |> headers(request_headers_map)
-                    |> opts(request_opts_keyword_list)
-                    |> YourClient.#{unquote(method)}
+        Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term, %Maxwell.Conn{}}`.
 
-               {:ok, %Maxwell.Conn{
-                      headers: reponse_headers_map,
-                      status:  reponse_http_status_integer,
-                      body:    reponse_body_term,
-                      opts:    request_opts_keyword_list,
-                      url:     request_urlwithquery_string,
-                      query:   request_query_map
-               }
-
-          or
-                {:error, {:conn_failed, {:error, :nxdomain}}}
-
-          You can make asynchronous requests by passing `respond_to: pid` option:
-                Maxwell.get(url: "http://example.org", respond_to: self)
-                receive do
-                  {:maxwell_response, res} -> res.status # => 200
-                end
-          """
-        def unquote(method)(conn \\ [])
-        def unquote(method)(conn = %Maxwell.Conn{body: body})when is_nil(body) do
-          %{conn| method: unquote(method)}
-          |> call_middleware
+        ## Examples
+        """
+        def unquote(method)(conn \\ %Maxwell.Conn{})
+        def unquote(method)(conn = %Maxwell.Conn{req_body: nil}) do
+          %{conn| method: unquote(method)} |> call_middleware
         end
-        def unquote(method)(maxwell)when is_list(maxwell) do
-          url        = maxwell[:url] || ""
-          headers    = maxwell[:headers] || %{}
-          query      = maxwell[:query] || %{}
-          opts       = maxwell[:opts] || []
-          opts =
-          if respond_to = maxwell[:respond_to] do
-            [{:respond_to, respond_to} | opts]
-          else
-            opts
-          end
-          %Maxwell.Conn{
-            method: unquote(method),
-            headers: headers,
-            opts: opts,
-            url: Maxwell.Conn.append_query_string(url, query)
-          }
-          |> call_middleware
+        def unquote(method)(conn) do
+          raise Maxwell.Error, {__MODULE__, "#{unquote(method)}/1 should not contain body", conn};
         end
 
         @doc """
-          Method without body: #{unquote(method_exception)}
+        Method #{unquote(method_exception)} without request body.
 
-          Receives `%Maxwell.Conn{}`
+          * `conn` - see `#{unquote(method)}/1`
 
-          Returns `%Maxwell.Conn{}` or raise `%MaxWell.Error{}`
+        Returns `%Maxwell.Conn{}` or raise `%MaxWell.Error{}` when status not in [200..299].
 
-          """
+        ## Example
+        """
         def unquote(method_exception)(conn \\ %Maxwell.Conn{})
         def unquote(method_exception)(conn) do
           case unquote(method)(conn) do
-            {:ok, %Maxwell.Conn{} = result} ->
-              result
-            {:error, reason}  ->
-              raise Maxwell.Error, value: reason,
-                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{conn.url}, module: #{__MODULE__}"
+            {:ok, %Maxwell.Conn{status: status} = new_conn} when status in 200..299 -> new_conn;
+            {:ok, new_conn} -> raise Maxwell.Error, {__MODULE__, :response_status_not_match, new_conn};
+            {:error, reason, new_conn} -> raise Maxwell.Error, {__MODULE__, reason, new_conn}
+          end
+        end
+        @doc """
+        Method #{unquote(method_exception)} without request body.
+
+        * `conn` - see `#{unquote(method)}/1`
+        * `normal_statuses` - the specified status which not raise exception, for example: [200, 201]
+
+        Returns `%Maxwell.Conn{}` or raise `%MaxWell.Error{}`.
+
+        ## Example
+        """
+        def unquote(method_exception)(conn, normal_statuses)when is_list(normal_statuses) do
+          case unquote(method)(conn) do
+            {:ok, %Maxwell.Conn{status: status} = new_conn} ->
+              unless status in normal_statuses do
+                raise Maxwell.Error, {__MODULE__, :response_status_not_match, conn}
+              end
+              new_conn;
+            {:error, reason, new_conn}  ->
+              raise Maxwell.Error, {__MODULE__, reason, new_conn}
           end
         end
       end
@@ -90,82 +114,52 @@ defmodule Maxwell.Builder do
     method_defs_with_body = for {method_exception, method} <- @method_with_body, method in methods do
       quote location: :keep do
         @doc """
-          Method: #{unquote(method)}
+          Method: #{unquote(method)}.
 
-          Receives `%Maxwell.Conn{}`
+          * `conn` - `%Maxwell.Conn{}`.
 
-          Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason}`
+          Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason, %Maxwell.Conn{}}`
           ## Examples
-               iex> url(request_url_string_or_char_list)
-                    |> query(request_query_map)
-                    |> headers(request_headers_map)
-                    |> opts(request_opts_keyword_list)
-                    |> body(request_body_term)
-                    |> YourClient.#{unquote(method)}
-
-               {:ok, %Maxwell.Conn{
-                     headers: reponse_headers_map,
-                     status:  reponse_http_status_integer,
-                     body:    reponse_body_term,
-                     opts:    request_opts_keyword_list
-                     url:     request_urlwithquery_string,
-               }
-          or
-               {:error, {:conn_failed, {:error, :timeout}}}
-          If adapter supports it, you can make asynchronous requests by passing `respond_to: pid` option:
-                Maxwell.get(url: "http://example.org", respond_to: self)
-                receive do
-                  {:maxwell_response, res} -> res.status # => 200
-                end
           """
         def unquote(method)(conn \\ %Maxwell.Conn{})
         def unquote(method)(conn = %Maxwell.Conn{}) do
-          %{conn| method: unquote(method)}
-          |> call_middleware
-        end
-        def unquote(method)(maxwell)when is_list(maxwell) do
-          url        = maxwell[:url] || ""
-          headers    = maxwell[:headers] || %{}
-          query      = maxwell[:query] || %{}
-          opts       = maxwell[:opts] || []
-          body       = maxwell[:body] || %{}
-          opts =
-          if respond_to = maxwell[:respond_to] do
-            [{:respond_to, respond_to} | opts]
-          else
-            opts
-          end
-          body =
-          if multipart = maxwell[:multipart] do
-            {:multipart, multipart}
-          else
-            body
-          end
-          %Maxwell.Conn{
-            method: unquote(method),
-            headers: headers,
-            opts: opts,
-            body: body,
-            url: Maxwell.Conn.append_query_string(url, query)
-          }
-          |> call_middleware
+          %{conn| method: unquote(method)} |> call_middleware
         end
         @doc """
           Method: #{unquote(method_exception)}
 
-          Receives `%Maxwell.Conn{}`
+          * `conn` - see `#{unquote(method)}/1`
 
-          Return `%Maxwell.Conn{}` or raise `%Maxwell.Error{}`
-
+          Return `%Maxwell.Conn{}` or raise `%Maxwell.Error{}` when status not in [200.299]
+          ## Example
           """
         def unquote(method_exception)(conn \\ %Maxwell.Conn{})
         def unquote(method_exception)(conn) do
           case unquote(method)(conn) do
-            {:ok, %Maxwell.Conn{} = result} ->
-              result
-            {:error, reason}  ->
-              raise Maxwell.Error, value: reason,
-                message: "method: #{unquote(method)} reason: #{inspect reason} url: #{conn.url}, module: #{__MODULE__}"
+            {:ok, %Maxwell.Conn{status: status} = new_conn} when status in 200..299 -> new_conn;
+            {:ok, new_conn} -> raise Maxwell.Error, {__MODULE__, :response_status_not_match, new_conn}
+            {:error, reason, new_conn}  -> raise Maxwell.Error, {__MODULE__, reason, new_conn}
+          end
+        end
+        @doc """
+        Method #{unquote(method_exception)} with request body.
+
+        * `conn` - see `#{unquote(method)}/1`
+        * `normal_statuses` - the specified status which not raise exception, for example: [200, 201]
+
+        Returns `%Maxwell.Conn{}` or raise `%MaxWell.Error{}`.
+
+        ## Example
+        """
+        def unquote(method_exception)(conn, normal_statuses) when is_list(normal_statuses) do
+          case unquote(method)(conn) do
+            {:ok, %Maxwell.Conn{status: status} = new_conn} ->
+              unless status in normal_statuses do
+                raise Maxwell.Error, {__MODULE__, :response_status_not_match, new_conn}
+              end
+              new_conn;
+            {:error, reason, new_conn}  ->
+              raise Maxwell.Error, {__MODULE__, reason, new_conn}
           end
         end
       end
