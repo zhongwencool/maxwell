@@ -38,19 +38,19 @@ if Code.ensure_loaded?(:ibrowse) do
     end
 
     ## todo support multipart
-    def need_multipart_encode(headers, {:multipart, multipart}) do
-      boundary = Maxwell.Multipart.new_boundary
-      body =
-    {fn(true) ->
-      {body, _size} = Maxwell.Multipart.encode(boundary, multipart)
-      {:ok, body, false}
-      (false) -> :eof
-    end, true}
-      len = Maxwell.Multipart.len_mp_stream(boundary, multipart)
-      headers = [{'Content-Type', "multipart/form-data; boundary=#{boundary}"}, {'Content-Length', len}|headers]
-      {headers, body}
-    end
-    def need_multipart_encode(headers, body), do: {headers, body || []}
+    # def need_multipart_encode(headers, {:multipart, multipart}) do
+    #  boundary = Maxwell.Multipart.new_boundary
+    #  body =
+    # {fn(true) ->
+    #  {body, _size} = Maxwell.Multipart.encode(boundary, multipart)
+    #  {:ok, body, false}
+    #  (false) -> :eof
+    # end, true}
+    #  len = Maxwell.Multipart.len_mp_stream(boundary, multipart)
+    #  headers = [{'Content-Type', "multipart/form-data; boundary=#{boundary}"}, {'Content-Length', len}|headers]
+    #  {headers, body}
+    # end
+    #def need_multipart_encode(headers, body), do: {headers, body || []}
 
   end
 

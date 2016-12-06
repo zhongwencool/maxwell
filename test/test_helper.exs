@@ -1,5 +1,6 @@
 
 defmodule Maxwell.TestHelper do
+  
   def request(mid, env, opts) do
     mid.request(env, opts)
   end

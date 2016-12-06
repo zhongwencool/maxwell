@@ -3,19 +3,20 @@ defmodule HeaderTest do
   import Maxwell.TestHelper
 
   alias Maxwell.Conn
-  test "Base.Middleware.Headers" do
-    env =
+  test "Base Middleware Headers" do
+    conn =
       request(Maxwell.Middleware.Headers,
         %Conn{req_headers: %{}},
         %{"Content-Type" => "text/plain"})
-    assert env.req_headers == %{"Content-Type" => "text/plain"}
+    assert conn.req_headers == %{"Content-Type" => "text/plain"}
   end
 
-  test "Merge.Middleware.Headers" do
-    env = request(Maxwell.Middleware.Headers,
+  test "Replace Middleware Headers" do
+    conn = request(Maxwell.Middleware.Headers,
       %{req_headers: %{"Content-Type" => "application/json"}},
       %{"Content-Type" => "text/plain"})
-    assert env.req_headers == %{"Content-Type" => "application/json"}
+    assert conn.req_headers == %{"Content-Type" => "application/json"}
   end
 
 end
+

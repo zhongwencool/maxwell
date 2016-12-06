@@ -1,12 +1,18 @@
 defmodule MaxwellAdapterTest do
   use ExUnit.Case
 
+  alias Maxwell.Conn
+  import Maxwell.Conn
+
   defmodule ModuleAdapter do
-    def call(conn) do
+    def call(conn = %Conn{status: nil}) do
       {:ok, %{conn|status: 200,
               resp_headers: %{"Content-Type" => "text/plain"},
               resp_body: "testbody",
               state: :sent}}
+    end
+    def call(conn) do
+      {:ok, %{conn| status: 400}}
     end
   end
 
@@ -15,22 +21,26 @@ defmodule MaxwellAdapterTest do
     adapter ModuleAdapter
   end
 
-  alias Maxwell.Conn
   test "return :status 200" do
-    {:ok, result} = Client.get()
+    {:ok, result} = Client.get
     assert Conn.get_status(result) == 200
+  end
+
+  test "return :status 400" do
+    assert_raise(Maxwell.Error, "url: \nmethod: get\nreason: :response_status_not_match\nmodule: Elixir.MaxwellAdapterTest.Client\n",
+      fn() -> %Conn{status: 100} |> Client.get! end)
   end
 
   test "return resp content-type header" do
     {:ok, conn} = Client.get()
-    assert Conn.get_resp_header(conn) == %{"Content-Type" => "text/plain"}
-    assert Conn.get_resp_header(conn, "Content-Type") == "text/plain"
+    assert get_resp_header(conn) == %{"Content-Type" => "text/plain"}
+    assert get_resp_header(conn, "Content-Type") == "text/plain"
   end
 
   test "return resp_body" do
     {:ok, conn} = Client.get
-    assert Conn.get_resp_body(conn) == "testbody"
-    assert Conn.get_resp_body(conn, &String.length/1) == 8
+    assert get_resp_body(conn) == "testbody"
+    assert get_resp_body(conn, &String.length/1) == 8
   end
 
   test "http method" do
@@ -69,15 +79,15 @@ defmodule MaxwellAdapterTest do
   end
 
   test "path + query" do
-   conn =
-      Conn.put_url("http://example.com")
-      |> Conn.put_path("/foo")
-      |> Conn.put_query_string(%{a: 1, b: "foo"})
+    conn =
+      put_url("http://example.com")
+      |> put_path("/foo")
+      |> put_query_string(%{a: 1, b: "foo"})
       |> Client.get!
-   assert conn.url == "http://example.com"
-   assert conn.path == "/foo"
-   assert conn.query_string == %{a: 1, b: "foo"}
-   assert Conn.get_status(conn) == 200
+    assert conn.url == "http://example.com"
+    assert conn.path == "/foo"
+    assert conn.query_string == %{a: 1, b: "foo"}
+    assert Conn.get_status(conn) == 200
   end
 end
 

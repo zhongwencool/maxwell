@@ -7,16 +7,19 @@ defmodule JsonTest do
       case conn.path do
         "/decode" ->
           {:ok,
-            %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: "{\"value\": 123}"}}
+           %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: "{\"value\": 123}"}}
+        "/decode_error" ->
+          {:ok,
+           %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: "\"123"}}
         "/encode" ->
           {:ok,
-            %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: conn.req_body |> String.replace("foo", "baz")}}
+           %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: conn.req_body |> String.replace("foo", "baz")}}
         "/empty" ->
           {:ok,
-            %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: nil}}
+           %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: nil}}
         "/invalid-content-type" ->
           {:ok,
-            %{conn| status: 200, resp_headers: %{"Content-Type" => "text/plain"}, resp_body: "hello"}}
+           %{conn| status: 200, resp_headers: %{"Content-Type" => "text/plain"}, resp_body: "hello"}}
         "/use-defined-content-type" ->
           {:ok,
            %{conn| status: 200, resp_headers: %{"Content-Type" => "text/html"}, resp_body: "{\"value\": 124}"}};
@@ -35,7 +38,6 @@ defmodule JsonTest do
 
     middleware Maxwell.Middleware.Json, [encode_func: &Poison.encode/1, decode_func: &Poison.decode/1,
                                          decode_content_types: ["text/html"], encode_content_type: "application/json"]
-    middleware Maxwell.Middleware.Logger
     middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
 
     adapter ModuleAdapter
@@ -44,6 +46,15 @@ defmodule JsonTest do
   alias Maxwell.Conn
   test "decode JSON body" do
     assert Conn.put_path("/decode") |> Client.get!|> Conn.get_resp_body == %{"value" => 123}
+  end
+
+  test "decode error JSON body" do
+    {:error, {:decode_json_error, :invalid}, conn} = Conn.put_path("/decode_error") |> Client.get
+    assert conn == %Conn{method: :get, opts: [connect_timeout: 3000],
+                         path: "/decode_error", query_string: %{},
+                         req_body: nil, req_headers: %{},
+                         resp_body: "\"123", resp_headers: %{"Content-Type" => "application/json"},
+                         state: :sent, status: 200, url: ""}
   end
 
   test "do not decode empty body" do
@@ -59,8 +70,8 @@ defmodule JsonTest do
       "/encode"
       |> Conn.put_path
       |> Conn.put_req_body(%{"foo" => "bar"})
-      |> Client.post!
-      |> Conn.get_resp_body
+    |> Client.post!
+    |> Conn.get_resp_body
     assert body == %{"baz" => "bar"}
   end
 
@@ -69,8 +80,8 @@ defmodule JsonTest do
       "/use-defined-content-type"
       |> Conn.put_path
       |> Conn.put_req_body(%{"foo" => "bar"})
-      |> Client.post!
-      |> Conn.get_resp_body
+    |> Client.post!
+    |> Conn.get_resp_body
     assert body == %{"value" => 124}
   end
 
@@ -79,7 +90,7 @@ defmodule JsonTest do
       "/not_found_404"
       |> Conn.put_path
       |> Conn.put_req_body(%{"foo" => "bar"})
-      |> Client.post
+    |> Client.post
     assert Conn.get_status(conn) == 404
   end
 
@@ -88,7 +99,7 @@ defmodule JsonTest do
       "/redirection_301"
       |> Conn.put_path
       |> Conn.put_req_body(%{"foo" => "bar"})
-      |> Client.post
+    |> Client.post
 
     assert Conn.get_status(conn) == 301
   end
@@ -98,7 +109,7 @@ defmodule JsonTest do
       "/error"
       |> Conn.put_path
       |> Conn.put_req_body(%{"foo" => "bar"})
-      |> Client.post
+    |> Client.post
     assert result == {:error, "hahahaha"}
   end
 end

@@ -67,7 +67,7 @@ defmodule Maxwell.Conn do
   alias Maxwell.Conn
 
   defmodule AlreadySentError do
-    defexception message: "the response was already sent"
+    defexception message: "the request was already sent"
 
     @moduledoc """
     Error raised when trying to modify or send an already sent response
