@@ -212,25 +212,9 @@ defmodule Maxwell.Builder do
       unquote(Maxwell.Builder.Until.default_adapter).call(unquote(env))
     end
   end
-
-  defp quote_adapter_call({:fn, _, _} = adapter, env) do
-    quote do
-      unquote(adapter).(unquote(env))
-    end
-  end
-
   defp quote_adapter_call(mod, env) when is_atom(mod) do
-    case Atom.to_char_list(mod) do
-      ~c"Elixir." ++ _ ->
-        # delegate to an elixir module
-        quote do
-          unquote(mod).call(unquote(env))
-        end
-      _ ->
-        # delegate to a local call
-        quote do
-          unquote(mod)(unquote(env))
-        end
+    quote do
+      unquote(mod).call(unquote(env))
     end
   end
 

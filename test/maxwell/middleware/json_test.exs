@@ -1,39 +1,44 @@
 defmodule JsonTest do
   use ExUnit.Case
 
-  defmodule Client do
-    use Maxwell.Builder
-
-    middleware Maxwell.Middleware.Json, [encode_func: &Poison.encode/1, decode_func: &Poison.decode/1, decode_content_types: ["text/html"], encode_content_type: "application/json"]
-    middleware Maxwell.Middleware.Logger
-    middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
-
-    adapter fn (env) ->
-      env = %{env|state: :sent}
-      case env.path do
+  defmodule ModuleAdapter do
+    def call(conn) do
+      conn = %{conn|state: :sent}
+      case conn.path do
         "/decode" ->
           {:ok,
-            %{env| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: "{\"value\": 123}"}}
+            %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: "{\"value\": 123}"}}
         "/encode" ->
           {:ok,
-            %{env| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: env.req_body |> String.replace("foo", "baz")}}
+            %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: conn.req_body |> String.replace("foo", "baz")}}
         "/empty" ->
           {:ok,
-            %{env| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: nil}}
+            %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: nil}}
         "/invalid-content-type" ->
           {:ok,
-            %{env| status: 200, resp_headers: %{"Content-Type" => "text/plain"}, resp_body: "hello"}}
+            %{conn| status: 200, resp_headers: %{"Content-Type" => "text/plain"}, resp_body: "hello"}}
         "/use-defined-content-type" ->
           {:ok,
-           %{env| status: 200, resp_headers: %{"Content-Type" => "text/html"}, resp_body: "{\"value\": 124}"}};
+           %{conn| status: 200, resp_headers: %{"Content-Type" => "text/html"}, resp_body: "{\"value\": 124}"}};
         "/not_found_404" ->
-          {:ok, %{env|status: 404, resp_body: "404 Not Found"}};
+          {:ok, %{conn|status: 404, resp_body: "404 Not Found"}};
         "/redirection_301" ->
-          {:ok, %{env|status: 301, resp_body: "301 Moved Permanently"}};
+          {:ok, %{conn|status: 301, resp_body: "301 Moved Permanently"}};
         "/error" ->
           {:error, "hahahaha"}
       end
     end
+  end
+
+  defmodule Client do
+    use Maxwell.Builder
+
+    middleware Maxwell.Middleware.Json, [encode_func: &Poison.encode/1, decode_func: &Poison.decode/1,
+                                         decode_content_types: ["text/html"], encode_content_type: "application/json"]
+    middleware Maxwell.Middleware.Logger
+    middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
+
+    adapter ModuleAdapter
   end
 
   alias Maxwell.Conn
@@ -98,6 +103,15 @@ defmodule JsonTest do
   end
 end
 
+defmodule ModuleAdapter2 do
+  def call(conn) do
+    {:ok, %{conn|status: 200,
+            state: :sent,
+            resp_headers: %{"Content-Type" => "text/javascript"},
+            resp_body: "{\"value\": 124}"}}
+  end
+end
+
 defmodule DecodeJsonTest do
   use ExUnit.Case
 
@@ -107,10 +121,7 @@ defmodule DecodeJsonTest do
     middleware Maxwell.Middleware.EncodeJson, [encode_content_type: "text/javascript"]
     middleware Maxwell.Middleware.DecodeJson
 
-    adapter fn (env) -> {:ok, %{env|status: 200,
-                                state: :sent,
-                                resp_headers: %{"Content-Type" => "text/javascript"},
-                                resp_body: "{\"value\": 124}"}} end
+    adapter ModuleAdapter2
 
   end
 
