@@ -1,5 +1,7 @@
 defmodule Maxwell.Builder.Adapter do
   @moduledoc """
+  Adapter macro.
+  ## Example
   ```
   # module
   @adapter Adapter.Module

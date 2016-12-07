@@ -24,7 +24,7 @@ defmodule MiddlewareTest do
     adapter Adapter
   end
 
-  alias Maxwell.Conn
+  import Maxwell.Conn
 
   test "make use of base url" do
     assert Client.get!().url == "http://example.com"
@@ -35,18 +35,17 @@ defmodule MiddlewareTest do
   end
 
   test "make use of headers" do
-    headers = Client.get!|> Conn.get_resp_header
-    assert headers == %{"Content-Type" => "application/json"}
+    assert Client.get!|> get_resp_header == %{"Content-Type" => "application/json"}
+    assert Client.get!|> get_resp_header("Content-Type") == "application/json"
   end
 
   test "make use of endeodejson" do
-    body = %{"key2" => 101, "key1" => 201} |> Conn.put_req_body |> Client.post! |> Conn.get_resp_body
+    body = %{"key2" => 101, "key1" => 201} |> put_req_body |> Client.post! |> get_resp_body
     assert true == Map.equal?(body, %{"key2" => 101, "key1" => 201})
   end
 
   test "make use of deodejson" do
-    body = Client.post! |> Conn.get_resp_body
-    assert body == %{"key2" => 2, "key1" => 1}
+    assert Client.post! |> get_resp_body == %{"key2" => 2, "key1" => 1}
   end
 end
 

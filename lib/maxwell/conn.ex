@@ -3,25 +3,28 @@ defmodule Maxwell.Conn do
   The Maxwell connection.
   This module defines a `Maxwell.Conn` struct and the main functions
   for working with Maxwell connections.
+
   ## Request fields
   These fields contain request information:
-      * `url` - the requested url as a binary, example: `"www.example.com:8080/path/?foo=bar"`.
-      * `method` - the request method as a atom, example: `GET`.
-      * `req_headers` - the request headers as a list, example: `[{"content-type", "text/plain"}]`.
-      * `req_body` - the request body, by default is an empty string. It is set
-         to nil after the request is set.
+   * `url` - the requested url as a binary, example: `"www.example.com:8080/path/?foo=bar"`.
+   * `method` - the request method as a atom, example: `GET`.
+   * `req_headers` - the request headers as a list, example: `[{"content-type", "text/plain"}]`.
+   * `req_body` - the request body, by default is an empty string. It is set
+      to nil after the request is set.
+
   ## Response fields
   These fields contain response information:
-      * `status` - the response status
-      * `resp_headers` - the response headers as a list of tuples.
-      * `resp_body` - the response body (todo desc).
+    * `status` - the response status
+    * `resp_headers` - the response headers as a list of tuples.
+    * `resp_body` - the response body (todo desc).
+
   ## Connection fields
-      * `state` - the connection state
-      * `mode`  - the connection mode
+    * `state` - the connection state
+    * `mode`  - the connection mode
   The connection state is used to track the connection lifecycle. It starts
   as `:unsent` but is changed to `:sending`, Its final result is `:sent` or `:error`.
   The connection mode is used to guide adapter how to request,
-  `:direct`, `:stream`. default is ':direct'.
+  `:direct`, `:stream`. default is `:direct`.
 
   ## Protocols
   `Maxwell.Conn` implements both the Collectable and Inspect protocols
@@ -70,7 +73,7 @@ defmodule Maxwell.Conn do
     defexception message: "the request was already sent"
 
     @moduledoc """
-    Error raised when trying to modify or send an already sent response
+    Error raised when trying to modify or send an already sent request
     """
   end
   defmodule NotSentError do
@@ -82,26 +85,31 @@ defmodule Maxwell.Conn do
   end
 
   @doc """
-  Replace `url` in `conn.url`;
-  * `conn` - `%Conn{}`
-  * `url` - url string, for example `"http://example.com"`
+  Create a `%Maxwell.Conn{}`
+  * `url` - the base url.
   ## Examples
-  ```ex
-  put_url("http://example.com") # %Conn{url: "http://example.com"}
+
+  ```
+  # %Maxwell.Conn{}
+  conn = new()
+  # %Maxwell.Conn{url = "http://example.com"}
+  conn = new("http://example.com")
   ```
   """
-  def put_url(conn \\ %Conn{}, path)
-  def put_url(conn = %Conn{state: :unsent}, url), do: %{conn| url: url}
-  def put_url(_conn, _path), do: raise AlreadySentError
+  def new(url \\ ""), do: %Maxwell.Conn{url: url}
 
   @doc """
   Replace `path` in `conn.path`;
-    * `conn` - `%Conn{}`
     * `path` - path string, for example `"/path/to/home"`
+    * `conn` - `%Conn{}`
   ## Examples
   ```ex
   @middleware Maxwell.Middleware.BaseUrl "http://example.com"
-  put_path("delete") # %Conn{path: "delete", url: "http://example.com"}
+
+   #%Conn{path: "delete", url: "http://example.com"}
+  put_path("delete")
+   #or
+  new() |> put_path("delete")
   ```
   """
   def put_path(conn \\ %Conn{}, path)
@@ -111,8 +119,7 @@ defmodule Maxwell.Conn do
   @doc """
   Add query string to `conn.query_string`
     * `conn` - `%Conn{}`
-    * `query_key_or_query_map` - as map, for example `%{foo => bar}`;
-                               - as key, for example `foo`.
+    * `query_key_or_query_map` - as map, for example `%{foo => bar}`,- as key, for example `foo`.
     * `value` - only valid when query_key_or_query_map as key.
 
   ## Examples
@@ -185,7 +192,7 @@ defmodule Maxwell.Conn do
   def put_req_body(_conn, _req_body), do: raise AlreadySentError
 
   @doc """
-  Get response status
+  Get response status, raise `Maxwell.Conn.NotSentError` when request is unsent.
   * `conn` - `%Conn{}`
 
   ## Examples
@@ -198,8 +205,8 @@ defmodule Maxwell.Conn do
   def get_status(_conn), do: raise NotSentError
 
   @doc """
-  * `get_resp_header/1` - get all response headers, return keyword list
-  * `get_resp_header/2` - get response header by key
+  * `get_resp_header/1` - get all response headers, return `Map.t`.
+  * `get_resp_header/2` - get response header by key, return value.
 
   * `conn` - `%Conn{}`
 
@@ -208,7 +215,7 @@ defmodule Maxwell.Conn do
   # "xyz"
   %Conn{resp_headers: %{"cookie" => "xyz"}} |> get_resp_header("cookie")
   # %{"cookie" => "xyz"}
-  %Conn{resp_headers: %{"cookie" => "xyz"} |> get_resp_header()
+  %Conn{resp_headers: %{"cookie" => "xyz"} |> get_resp_header
   ```
   """
   def get_resp_header(conn, key \\ nil)
@@ -218,7 +225,7 @@ defmodule Maxwell.Conn do
 
   @doc """
   * `get_resp_body/1` - get all response body.
-  * `get_resp_body/2` - get response header by key or func.
+  * `get_resp_body/2` - get response header by key or fn/1.
 
   * `conn` - `%Conn{}`
 
@@ -228,11 +235,12 @@ defmodule Maxwell.Conn do
   %Conn{resp_body: "best http client" |> get_resp_body
   # "xyz"
   %Conn{resp_body: %{"name" => "xyz"}} |> get_resp_body("name")
-  #
+
   func = fn(x) ->
        [key, value] = String.split(x, ":")
        value
   end
+  # "xyz"
   %Conn{resp_body: "name:xyz" |> get_resp_body(func)
   ```
   """

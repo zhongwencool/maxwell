@@ -1,11 +1,12 @@
 defmodule Maxwell.Middleware.BaseUrl do
   @moduledoc  """
+  ## Example
   ```ex
   #Client.ex
   use Maxwell.Builder ~(get)a
   @middleware Maxwell.Middleware.BaseUrl "http{s}://example.com"
 
-  def request do
+  def get_home_page do
     # request http{s}://example.com"
     Client.get!
   end
@@ -17,14 +18,14 @@ defmodule Maxwell.Middleware.BaseUrl do
 
   def request_other() do
     # http{s}://other.com/other_path"
-    url("http{s}://other.com/other_path") |> Client.get!
+    "http{s}://other.com/other_path" |> new |> Client.get!
   end
   ```
   Add query to url
 
   ```ex
   def request(url, query)when is_map(query) do
-    url(url) |> put_query_string(query) |> Client.get!
+    url |> new |> put_query_string(query) |> Client.get!
   end
   ```
   """

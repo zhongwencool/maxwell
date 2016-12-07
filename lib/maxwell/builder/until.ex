@@ -19,6 +19,7 @@ defmodule Maxwell.Builder.Until do
   Serialize http method to atom lists
     * `methods` - http methods list, for example: ~w(get), [:get], ["get"]
     * `default_methods` - all http method lists.
+    *  raise ArgumentError when method is not atom list, string list or ~w(get put).
   ## Example
   ```ex
     [:get, :head, :delete, :trace, :options, :post, :put, :patch]
@@ -37,12 +38,14 @@ defmodule Maxwell.Builder.Until do
   end
 
   @doc """
-  Make sure all `methods` in `allow_methods`.
+  Make sure all `methods` in `allow_methods`,
+  otherwise raise ArgumentError
+
   ## Example
-    ```ex
-    iex> allow_methods?([:Get], [:post, :head, :get])
-    ** (ArgumentError) http methods don't support Get
-    ```
+  ```
+     iex> allow_methods?([:Get], [:post, :head, :get])
+     ** (ArgumentError) http methods don't support Get
+  ```
   """
   def allow_methods?([], _allow_methods), do: true
   def allow_methods?([method|methods], allow_methods) do

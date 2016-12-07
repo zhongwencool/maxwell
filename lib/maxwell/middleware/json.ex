@@ -7,6 +7,9 @@ defmodule Maxwell.Middleware.Json do
   It will auto add `%{'Content-Type': 'application/json'}` to request's headers
 
   Default json_lib is Poison
+
+  ## Example
+
   ```ex
   # Client.ex
   use Maxwell.Builder ~(get)a
@@ -59,6 +62,9 @@ defmodule Maxwell.Middleware.EncodeJson do
   It will auto add `%{'Content-Type': 'application/json'}` to request's headers
 
   Default json_lib is Poison
+
+  ## Example
+
   ```ex
   # Client.ex
   use Maxwell.Builder ~(get)a
@@ -104,13 +110,16 @@ end
 
 defmodule Maxwell.Middleware.DecodeJson do
   @moduledoc  """
-  Decode reponse's body to json when
+  Decode response's body to json when
 
   1. Reponse header contain `{'Content-Type', "application/json"}` and body is binary
 
   2. Reponse is list
 
   Default json_lib is Poison
+
+  ## Example
+
   ```ex
   # Client.ex
   use Maxwell.Builder ~(get)a
@@ -164,3 +173,4 @@ defmodule Maxwell.Middleware.DecodeJson do
   end
 
 end
+

@@ -4,11 +4,11 @@ defmodule Maxwell.Builder.Middleware do
   """
 
   @doc """
-   ```
-   * `middlewares` - middlewares module, for example: Maxwell.Middleware.Json
-   * `opts` - options setting in compile time, default is [], for example: [encode_func: &Poison.encode/1]
+   * `middlewares` - middlewares module, for example: `Maxwell.Middleware.Json`
+   * `opts` - options setting in compile time, default is `[]`, for example: `[encode_func: &Poison.encode/1]`
    ## Example
-    @middleware Middleware.Module, opts\\[]
+   ```
+      @middleware Middleware.Module, opts\\[]
    ```
   """
   defmacro middleware(middleware, opts\\[]) do

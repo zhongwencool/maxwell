@@ -6,11 +6,9 @@ defmodule ConnTest do
   alias Maxwell.Conn.AlreadySentError
   alias Maxwell.Conn.NotSentError
 
-  test "put_url/2 test" do
-    assert put_url(%Conn{state: :unsent}, "http://example.com") == %Conn{state: :unsent, url: "http://example.com"}
-    assert_raise AlreadySentError, "the request was already sent", fn ->
-      put_url(%Conn{state: :sent}, "http://example.com")
-    end
+  test "new/0 new/1 test" do
+    assert new() == %Conn{}
+    assert new("http://example.com") == %Conn{url: "http://example.com"}
   end
 
   test "put_path/2 test" do

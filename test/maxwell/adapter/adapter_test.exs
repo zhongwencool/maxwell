@@ -81,7 +81,7 @@ defmodule MaxwellAdapterTest do
   test "path + query" do
     conn =
       "http://example.com"
-      |> put_url
+      |> new
       |> put_path("/foo")
       |> put_query_string(%{a: 1, b: "foo"})
       |> Client.get!

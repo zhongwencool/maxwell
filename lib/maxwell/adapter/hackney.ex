@@ -1,7 +1,8 @@
 if Code.ensure_loaded?(:hackney) do
   defmodule Maxwell.Adapter.Hackney do
+    @behaviour Maxwell.Adapter
     @moduledoc  """
-    [hackney](https://github.com/benoitc/hackney) adapter
+    [`hackney`](https://github.com/benoitc/hackney) adapter
     """
 
     @doc """

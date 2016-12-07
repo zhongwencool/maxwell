@@ -1,7 +1,8 @@
 if Code.ensure_loaded?(:ibrowse) do
   defmodule Maxwell.Adapter.Ibrowse do
+    @behaviour Maxwell.Adapter
     @moduledoc  """
-    [ibrowse](https://github.com/cmullaparthi/ibrowse) adapter
+    [`ibrowse`](https://github.com/cmullaparthi/ibrowse) adapter
     """
 
     @doc """
@@ -43,7 +44,7 @@ if Code.ensure_loaded?(:ibrowse) do
     #  body =
     # {fn(true) ->
     #  {body, _size} = Maxwell.Multipart.encode(boundary, multipart)
-    #  {:ok, body, false}
+      #  {:ok, body, false}
     #  (false) -> :eof
     # end, true}
     #  len = Maxwell.Multipart.len_mp_stream(boundary, multipart)

@@ -1,7 +1,8 @@
 defmodule Maxwell.Middleware.Opts do
   @moduledoc  """
-  Passthrough adapter's options (keyword list) to adapter's options
+  Merge adapter's options (keyword list) to adapter's options
 
+  ## Example
   ```ex
   # Client.ex
   use Maxwell.Builder ~(get)a
@@ -9,7 +10,7 @@ defmodule Maxwell.Middleware.Opts do
 
   def request do
     # opts is [connect_timeout: 5000, cookie: "xxxxcookieyyyy"]
-    opts([cookie: "xxxxcookieyyyy"])|> get!
+    put_option(cookie: "xxxxcookieyyyy")|> get!
   end
   ```
   """

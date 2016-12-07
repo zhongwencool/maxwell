@@ -1,6 +1,7 @@
 defmodule LoggerTest do
   use ExUnit.Case
   import Maxwell.MiddlewareTestHelper
+  import ExUnit.CaptureLog
   alias Maxwell.Conn
 
   test "Middleware Logger Request" do
@@ -15,10 +16,18 @@ defmodule LoggerTest do
 
   test "Logger Call" do
     conn = %Conn{method: :get, url: "http://example.com", status: 200}
-    Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:error, "bad request"} end, :info)
-    Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:ok, %{conn| status: 301}} end, :info)
-    Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:ok, %{conn| status: 404}} end, :info)
-    Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:ok, %{conn| status: 500}} end, :info)
+    outputstr = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:error, "bad request"} end, :info) end
+    output301 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:ok, %{conn| status: 301}} end, :info) end
+    output404 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:ok, %{conn| status: 404}} end, :info) end
+    output500 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:ok, %{conn| status: 500}} end, :info) end
+    assert outputstr =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  GET http://example.com>> \e\[31mERROR: <<\"bad request\">>\n\e\[0m"
+
+    assert output301 =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[33m301\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, mode: :direct, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 301, url: \"http://example.com\"\}\n\e\[0m"
+
+    assert output404 =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[31m404\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, mode: :direct, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 404, url: \"http://example.com\"\}\n\e\[0m"
+
+    assert output500 =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[31m500\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, mode: :direct, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 500, url: \"http://example.com\"\}\n\e\[0m"
+
   end
 
   test "Middleware Logger with invalid log_level" do

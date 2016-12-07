@@ -18,7 +18,7 @@ defmodule OptsTest do
     assert conn.opts == [timeout: 1000]
   end
 
-  test "Add Middleware Opts" do
+  test "Add and merge Middleware Opts" do
     conn = request(Maxwell.Middleware.Opts,
       %Conn{opts: [timeout: 1000]},
       [timeout: 2000, stream_to: :pid])

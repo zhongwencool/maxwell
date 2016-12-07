@@ -3,12 +3,12 @@ defmodule BaseUrlTest do
   import Maxwell.MiddlewareTestHelper
   alias Maxwell.Conn
   test "Base Middleware.BaseUrl" do
-    env = request(Maxwell.Middleware.BaseUrl, %Conn{url: "/path"}, "http://example.com")
-    assert env.url == "http://example.com"
+    conn = request(Maxwell.Middleware.BaseUrl, %Conn{url: "/path"}, "http://example.com")
+    assert conn.url == "http://example.com"
   end
   test "Replace http Middleware.BaseUrl" do
-    env = request(Maxwell.Middleware.BaseUrl, %{url: "http://see_me.com/path"}, "http://can_not_seen.com/")
-    assert env.url == "http://see_me.com/path"
+    conn = request(Maxwell.Middleware.BaseUrl, %{url: "http://see_me.com/path"}, "http://can_not_seen.com/")
+    assert conn.url == "http://see_me.com/path"
   end
 
 end

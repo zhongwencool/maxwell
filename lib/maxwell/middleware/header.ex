@@ -2,6 +2,7 @@ defmodule Maxwell.Middleware.Headers do
   @moduledoc  """
   Add fixed headers to request's headers
 
+  ## Example
   ```ex
   # Client.ex
   use Maxwell.Builder ~(get)a
@@ -9,7 +10,7 @@ defmodule Maxwell.Middleware.Headers do
 
   def request do
     # headers is merge to %{'User-Agent' => "zhongwencool", 'username' => "zhongwencool"}
-    [header: %{'username' => "zhongwencool"}] |> get!
+    %{'username' => "zhongwencool"} |> put_req_header |> get!
   end
   ```
   """

@@ -1,46 +1,25 @@
 defmodule Maxwell.Builder do
   @moduledoc """
-  Conveniences for building maxwell
-  This module can be `use`-d into a module in order to build
-  middleware pipeline:
-      defmodule Client do
-        use Maxwell.Builder, ~w(get post put)a
-        adapter Maxwell.Adapter.Ibrowse
+  Conveniences for building maxwell.
 
-        middleware Maxwell.Middleware.BaseUrl,   "http://example.com"
-        middleware Maxwell.Middleware.Opts,      [connect_timeout: 1000]
-        middleware Maxwell.Middleware.Headers,   %{'User-Agent' => "zhongwencool"}
-        middleware Maxwell.Middleware.Json
-
-        # get home page
-        # curl --header "User-Agent: zhongwencool" http://example.com
-        def home, do: get!
-
-        # get help info with path
-        # curl --header "User-Agent: zhongwencool" http://example.com/help
-        def get_help do
-          put_path("/help) |> get!
-        end
-
-        # get user info with query
-        # curl --header "User-Agent: zhongwencool" http://example.com/user?name=username
-        def get_user_info(username) do
-          put_path("/user") |> query(%{name: username}) |> get!
-        end
-
-        # post user login with json
-        # curl -H "Content-Type: application/json" -X POST -d '{"username":"xyz","password":"xyz"}' http://example.com/login
-        def login(username, password) do
-          url("/login") |> body(%{username: username, password: password}) |> post!
-        end
+  This module can be `use`-d into a module in order to build.
 
   `Maxwell.Builder` also imports the `Maxwell.Conn` module, making functions like
-  `put_req_header/3` available.
+  `get_*`/`put_*` available.
 
   ## Options
   When used, the following options are accepted by `Maxwell.Builder`:
     * `~w(get)a` - only create `get/1` and `get!/1` functions,
     default is `~w(get head delete trace options post put patch)a`
+
+  ## Example
+
+  ```ex
+     use Maxwell.Builder
+     use Maxwell.Builder, ~w(get put)a
+     use Maxwell.Builder, ["get", "put"]
+     use Maxwell.Builder, [:get, :put]
+  ```
 
   """
   @http_methods [:get, :head, :delete, :trace, :options, :post, :put, :patch]
