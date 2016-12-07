@@ -1,6 +1,6 @@
 defmodule BaseUrlTest do
   use ExUnit.Case
-  import Maxwell.TestHelper
+  import Maxwell.MiddlewareTestHelper
   alias Maxwell.Conn
   test "Base Middleware.BaseUrl" do
     env = request(Maxwell.Middleware.BaseUrl, %Conn{url: "/path"}, "http://example.com")

@@ -1,6 +1,6 @@
 defmodule RelsTest do
   use ExUnit.Case
-  import Maxwell.TestHelper
+  import Maxwell.MiddlewareTestHelper
 
   test "Header Without Link Middleware Rels" do
     env =

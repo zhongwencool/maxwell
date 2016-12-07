@@ -4,7 +4,7 @@ defmodule MaxwellAdapterTest do
   alias Maxwell.Conn
   import Maxwell.Conn
 
-  defmodule ModuleAdapter do
+  defmodule TestAdapter do
     def call(conn = %Conn{status: nil}) do
       {:ok, %{conn|status: 200,
               resp_headers: %{"Content-Type" => "text/plain"},
@@ -18,12 +18,12 @@ defmodule MaxwellAdapterTest do
 
   defmodule Client do
     use Maxwell.Builder
-    adapter ModuleAdapter
+    adapter TestAdapter
   end
 
   test "return :status 200" do
     {:ok, result} = Client.get
-    assert Conn.get_status(result) == 200
+    assert result |> Conn.get_status == 200
   end
 
   test "return :status 400" do
@@ -33,14 +33,14 @@ defmodule MaxwellAdapterTest do
 
   test "return resp content-type header" do
     {:ok, conn} = Client.get()
-    assert get_resp_header(conn) == %{"Content-Type" => "text/plain"}
-    assert get_resp_header(conn, "Content-Type") == "text/plain"
+    assert conn |> get_resp_header == %{"Content-Type" => "text/plain"}
+    assert conn |> get_resp_header("Content-Type") == "text/plain"
   end
 
   test "return resp_body" do
     {:ok, conn} = Client.get
-    assert get_resp_body(conn) == "testbody"
-    assert get_resp_body(conn, &String.length/1) == 8
+    assert conn|> get_resp_body == "testbody"
+    assert conn|> get_resp_body(&String.length/1) == 8
   end
 
   test "http method" do
@@ -80,7 +80,8 @@ defmodule MaxwellAdapterTest do
 
   test "path + query" do
     conn =
-      put_url("http://example.com")
+      "http://example.com"
+      |> put_url
       |> put_path("/foo")
       |> put_query_string(%{a: 1, b: "foo"})
       |> Client.get!
@@ -89,5 +90,6 @@ defmodule MaxwellAdapterTest do
     assert conn.query_string == %{a: 1, b: "foo"}
     assert Conn.get_status(conn) == 200
   end
+
 end
 

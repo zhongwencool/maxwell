@@ -3,15 +3,17 @@ defmodule Maxwell.IbrowseTest do
 
   defmodule Client do
     use Maxwell.Builder
+    adapter Maxwell.Adapter.Ibrowse
+
     middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org"
     middleware Maxwell.Middleware.Opts, [connect_timeout: 5000]
     middleware Maxwell.Middleware.Json
 
-    def get_ip() do
+    def get_ip_test() do
       "/ip" |> put_path |> Client.get!
     end
 
-    def encode_decode_json(body) do
+    def encode_decode_json_test(body) do
       "/post"
       |> put_path
       |> put_req_body(body)
@@ -19,7 +21,7 @@ defmodule Maxwell.IbrowseTest do
       |> get_resp_body("json")
     end
 
-    def user_agent(user_agent) do
+    def user_agent_test(user_agent) do
       "/user-agent"
       |> put_path
       |> put_req_header("user-agent", user_agent)
@@ -27,7 +29,7 @@ defmodule Maxwell.IbrowseTest do
       |> get_resp_body("user-agent")
     end
 
-    def put_json(json) do
+    def put_json_test(json) do
       "/put"
       |> put_path
       |> put_req_body(json)
@@ -51,12 +53,11 @@ defmodule Maxwell.IbrowseTest do
   end
 
   test "sync request" do
-    reponse = Client.get_ip
-    assert Maxwell.Conn.get_status(reponse) == 200
+    assert Client.get_ip_test |> Maxwell.Conn.get_status == 200
   end
 
-  test "encode decode json" do
-    result = Client.encode_decode_json(%{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"})
+  test "encode decode json test" do
+    result = %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"} |> Client.encode_decode_json_test
     assert result == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
 
   end
@@ -91,16 +92,16 @@ defmodule Maxwell.IbrowseTest do
 
   # end
 
-  test "user-agent header" do
-    assert Client.user_agent("test") == "test"
+  test "user-agent header test" do
+    assert "test" |> Client.user_agent_test == "test"
   end
 
   test "/put" do
-    assert Client.put_json(%{"key" => "value"}) == "{\"key\":\"value\"}"
+    assert %{"key" => "value"} |> Client.put_json_test == "{\"key\":\"value\"}"
   end
 
   test "/delete" do
-    assert Client.delete_test() == ""
+    assert Client.delete_test == ""
   end
 
 end

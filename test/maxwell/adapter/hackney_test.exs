@@ -1,20 +1,21 @@
 defmodule Maxwell.HackneyTest do
   use ExUnit.Case
+  import Maxwell.Conn
 
   defmodule Client do
     use Maxwell.Builder
-    middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org"
-    middleware Maxwell.Middleware.Opts, [connect_timeout: 6000]
-
-    middleware Maxwell.Middleware.Json
 
     adapter Maxwell.Adapter.Hackney
 
-    def get_ip do
+    middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org"
+    middleware Maxwell.Middleware.Opts, [connect_timeout: 6000]
+    middleware Maxwell.Middleware.Json
+
+    def get_ip_test do
       put_path("/ip")
       |> get!
     end
-    def encode_decode_json(body) do
+    def encode_decode_json_test(body) do
       "/post"
       |> put_path
       |> put_req_body(body)
@@ -22,7 +23,7 @@ defmodule Maxwell.HackneyTest do
       |> get_resp_body("json")
     end
 
-    def user_agent(user_agent) do
+    def user_agent_test(user_agent) do
       "/user-agent"
       |> put_path
       |> put_req_header("user-agent", user_agent)
@@ -30,7 +31,7 @@ defmodule Maxwell.HackneyTest do
       |> get_resp_body("user-agent")
     end
 
-    def put_json(json) do
+    def put_json_test(json) do
       "/put"
       |> put_path
       |> put_req_body(json)
@@ -53,13 +54,12 @@ defmodule Maxwell.HackneyTest do
     :ok
   end
 
-  alias Maxwell.Conn
   test "sync request" do
-    assert Client.get_ip |> Conn.get_status == 200
+    assert Client.get_ip_test |> get_status == 200
   end
 
   test "encode decode json" do
-    res = Client.encode_decode_json(%{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"})
+    res = %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"} |> Client.encode_decode_json_test
     assert res == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
 
   end
@@ -94,30 +94,29 @@ defmodule Maxwell.HackneyTest do
 
   # end
 
-  test "user-agent header" do
-    assert Client.user_agent("test") == "test"
+  test "user-agent header test" do
+    assert "test" |> Client.user_agent_test == "test"
   end
 
   test "/put" do
-    assert Client.put_json(%{"key" => "value"}) == "{\"key\":\"value\"}"
+    assert %{"key" => "value"} |> Client.put_json_test == "{\"key\":\"value\"}"
   end
 
   test "/delete" do
-    assert Client.delete_test() == ""
+    assert Client.delete_test == ""
   end
 
-  test "http url not exist" do
-    {:error, :nxdomain, conn} =
-      "notexist"
-      |> Maxwell.Conn.put_path
-      |> Maxwell.Conn.put_option(:connect_timeout, 10000)
+  test "adapter return error" do
+    {:error, :timeout, conn} =
+      "/delay/9"
+      |> put_path
+      |> put_option(:recv_timeout, 1000)
       |> Client.get
     assert conn.state == :error
   end
 
   test "Head without body(test hackney.ex return {:ok, status, header})" do
-     data = Client.head!
-     assert data.resp_body == ""
+      assert Client.head! |> get_resp_body == ""
   end
 
 end

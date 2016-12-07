@@ -1,6 +1,6 @@
 defmodule HeaderTest do
   use ExUnit.Case
-  import Maxwell.TestHelper
+  import Maxwell.MiddlewareTestHelper
 
   alias Maxwell.Conn
   test "Base Middleware Headers" do

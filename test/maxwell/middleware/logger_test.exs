@@ -1,6 +1,6 @@
 defmodule LoggerTest do
   use ExUnit.Case
-  import Maxwell.TestHelper
+  import Maxwell.MiddlewareTestHelper
   alias Maxwell.Conn
 
   test "Middleware Logger Request" do
