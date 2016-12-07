@@ -27,7 +27,7 @@ defmodule Maxwell.Multipart do
 
   @doc """
   Return a random boundary(binary)
-  ## Example
+  ## Examples
   ```
   # "---------------------------mtynipxrmpegseog"
   boundary = new_boundary()

@@ -1,7 +1,7 @@
 defmodule Maxwell.Error do
   @moduledoc  """
   Exception `%Maxwell.Error{:url, :reason, :message, :status, :conn}`
-  ## Example
+  ## Examples
   ```
   raise Maxwell.Error, {__MODULE__, reason, conn};
   ```

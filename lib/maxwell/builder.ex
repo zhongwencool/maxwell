@@ -12,7 +12,7 @@ defmodule Maxwell.Builder do
     * `~w(get)a` - only create `get/1` and `get!/1` functions,
     default is `~w(get head delete trace options post put patch)a`
 
-  ## Example
+  ## Examples
 
   ```ex
      use Maxwell.Builder
@@ -56,7 +56,7 @@ defmodule Maxwell.Builder do
 
         Returns `%Maxwell.Conn{}` or raise `%MaxWell.Error{}` when status not in [200..299].
 
-        ## Example
+        ## Examples
         """
         def unquote(method_exception)(conn \\ %Maxwell.Conn{})
         def unquote(method_exception)(conn) do
@@ -74,7 +74,7 @@ defmodule Maxwell.Builder do
 
         Returns `%Maxwell.Conn{}` or raise `%MaxWell.Error{}`.
 
-        ## Example
+        ## Examples
         """
         def unquote(method_exception)(conn, normal_statuses)when is_list(normal_statuses) do
           case unquote(method)(conn) do
@@ -110,7 +110,7 @@ defmodule Maxwell.Builder do
           * `conn` - see `#{unquote(method)}/1`
 
           Return `%Maxwell.Conn{}` or raise `%Maxwell.Error{}` when status not in [200.299]
-          ## Example
+          ## Examples
           """
         def unquote(method_exception)(conn \\ %Maxwell.Conn{})
         def unquote(method_exception)(conn) do
@@ -128,7 +128,7 @@ defmodule Maxwell.Builder do
 
         Returns `%Maxwell.Conn{}` or raise `%MaxWell.Error{}`.
 
-        ## Example
+        ## Examples
         """
         def unquote(method_exception)(conn, normal_statuses) when is_list(normal_statuses) do
           case unquote(method)(conn) do

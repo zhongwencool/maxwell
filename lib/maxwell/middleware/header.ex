@@ -2,7 +2,7 @@ defmodule Maxwell.Middleware.Headers do
   @moduledoc  """
   Add fixed headers to request's headers
 
-  ## Example
+  ## Examples
   ```ex
   # Client.ex
   use Maxwell.Builder ~(get)a

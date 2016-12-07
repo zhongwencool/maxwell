@@ -2,7 +2,7 @@ defmodule Maxwell.Middleware.Opts do
   @moduledoc  """
   Merge adapter's options (keyword list) to adapter's options
 
-  ## Example
+  ## Examples
   ```ex
   # Client.ex
   use Maxwell.Builder ~(get)a

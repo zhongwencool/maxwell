@@ -8,7 +8,7 @@ defmodule Maxwell.Middleware.Json do
 
   Default json_lib is Poison
 
-  ## Example
+  ## Examples
 
   ```ex
   # Client.ex
@@ -63,7 +63,7 @@ defmodule Maxwell.Middleware.EncodeJson do
 
   Default json_lib is Poison
 
-  ## Example
+  ## Examples
 
   ```ex
   # Client.ex
@@ -118,7 +118,7 @@ defmodule Maxwell.Middleware.DecodeJson do
 
   Default json_lib is Poison
 
-  ## Example
+  ## Examples
 
   ```ex
   # Client.ex

@@ -5,7 +5,7 @@ defmodule Maxwell.Builder.Until do
 
   @doc """
   Global default adapter.
-  ## Example
+  ## Examples
   ```ex
     config :maxwell,
     default_adapter: Maxwell.Adapter.Hackney
@@ -20,7 +20,7 @@ defmodule Maxwell.Builder.Until do
     * `methods` - http methods list, for example: ~w(get), [:get], ["get"]
     * `default_methods` - all http method lists.
     *  raise ArgumentError when method is not atom list, string list or ~w(get put).
-  ## Example
+  ## Examples
   ```ex
     [:get, :head, :delete, :trace, :options, :post, :put, :patch]
   ```
@@ -38,10 +38,10 @@ defmodule Maxwell.Builder.Until do
   end
 
   @doc """
-  Make sure all `methods` in `allow_methods`,
+  Make sure all `list` in `allow_methods`,
   otherwise raise ArgumentError
 
-  ## Example
+  ## Examples
   ```
      iex> allow_methods?([:Get], [:post, :head, :get])
      ** (ArgumentError) http methods don't support Get

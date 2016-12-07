@@ -2,7 +2,7 @@ defmodule Maxwell.Middleware.Logger do
   @moduledoc  """
   Log the request and response by Logger, default log_level is :info
 
-  ## Example
+  ## Examples
   
   ```ex
   # Client.ex

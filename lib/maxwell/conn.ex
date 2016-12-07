@@ -140,6 +140,8 @@ defmodule Maxwell.Conn do
   Merge http headers.
     * `conn` - `%Conn{}`
     * `req_headers` - query string, for example `%{"content-type" => "text/javascript"}`
+    * `key` - header key
+    * `value` - pair with the header key
 
   ## Examples
   ```ex
@@ -158,8 +160,10 @@ defmodule Maxwell.Conn do
 
   @doc """
   Merge adapter's request options
-  * `conn` - `%Conn{}`
-  * `opts` - request's options, for example `[connect_timeout: 4000]`
+  * `conn` - `%Conn{}`.
+  * `opts` - request's options, for example `[connect_timeout: 4000]`.
+  * `key_or_keyword` - for example: :cookie or [cookie: "xyz"].
+  * `value` - for example: "xyz", only valid when `key_or_keyword` is a key.
 
   ## Examples
   ```ex
@@ -206,7 +210,7 @@ defmodule Maxwell.Conn do
 
   @doc """
   * `get_resp_header/1` - get all response headers, return `Map.t`.
-  * `get_resp_header/2` - get response header by key, return value.
+  * `get_resp_header/2` - get response header by `key`, return value.
 
   * `conn` - `%Conn{}`
 
@@ -225,7 +229,7 @@ defmodule Maxwell.Conn do
 
   @doc """
   * `get_resp_body/1` - get all response body.
-  * `get_resp_body/2` - get response header by key or fn/1.
+  * `get_resp_body/2` - get response header by `key` or `func`(fn/1).
 
   * `conn` - `%Conn{}`
 
@@ -251,6 +255,19 @@ defmodule Maxwell.Conn do
   def get_resp_body(%Conn{resp_body: body}, keys)when is_list(keys), do: get_in(body, keys)
   def get_resp_body(%Conn{resp_body: body}, key), do: body[key]
 
+  @doc """
+    Append path and query string to url,
+    query string encode by `URI.encode_query/1`.
+    * `url`   - `conn.url`
+    * `path`  - `conn.path`
+    * `query` - `conn.query`
+
+   ## Examples
+   ```
+   # http://example.com/home?name=foo
+   iex> append_query_string("http://example.com", "/home", %{"name" => "foo"})
+   ```
+  """
   def append_query_string(url, path, query)when query == %{}, do: url <> path
   def append_query_string(url, path, query) do
     query_string = URI.encode_query(query)

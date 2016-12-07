@@ -1,6 +1,6 @@
 defmodule Maxwell.Middleware.BaseUrl do
   @moduledoc  """
-  ## Example
+  ## Examples
   ```ex
   #Client.ex
   use Maxwell.Builder ~(get)a
