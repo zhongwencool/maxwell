@@ -1,77 +1,57 @@
 if Code.ensure_loaded?(:ibrowse) do
   defmodule Maxwell.Adapter.Ibrowse do
+    @behaviour Maxwell.Adapter
     @moduledoc  """
-    [ibrowse](https://github.com/cmullaparthi/ibrowse) adapter
+    [`ibrowse`](https://github.com/cmullaparthi/ibrowse) adapter
     """
 
     @doc """
-    Receives `%Maxwell.Conn{}`
+    * `conn` - `%Maxwell.Conn{}`
 
-    Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term}` when synchronous request
-
-    Returns `{:ok, ref_integer}` when asynchronous requests(options add [respond_to: target_pid])
-
+    Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term, %Maxwell.Conn{}}`.
     """
-    def call(env) do
-      if target = env.opts[:respond_to] do
-        gatherer = spawn_link fn -> receive_response(env, target, nil, nil, nil) end
-        opts = env.opts |> List.keyreplace(:respond_to, 0, {:stream_to, gatherer})
-        env = %{env |opts: opts}
-      else
-        env
-      end
+    def call(conn) do
+      conn
       |> send_req
-      |> format_response(env)
+      |> format_response(conn)
     end
 
-    defp send_req(%Maxwell.Conn{url: url, headers: headers, method: method, opts: opts, body: body}) do
-      url = url |> to_char_list
-      headers = headers |> Map.to_list
-      {headers, body} = need_multipart_encode(headers, body)
-      :ibrowse.send_req(url, headers, method, body, opts)
+    defp send_req(%Maxwell.Conn{url: url, req_headers: req_headers,
+                                query_string: query_string, path: path,
+                                method: method, opts: opts, req_body: req_body}) do
+      url = url |> Maxwell.Conn.append_query_string(path, query_string) |> to_char_list
+      req_body = req_body || ""
+      req_headers = req_headers |> Map.to_list
+      :ibrowse.send_req(url, req_headers, method, req_body, opts)
     end
 
-    defp receive_response(env, target, status, headers, body) do
-      receive do
-        {:ibrowse_async_headers, _, new_status, new_headers} ->
-          receive_response(env, target, new_status, new_headers, body)
-
-        {:ibrowse_async_response, _, append_body} ->
-          new_body = if body, do: body <> append_body, else: append_body
-          receive_response(env, target, status, headers, new_body)
-
-        {:ibrowse_async_response_end, _} ->
-          response = format_response({:ok, status, headers, body}, env)
-          send(target, {:maxwell_response, response})
-      end
-    end
-
-    defp format_response({:ibrowse_req_id, id}, _env), do: {:ok, id}
-    defp format_response({:ok, status, headers, body}, env) do
+    defp format_response({:ok, status, headers, body}, conn) do
       {status, _} = status |> to_string |> Integer.parse
-      headers     = Enum.into(headers, %{})
-      {:ok, %{env |status:   status,
-              headers:  headers,
-              body:     body}
+      {:ok, %{conn |status:   status,
+              resp_headers:  headers |> :maps.from_list,
+              resp_body:     body,
+              state:         :sent,
+              req_body:      nil}
       }
     end
-    defp format_response({:error, _} = error, _env) do
-      error
+    defp format_response({:error, reason}, conn) do
+      {:error, reason, %{conn | state: :error}}
     end
 
-    defp need_multipart_encode(headers, {:multipart, multipart}) do
-      boundary = Maxwell.Multipart.new_boundary
-      body =
-    {fn(true) ->
-      {body, _size} = Maxwell.Multipart.encode(boundary, multipart)
-      {:ok, body, false}
-      (false) -> :eof
-    end, true}
-      len = Maxwell.Multipart.len_mp_stream(boundary, multipart)
-      headers = [{'Content-Type', "multipart/form-data; boundary=#{boundary}"}, {'Content-Length', len}|headers]
-      {headers, body}
-    end
-    defp need_multipart_encode(headers, body), do: {headers, body || []}
+    ## todo support multipart
+    # def need_multipart_encode(headers, {:multipart, multipart}) do
+    #  boundary = Maxwell.Multipart.new_boundary
+    #  body =
+    # {fn(true) ->
+    #  {body, _size} = Maxwell.Multipart.encode(boundary, multipart)
+      #  {:ok, body, false}
+    #  (false) -> :eof
+    # end, true}
+    #  len = Maxwell.Multipart.len_mp_stream(boundary, multipart)
+    #  headers = [{'Content-Type', "multipart/form-data; boundary=#{boundary}"}, {'Content-Length', len}|headers]
+    #  {headers, body}
+    # end
+    #def need_multipart_encode(headers, body), do: {headers, body || []}
 
   end
 

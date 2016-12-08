@@ -1,55 +1,48 @@
 defmodule Maxwell do
   @moduledoc  """
-  1. Make a direct request
+  The maxwell specification.
+
+  There are two kind of usages: Basic Usage and Advanced Middleware Usage.
+
+  ### Basic Usage
   ```ex
-    Maxwell.Conn.url("http://httpbin.org/ip")|>Maxwell.get!|>(fn(conn) -> conn.body end).()|> Poison.decode!
+    ## Returns Origin IP, for example %{"origin" => "127.0.0.1"}
+    Maxwell.Conn.new
+    |> Maxwell.Conn.put_url("http://httpbin.org/ip")
+    |> Maxwell.get!
+    |> Maxwell.get_resp_body
+    |> Poison.decode!
   ```
-  All helper functions are in `Maxwell.Conn`
-  2. Create API client
+  Find all `get_*&put_*` helper functions by `h Maxwell.Conn.xxx`
 
+  ### Advanced Middleware Usage(Create API Client).
 
-       defmodule Client do
-         use Maxwell.Builder, ~w(get post put)a
-         adapter Maxwell.Adapter.Ibrowse
+         defmodule Client do
+           use Maxwell.Builder, ~w(get)a
+           adapter Maxwell.Adapter.Ibrowse
 
-         middleware Maxwell.Middleware.BaseUrl,   "http://example.com"
-         middleware Maxwell.Middleware.Opts,      [connect_timeout: 1000]
-         middleware Maxwell.Middleware.Headers,   %{'User-Agent' => "zhongwencool"}
-         middleware Maxwell.Middleware.Json
+           middleware Maxwell.Middleware.BaseUrl,   "http://httpbin.org"
+           middleware Maxwell.Middleware.Opts,      [connect_timeout: 1000]
+           middleware Maxwell.Middleware.Headers,   %{'User-Agent' => "zhongwencool"}
+           middleware Maxwell.Middleware.Json
 
-         # get home page
-         # curl --header "User-Agent: zhongwencool" http://example.com
-         def home, do: get!
+           ## Returns origin IP, for example "127.0.0.1"
+           def ip do
+             new()
+             |> put_path("ip")
+             |> get!()
+             |> get_resp_body("origin")
+           end
 
-         # get help info with path
-         # curl --header "User-Agent: zhongwencool" http://example.com/help
-         def get_help do
-           url("/help) |> get!
-         end
+           ## Generates n random bytes of binary data, accepts optional seed integer parameter
+           def get_random_bytes(size) do
+             "/bytes/\#\{size\}"
+             |> put_path
+             |> get!
+             |> get_resp_body(&to_string/1)
+           end
+        end
 
-         # get user info with query
-         # curl --header "User-Agent: zhongwencool" http://example.com/user?name=username
-         def get_user_info(username) do
-           url("/user") |> query(%{name: username}) |> get!
-         end
-
-         # post user login with json
-         # curl -H "Content-Type: application/json" -X POST -d '{"username":"xyz","password":"xyz"}' http://example.com/login
-         def login(username, password) do
-           url("/login") |> body(%{username: username, password: password}) |> post!
-         end
-
-         # upload put multipart form
-         # curl --form "file=@filepath" https://example.com/upload
-         def upload(filepath, username) do
-           url("/upload") |> query(%{username: username}) |> multipart([{:file, filepath}]) |> put!
-         end
-
-         # cover adapter(ibrowse) connect_timeout from 1000 to 6000
-         def delete(username) do
-           url("/delete") |> query(%{username: username}) |> opts([connect_timeout: 6000]) |> delete!
-         end
-       end
   """
   use Maxwell.Builder
 

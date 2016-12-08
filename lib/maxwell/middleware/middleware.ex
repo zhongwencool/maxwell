@@ -19,20 +19,20 @@ defmodule Maxwell.Middleware do
       def init(opts), do: opts
 
       @doc false
-      def call(env, next, opts) do
-        env = request(env, opts)
-        env = next.(env)
-        response(env, opts)
+      def call(conn, next, opts) do
+        conn = request(conn, opts)
+        conn = next.(conn)
+        response(conn, opts)
       end
 
       @doc false
-      def request(env, opts) do
-        env
+      def request(conn, opts) do
+        conn
       end
 
       @doc false
-      def response(env, opts) do
-        env
+      def response(conn, opts) do
+        conn
       end
 
       defoverridable [request: 2, response: 2, call: 3, init: 1] end

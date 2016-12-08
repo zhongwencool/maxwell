@@ -1,79 +1,82 @@
 defmodule Maxwell.Multipart do
-@moduledoc  """
+  @moduledoc  """
   Process mutipart for adapter
-"""
+  """
+  @eof_size 2
   @doc """
-   Receives lists list's member format:
-    1. `{:file, path}`
-    2. `{:file, path, extra_headers}`
-    3. `{:file, path, disposition, extra_headers}`
-    4. `{:mp_mixed, name, mixed_boundary}`
-    5. `{:mp_mixed_eof, mixed_boundary}`
-    6. `{name, bin_data}`
-    7. `{name, bin_data, extra_headers}`
-    8. `{name, bin_data, disposition, extra_headers}`
+  Receives lists list's member format:
+  1. `{:file, path}`
+  2. `{:file, path, extra_headers}`
+  3. `{:file, path, disposition, extra_headers}`
+  4. `{:mp_mixed, name, mixed_boundary}`
+  5. `{:mp_mixed_eof, mixed_boundary}`
+  6. `{name, bin_data}`
+  7. `{name, bin_data, extra_headers}`
+  8. `{name, bin_data, disposition, extra_headers}`
 
   Returns `{body_binary, size}`
 
   """
-  @eof_size 2
-
   def encode(parts), do: encode(new_boundary, parts)
+  @doc """
+  See `encode/1`
+  """
   def encode(boundary, parts)when is_list(parts) do
     encode_form(parts, boundary, "", 0)
   end
 
   @doc """
-   Return a random boundary(binary)
-
-   ```
-     "---------------------------mtynipxrmpegseog"
-   ```
+  Return a random boundary(binary)
+  ## Examples
+  ```
+  # "---------------------------mtynipxrmpegseog"
+  boundary = new_boundary()
+  ```
   """
   def new_boundary, do: "---------------------------" <> unique(16)
 
   @doc """
-   Get the size of a mp stream. Useful to calculate the content-length of a full multipart stream and send it as an identity
+  Get the size of a mp stream. Useful to calculate the content-length of a full multipart stream and send it as an identity
 
-   Receives parameter as `Maxwell.Multipart.encode`
+  Receives parameter as `Maxwell.Multipart.encode`
 
-   Return stream size(integer)
+  Return stream size(integer)
   """
   def len_mp_stream(boundary, parts) do
     size =
       Enum.reduce(parts, 0,
         fn({:file, path}, acc_size) ->
-            {mp_header, len} = mp_file_header(%{path: path}, boundary)
-            acc_size + byte_size(mp_header) + len + @eof_size
+          {mp_header, len} = mp_file_header(%{path: path}, boundary)
+          acc_size + byte_size(mp_header) + len + @eof_size
           ({:file, path, extra_headers}, acc_size) ->
             {mp_header, len} = mp_file_header(%{path: path, extra_headers: extra_headers}, boundary)
-            acc_size + byte_size(mp_header) + len + @eof_size
+          acc_size + byte_size(mp_header) + len + @eof_size
           ({:file, path, disposition, extra_headers}, acc_size) ->
             file = %{path: path, extra_headers: extra_headers, disposition: disposition}
-            {mp_header, len} = mp_file_header(file, boundary)
-            acc_size + byte_size(mp_header) + len + @eof_size
+          {mp_header, len} = mp_file_header(file, boundary)
+          acc_size + byte_size(mp_header) + len + @eof_size
           ({:mp_mixed, name, mixed_boundary}, acc_size) ->
             {mp_header, _} = mp_mixed_header(name, mixed_boundary)
-            acc_size + byte_size(mp_header) + @eof_size + byte_size(mp_eof(mixed_boundary))
+          acc_size + byte_size(mp_header) + @eof_size + byte_size(mp_eof(mixed_boundary))
           ({:mp_mixed_eof, mixed_boundary}, acc_size) ->
             acc_size + byte_size(mp_eof(mixed_boundary)) + @eof_size
           ({name, bin}, acc_size) when is_binary(bin) ->
             {mp_header, len} = mp_data_header(name, %{binary: bin}, boundary)
-            acc_size + byte_size(mp_header) + len + @eof_size
+          acc_size + byte_size(mp_header) + len + @eof_size
           ({name, bin, extra_headers}, acc_size) when is_binary(bin) ->
             {mp_header, len} = mp_data_header(name, %{binary: bin, extra_headers: extra_headers}, boundary)
-            acc_size + byte_size(mp_header) + len + @eof_size
+          acc_size + byte_size(mp_header) + len + @eof_size
           ({name, bin, disposition, extra_headers}, acc_size) when is_binary(bin) ->
             data = %{binary: bin, disposition: disposition, extra_headers: extra_headers}
-            {mp_header, len} = mp_data_header(name, data, boundary)
-            acc_size + byte_size(mp_header) + len + @eof_size
+          {mp_header, len} = mp_data_header(name, data, boundary)
+          acc_size + byte_size(mp_header) + len + @eof_size
         end)
     size + byte_size(mp_eof(boundary))
   end
 
   defp encode_form([], boundary, acc, acc_size) do
-   mp_eof = mp_eof(boundary)
-   {acc <> mp_eof, acc_size + byte_size(mp_eof)}
+    mp_eof = mp_eof(boundary)
+    {acc <> mp_eof, acc_size + byte_size(mp_eof)}
   end
   defp encode_form([{:file, path}|parts], boundary, acc, acc_size) do
     {mp_header, len} = mp_file_header(%{path: path}, boundary)
@@ -100,16 +103,16 @@ defmodule Maxwell.Multipart do
   end
 
   defp encode_form([{:mp_mixed, name, mixed_boundary}|parts], boundary, acc, acc_size) do
-   {mp_header, _} = mp_mixed_header(name, mixed_boundary)
-   acc_size = acc_size + byte_size(mp_header) + @eof_size
-   acc = acc <> mp_header <> "\r\n"
-   encode_form(parts, boundary, acc, acc_size)
+    {mp_header, _} = mp_mixed_header(name, mixed_boundary)
+    acc_size = acc_size + byte_size(mp_header) + @eof_size
+    acc = acc <> mp_header <> "\r\n"
+    encode_form(parts, boundary, acc, acc_size)
   end
   defp encode_form([{:mp_mixed_eof, mixed_boundary}|parts], boundary, acc, acc_size) do
-   eof = mp_eof(mixed_boundary)
-   acc_size = acc_size + byte_size(eof) + @eof_size
-   acc = acc <> eof <> "\r\n"
-   encode_form(parts, boundary, acc, acc_size)
+    eof = mp_eof(mixed_boundary)
+    acc_size = acc_size + byte_size(eof) + @eof_size
+    acc = acc <> eof <> "\r\n"
+    encode_form(parts, boundary, acc, acc_size)
   end
 
   defp encode_form([{name, bin}|parts], boundary, acc, acc_size) do
@@ -189,7 +192,7 @@ defmodule Maxwell.Multipart do
       |> Enum.reverse
       |> join("\r\n")
     :erlang.iolist_to_binary([headers, "\r\n\r\n"])
-   end
+  end
 
   defp make_header({name, value}) do
     value = value_to_binary(value)
@@ -201,29 +204,29 @@ defmodule Maxwell.Multipart do
       |> value_to_binary
       |> header_value(params)
     name <> ": " <> value
-   end
+  end
 
   defp header_value(value, params) do
     params =
       params
       |> Enum.reduce([],
-           fn({k, v}, acc) ->
-             k = value_to_binary(k)
-             v = value_to_binary(v)
-             [k <> "=" <> v | acc]
-           end)
-      |> Enum.reverse
-    join([value |params] , "; ")
+    fn({k, v}, acc) ->
+      k = value_to_binary(k)
+      v = value_to_binary(v)
+      [k <> "=" <> v | acc]
+    end)
+    |> Enum.reverse
+      join([value |params] , "; ")
   end
 
   defp replace_header_from_extra(headers, extra_headers) do
     extra_headers
     |> Enum.reduce(headers, fn({ex_header, ex_value}, acc) ->
-         case List.keymember?(acc, ex_header, 0) do
-           true ->  List.keyreplace(acc, ex_header, 0, {ex_header, ex_value})
-           false -> [{ex_header, ex_value} |acc]
-         end
-      end)
+      case List.keymember?(acc, ex_header, 0) do
+        true ->  List.keyreplace(acc, ex_header, 0, {ex_header, ex_value})
+        false -> [{ex_header, ex_value} |acc]
+      end
+    end)
   end
 
   defp value_to_binary(v) when is_list(v) do
@@ -233,7 +236,7 @@ defmodule Maxwell.Multipart do
     :erlang.atom_to_binary(v, :latin1)
   end
   defp value_to_binary(v) when is_integer(v) do
-   Integer.to_string v
+    Integer.to_string v
   end
   defp value_to_binary(v) when is_binary(v) do
     v
@@ -242,10 +245,10 @@ defmodule Maxwell.Multipart do
   defp join([], _Separator), do: ""
   # defp join([s], _separator), do: s
   defp join(l, separator) do
-   l
-   |> Enum.reverse
-   |> join(separator, [])
-   |> :erlang.iolist_to_binary
+    l
+    |> Enum.reverse
+    |> join(separator, [])
+    |> :erlang.iolist_to_binary
   end
   defp join([], _separator, acc), do: acc
   defp join([s | rest], separator, []), do: join(rest, separator, [s])

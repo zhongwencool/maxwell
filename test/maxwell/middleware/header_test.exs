@@ -1,20 +1,22 @@
 defmodule HeaderTest do
   use ExUnit.Case
-  import Maxwell.TestHelper
+  import Maxwell.MiddlewareTestHelper
 
-  test "Base.Middleware.Headers" do
-    env =
+  alias Maxwell.Conn
+  test "Base Middleware Headers" do
+    conn =
       request(Maxwell.Middleware.Headers,
-        %{headers: %{}},
-        %{'Content-Type' => 'text/plain'})
-    assert env.headers == %{'Content-Type' => 'text/plain'}
+        %Conn{req_headers: %{}},
+        %{"Content-Type" => "text/plain"})
+    assert conn.req_headers == %{"Content-Type" => "text/plain"}
   end
 
-  test "Merge.Middleware.Headers" do
-    env = request(Maxwell.Middleware.Headers,
-      %{headers: %{'Content-Type' => "application/json"}},
-      %{'Content-Type' => 'text/plain'})
-    assert env.headers == %{'Content-Type' => "application/json"}
+  test "Replace Middleware Headers" do
+    conn = request(Maxwell.Middleware.Headers,
+      %{req_headers: %{"Content-Type" => "application/json"}},
+      %{"Content-Type" => "text/plain"})
+    assert conn.req_headers == %{"Content-Type" => "application/json"}
   end
 
 end
+
