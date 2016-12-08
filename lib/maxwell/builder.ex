@@ -27,8 +27,8 @@ defmodule Maxwell.Builder do
   @method_with_body [{:post!, :post}, {:put!, :put}, {:patch!, :patch}]
 
   defmacro __using__(methods) do
-    methods = Maxwell.Builder.Until.serialize_method_to_atom(methods, @http_methods)
-    Maxwell.Builder.Until.allow_methods?(methods, @http_methods)
+    methods = methods |> Macro.expand(__CALLER__) |> Maxwell.Builder.Util.serialize_method_to_atom(@http_methods)
+    Maxwell.Builder.Util.allow_methods?(methods, @http_methods)
 
     method_defs = for {method_exception, method} <- @method_without_body, method in methods do
       quote location: :keep do
@@ -188,7 +188,7 @@ defmodule Maxwell.Builder do
 
   defp quote_adapter_call(nil, env) do
     quote do
-      unquote(Maxwell.Builder.Until.default_adapter).call(unquote(env))
+      unquote(Maxwell.Builder.Util.default_adapter).call(unquote(env))
     end
   end
   defp quote_adapter_call(mod, env) when is_atom(mod) do

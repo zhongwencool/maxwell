@@ -1,4 +1,4 @@
-defmodule Maxwell.Builder.Until do
+defmodule Maxwell.Builder.Util do
   @moduledoc  """
   Utils for builder
   """
@@ -27,9 +27,6 @@ defmodule Maxwell.Builder.Until do
   """
   def serialize_method_to_atom([], default_methods), do: default_methods
   def serialize_method_to_atom(methods = [atom|_], _)when is_atom(atom), do: methods
-  def serialize_method_to_atom({:sigil_w, _, [{:<<>>, _, [methods_str]}, _]}, _) do
-    methods_str |> String.split(" ") |> Enum.map(&String.to_atom/1)
-  end
   def serialize_method_to_atom(methods = [str|_], _)when is_binary(str) do
     for method <- methods, do: String.to_atom(method)
   end

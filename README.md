@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/zhongwencool/maxwell.svg?branch=master)](https://travis-ci.org/zhongwencool/maxwell)
 [![Inline docs](http://inch-ci.org/github/zhongwencool/maxwell.svg)](http://inch-ci.org/github/zhongwencool/maxwell)
 [![Coveralls Coverage](https://img.shields.io/coveralls/zhongwencool/maxwell.svg)](https://coveralls.io/github/zhongwencool/maxwell)
+[![Hex.pm](https://img.shields.io/hexpm/v/maxwell.svg)](http://hex.pm/packages/maxwell)
 
 Maxwell is an HTTP client that provides a common interface over many adapters.
 
@@ -76,7 +77,7 @@ Content-Length:137695
 ```
 if you don't want to defined a client module:
 ```ex
-iex(2)> Maxwell.url("http://httpbin.org/drip") |> Maxwell.query(%{numbytes: 25, duration: 1, delay: 1, code: 200}) |> Maxwell.get
+iex(2)> Maxwell.new("http://httpbin.org/drip") |> Maxwell.put_querystring(%{numbytes: 25, duration: 1, delay: 1, code: 200}) |> Maxwell.get
 {:ok,
  %Maxwell{body: '*************************',
   headers: %{'Access-Control-Allow-Credentials' => 'true',
@@ -88,33 +89,22 @@ iex(2)> Maxwell.url("http://httpbin.org/drip") |> Maxwell.query(%{numbytes: 25, 
 ```
 ### Request helper functions
 ```ex
-  url(request_url_string_or_char_list)
-  |> query(request_query_map)
-  |> headers(request_headers_map)
-  |> opts(request_opts_keyword_list)
-  |> body(request_body_term)
+  new(request_url_string)
+  |> put_querystring(request_query_map)
+  |> put_req_headers(request_headers_map)
+  |> put_option(request_opts_keyword_list)
+  |> put_req_body(request_body_term)
   |> YourClient.{http_method}!
 ```
-For more examples see `h Maxwell`
-
-### Multipart helper function
-```ex
-  multipart(maxwell \\ %Maxwell, request_multipart_list) -> new_maxwell # same as hackney   
-```
-More info: [Multipart format](#Multipart)
-### Asynchronous helper function
-```ex
-  respond_to(maxwell \\ %Maxwell, target_pid) -> new_maxwell   
-```
-More info: [Asynchronous Request](#Asynchronous requests)
+For more examples see `h Maxwell.Conn`
 
 ## Response result
 ```ex
 {:ok,
   %Maxwell{
-    headers: reponse_headers_map,
+    resp_headers: reponse_headers_map,
     status:  reponse_http_status_integer,
-    body:    reponse_body_term,
+    resp_body:    reponse_body_term,
     opts:    request_opts_keyword_list,
     url:     request_urlwithquery_string,
   }}
@@ -129,7 +119,7 @@ More info: [Asynchronous Request](#Asynchronous requests)
   1. Add maxwell to your list of dependencies in `mix.exs`:
 ```ex
    def deps do
-     [{:maxwell, "~> 1.1.0"}]
+     [{:maxwell, "~> 2.0.0"}]
    end
 ```
   2. Ensure maxwell has started before your application:
@@ -190,48 +180,11 @@ See more by `h Maxwell.Middleware.{name}`
 
 See [Maxwell.Middleware.BaseUrl](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/baseurl.ex) and [Maxwell.Middleware.DecodeJson](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/json.ex#L84)
 
-## Asynchronous requests
-
-If the adapter supports it, you can make asynchronous requests by passing `respond_to: pid` option:
-
-```ex
-
-Maxwell.get(url: "http://example.org", respond_to: self)
-
-receive do
-  {:maxwell_response, {:ok, res}} -> res.status # => 200
-  {:maxwell_response, {:error, reason, env}} -> env # the request env
-end
-```
-
-## Multipart
-```ex
-response =
-  [url: "http://httpbin.org/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh"}]]
-  |> Client.post!
-# reponse.body["files"] is %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
-
-```
-both ibrowse and hackney adapter support multipart
-
-`{:multipart: lists}`, lists support:
-
-1. `{:file, path}`
-2. `{:file, path, extra_headers}`
-3. `{:file, path, disposition, extra_headers}`
-4. `{:mp_mixed, name, mixed_boundary}`
-5. `{:mp_mixed_eof, mixed_boundary}`
-6. `{name, bin_data}`
-7. `{name, bin_data, extra_headers}`
-8. `{name, bin_data, disposition, extra_headers}`
-
-All formats supported by hackney.
-See more [examples](https://github.com/zhongwencool/maxwell/blob/master/test/maxwell/multipart_test.exs).
-
 ## TODO
 
 * Support stream
-* more clear document
+* Support multipart
+* More clear readme
 
 ## Test
 ```ex
