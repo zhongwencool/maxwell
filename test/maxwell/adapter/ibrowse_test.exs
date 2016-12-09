@@ -44,6 +44,13 @@ defmodule Maxwell.IbrowseTest do
       |> get_resp_body("data")
     end
 
+    def timeout_test() do
+      "/delay/5"
+      |> put_path
+      |> put_option(:inactivity_timeout, 1000)
+      |> Client.get
+    end
+
   end
 
   setup do
@@ -102,6 +109,11 @@ defmodule Maxwell.IbrowseTest do
 
   test "/delete" do
     assert Client.delete_test == ""
+  end
+
+  test "adapter return error" do
+    {:error, :req_timedout, conn} = Client.timeout_test
+    assert conn.state == :error
   end
 
 end

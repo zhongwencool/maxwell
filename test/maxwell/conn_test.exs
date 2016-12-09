@@ -19,29 +19,41 @@ defmodule ConnTest do
   end
 
   test "put_query_string/2 put_query_string/3 test" do
+    assert put_query_string(%Conn{}, "name", "foo") == %Conn{state: :unsent, query_string: %{"name" => "foo"}}
     assert put_query_string(%Conn{state: :unsent}, "name", "foo") == %Conn{state: :unsent, query_string: %{"name" => "foo"}}
-    assert put_query_string(%Conn{state: :unsent}, %{"name" => "foo", "passwd" => "123"})
+    assert put_query_string(%{"name" => "foo", "passwd" => "123"})
     == %Conn{state: :unsent, query_string: %{"name" => "foo", "passwd" => "123"}}
+
+    assert_raise AlreadySentError, "the request was already sent", fn ->
+      put_query_string(%Conn{state: :sent}, %{"name" => "foo"})
+    end
     assert_raise AlreadySentError, "the request was already sent", fn ->
       put_query_string(%Conn{state: :sent}, "name", "foo")
     end
   end
 
   test "put_req_header/2 put_req_header/3 test" do
+    assert put_req_header(%Conn{}, "cache-control", "no-cache")
     assert put_req_header(%Conn{state: :unsent}, "cache-control", "no-cache")
     == %Conn{state: :unsent, req_headers: %{"cache-control" => "no-cache"}}
-    assert put_req_header(%Conn{state: :unsent}, %{"cache-control" => "no-cache", "ETag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="})
+    assert put_req_header(%{"cache-control" => "no-cache", "ETag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="})
     == %Conn{state: :unsent, req_headers: %{"cache-control" => "no-cache", "ETag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="}}
+
+    assert_raise AlreadySentError, "the request was already sent", fn ->
+      put_req_header(%Conn{state: :sent}, %{"cache-control" => "no-cache"})
+    end
     assert_raise AlreadySentError, "the request was already sent", fn ->
       put_req_header(%Conn{state: :sent}, "cache-control", "no-cache")
     end
   end
 
   test "put_option/2 put_option/3 test" do
-    conn = put_option(%Conn{state: :unsent, opts: [max_attempts: 3]}, :connect_timeout, 3000)
-    assert Keyword.equal?(conn.opts, [connect_timeout: 3000, max_attempts: 3])
-    conn1 = put_option(%Conn{state: :unsent, opts: [max_attempts: 3]}, [connect_timeout: 3000])
+    conn0 = put_option(%Conn{state: :unsent, opts: [max_attempts: 3]}, :connect_timeout, 3000)
+    assert Keyword.equal?(conn0.opts, [connect_timeout: 3000, max_attempts: 3])
+    conn1 = put_option(%Conn{state: :unsent, opts: [max_attempts: 3]}, :connect_timeout, 3000)
     assert Keyword.equal?(conn1.opts, [connect_timeout: 3000, max_attempts: 3])
+    conn2 = put_option(%Conn{state: :unsent, opts: [max_attempts: 3]}, [connect_timeout: 3000])
+    assert Keyword.equal?(conn2.opts, [connect_timeout: 3000, max_attempts: 3])
     assert_raise AlreadySentError, "the request was already sent", fn ->
       put_option(%Conn{state: :sent}, :connect_timeout, 3000)
     end
@@ -80,5 +92,11 @@ defmodule ConnTest do
       get_resp_body(%Conn{state: :unsent})
     end
   end
+
+  test "append_query_string/2 test" do
+    assert "http://example.com/home?name=zhong+wen" == append_query_string("http://example.com", "/home", %{"name" => "zhong wen"})
+    assert "http://example.com/home" == append_query_string("http://example.com", "/home", %{})
+  end
+
 end
 

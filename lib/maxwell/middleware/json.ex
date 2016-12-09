@@ -8,16 +8,15 @@ defmodule Maxwell.Middleware.Json do
 
   Default json_lib is Poison
 
-  ## Examples
+  ### Examples
 
-  ```ex
-  # Client.ex
-  use Maxwell.Builder ~(get)a
-  @middleware Maxwell.Middleware.Json
-  # or
-  @middleware Maxwell.Middleware.Json, [encode_content_type: "application/json", encode_func: &other_json_lib.encode/1,
-  decode_content_types: ["yourowntype"],   decode_func: &other_json_lib.decode/1]
-  ```
+        # Client.ex
+        use Maxwell.Builder ~(get)a
+        @middleware Maxwell.Middleware.Json
+        # or
+        @middleware Maxwell.Middleware.Json, [encode_content_type: "application/json", encode_func: &other_json_lib.encode/1,
+        decode_content_types: ["yourowntype"],   decode_func: &other_json_lib.decode/1]
+
   """
   use Maxwell.Middleware
   def init(opts) do
@@ -63,15 +62,14 @@ defmodule Maxwell.Middleware.EncodeJson do
 
   Default json_lib is Poison
 
-  ## Examples
+  ### Examples
 
-  ```ex
-  # Client.ex
-  use Maxwell.Builder ~(get)a
-  @middleware Maxwell.Middleware.EncodeJson
-  # or
-  @middleware Maxwell.Middleware.EncodeJson, [encode_content_type: "application/json", encode_func: &other_json_lib.encode/1]
-  ```
+        # Client.ex
+        use Maxwell.Builder ~(get)a
+        @middleware Maxwell.Middleware.EncodeJson
+        # or
+        @middleware Maxwell.Middleware.EncodeJson, [encode_content_type: "application/json", encode_func: &other_json_lib.encode/1]
+
   """
   use Maxwell.Middleware
 
@@ -112,21 +110,19 @@ defmodule Maxwell.Middleware.DecodeJson do
   @moduledoc  """
   Decode response's body to json when
 
-  1. Reponse header contain `{'Content-Type', "application/json"}` and body is binary
-
-  2. Reponse is list
+  1. Reponse header contain `{'Content-Type', "application/json"}` and body is binary.
+  2. Reponse is list.
 
   Default json_lib is Poison
 
-  ## Examples
+  ### Examples
 
-  ```ex
-  # Client.ex
-  use Maxwell.Builder ~(get)a
-  @middleware Maxwell.Middleware.DecodeJson
-  # or
-  @middleware Maxwell.Middleware.DecodeJson, [decode_content_types: ["text/javascript"], decode_func: &other_json_lib.decode/1]
-  ```
+        # Client.ex
+        use Maxwell.Builder ~(get)a
+        @middleware Maxwell.Middleware.DecodeJson
+        # or
+        @middleware Maxwell.Middleware.DecodeJson, [decode_content_types: ["text/javascript"], decode_func: &other_json_lib.decode/1]
+
   """
   use Maxwell.Middleware
   def init(opts) do

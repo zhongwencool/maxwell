@@ -5,6 +5,7 @@ defmodule Maxwell.Multipart do
   @eof_size 2
   @doc """
   Receives lists list's member format:
+
   1. `{:file, path}`
   2. `{:file, path, extra_headers}`
   3. `{:file, path, disposition, extra_headers}`
@@ -27,11 +28,12 @@ defmodule Maxwell.Multipart do
 
   @doc """
   Return a random boundary(binary)
-  ## Examples
-  ```
-  # "---------------------------mtynipxrmpegseog"
-  boundary = new_boundary()
-  ```
+
+  ### Examples
+
+        # "---------------------------mtynipxrmpegseog"
+        boundary = new_boundary()
+
   """
   def new_boundary, do: "---------------------------" <> unique(16)
 

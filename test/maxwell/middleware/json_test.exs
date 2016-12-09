@@ -17,6 +17,9 @@ defmodule JsonTest do
         "/empty" ->
           {:ok,
            %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: nil}}
+        "/tuple" ->
+          {:ok,
+           %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: {:key, :value}}}
         "/invalid-content-type" ->
           {:ok,
            %{conn| status: 200, resp_headers: %{"Content-Type" => "text/plain"}, resp_body: "hello"}}
@@ -24,11 +27,13 @@ defmodule JsonTest do
           {:ok,
            %{conn| status: 200, resp_headers: %{"Content-Type" => "text/html"}, resp_body: "{\"value\": 124}"}};
         "/not_found_404" ->
-          {:ok, %{conn|status: 404, resp_body: "404 Not Found"}};
+          {:ok, %{conn| status: 404, resp_body: "404 Not Found"}}
         "/redirection_301" ->
-          {:ok, %{conn|status: 301, resp_body: "301 Moved Permanently"}};
+          {:ok, %{conn| status: 301, resp_body: "301 Moved Permanently"}}
         "/error" ->
           {:error, "hahahaha"}
+        _ ->
+          {:ok, %{conn| status: 200}}
       end
     end
   end
@@ -61,6 +66,10 @@ defmodule JsonTest do
     assert Conn.put_path("/empty") |> Client.get!|> Conn.get_resp_body == nil
   end
 
+  test "do not decode tuple body" do
+    assert Conn.put_path("/tuple") |> Client.get!|> Conn.get_resp_body == {:key, :value}
+  end
+
   test "decode only if Content-Type is application/json" do
     assert "/invalid-content-type" |> Conn.put_path |> Client.get!|> Conn.get_resp_body == "hello"
   end
@@ -73,6 +82,10 @@ defmodule JsonTest do
     |> Client.post!
     |> Conn.get_resp_body
     assert body == %{"baz" => "bar"}
+  end
+
+  test "do not encode tuple body" do
+    assert Conn.put_req_body({:key, :vaule}) |> Client.post!|> Conn.get_status == 200
   end
 
   test "/use-defined-content-type" do

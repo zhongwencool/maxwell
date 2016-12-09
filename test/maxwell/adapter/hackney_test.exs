@@ -46,6 +46,13 @@ defmodule Maxwell.HackneyTest do
       |> get_resp_body("data")
     end
 
+    def timeout_test() do
+      "/delay/5"
+      |> put_path
+      |> put_option(:recv_timeout, 1000)
+      |> Client.get
+    end
+
   end
 
   setup do
@@ -107,11 +114,7 @@ defmodule Maxwell.HackneyTest do
   end
 
   test "adapter return error" do
-    {:error, :timeout, conn} =
-      "/delay/9"
-      |> put_path
-      |> put_option(:recv_timeout, 1000)
-      |> Client.get
+    {:error, :timeout, conn} = Client.timeout_test
     assert conn.state == :error
   end
 

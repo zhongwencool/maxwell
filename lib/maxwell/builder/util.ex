@@ -5,25 +5,25 @@ defmodule Maxwell.Builder.Util do
 
   @doc """
   Global default adapter.
-  ## Examples
-  ```ex
-    config :maxwell,
-    default_adapter: Maxwell.Adapter.Hackney
-  ```
+
+  ### Examples
+        config :maxwell,
+        default_adapter: Maxwell.Adapter.Hackney
   """
   def default_adapter do
     Application.get_env(:maxwell, :default_adapter, Maxwell.Adapter.Ibrowse)
   end
 
   @doc """
-  Serialize http method to atom lists
+  Serialize http method to atom lists.
+
     * `methods` - http methods list, for example: ~w(get), [:get], ["get"]
     * `default_methods` - all http method lists.
     *  raise ArgumentError when method is not atom list, string list or ~w(get put).
-  ## Examples
-  ```ex
-    [:get, :head, :delete, :trace, :options, :post, :put, :patch]
-  ```
+
+  ### Examples
+        [:get, :head, :delete, :trace, :options, :post, :put, :patch]
+
   """
   def serialize_method_to_atom([], default_methods), do: default_methods
   def serialize_method_to_atom(methods = [atom|_], _)when is_atom(atom), do: methods
@@ -36,7 +36,7 @@ defmodule Maxwell.Builder.Util do
 
   @doc """
   Make sure all `list` in `allow_methods`,
-  otherwise raise ArgumentError
+  otherwise raise ArgumentError.
 
   ## Examples
   ```

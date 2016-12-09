@@ -116,6 +116,21 @@ defmodule MultipartTest do
     assert size == 279
   end
 
+  test "file path stream len" do
+    boundary = Maxwell.Multipart.new_boundary
+    file_path = "test/maxwell/multipart_test_file.sh"
+    size = Maxwell.Multipart.len_mp_stream(boundary, [{:file, file_path}])
+    assert size == 279
+  end
+
+  test "file path extra_headers stream len" do
+    boundary = Maxwell.Multipart.new_boundary
+    extra_headers = [{"Content-Type", "image/jpeg"}]
+    file_path = "test/maxwell/multipart_test_file.sh"
+    size = Maxwell.Multipart.len_mp_stream(boundary, [{:file, file_path, extra_headers}])
+    assert size == 273
+  end
+
   test "file disposition extra_headers stream len" do
     boundary = Maxwell.Multipart.new_boundary
     extra_headers = [{"Content-Type", "image/jpeg"}]

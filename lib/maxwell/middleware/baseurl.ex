@@ -1,33 +1,32 @@
 defmodule Maxwell.Middleware.BaseUrl do
   @moduledoc  """
-  ## Examples
-  ```ex
-  #Client.ex
-  use Maxwell.Builder ~(get)a
-  @middleware Maxwell.Middleware.BaseUrl "http{s}://example.com"
+  ### Examples
 
-  def get_home_page do
-    # request http{s}://example.com"
-    Client.get!
-  end
+        #Client.ex
+        use Maxwell.Builder ~(get)a
+        @middleware Maxwell.Middleware.BaseUrl "http{s}://example.com"
 
-  def request(path) do
-    # http{s}://example.com/\#\{path\}"
-    put_path(path) |> Client.get!
-  end
+        def get_home_page do
+        # request http{s}://example.com"
+          Client.get!
+        end
 
-  def request_other() do
-    # http{s}://other.com/other_path"
-    "http{s}://other.com/other_path" |> new |> Client.get!
-  end
-  ```
-  Add query to url
+        def request(path) do
+        # http{s}://example.com/\#\{path\}"
+          put_path(path) |> Client.get!
+        end
 
-  ```ex
-  def request(url, query)when is_map(query) do
-    url |> new |> put_query_string(query) |> Client.get!
-  end
-  ```
+        def request_other() do
+        # http{s}://other.com/other_path"
+          "http{s}://other.com/other_path" |> new |> Client.get!
+          end
+
+  Add query to url.
+
+        def request(url, query)when is_map(query) do
+          url |> new |> put_query_string(query) |> Client.get!
+        end
+
   """
   use Maxwell.Middleware
 

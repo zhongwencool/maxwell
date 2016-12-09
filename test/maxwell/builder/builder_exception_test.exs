@@ -18,7 +18,7 @@ defmodule BuilderExceptionTest do
   end
 
   test "Builder Adapter Exception Test" do
-    assert_raise ArgumentError, "Adapter must be Module, fn(env) -> env end or atom", fn ->
+    assert_raise ArgumentError, "Adapter must be Module", fn ->
       defmodule TAdapter do
         use Maxwell.Builder, ~w(get)
         adapter 1

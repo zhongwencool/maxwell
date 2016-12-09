@@ -5,14 +5,14 @@ defmodule Maxwell do
   There are two kind of usages: Basic Usage and Advanced Middleware Usage.
 
   ### Basic Usage
-  ```ex
-    ## Returns Origin IP, for example %{"origin" => "127.0.0.1"}
-    Maxwell.Conn.new
-    |> Maxwell.Conn.put_url("http://httpbin.org/ip")
-    |> Maxwell.get!
-    |> Maxwell.get_resp_body
-    |> Poison.decode!
-  ```
+
+      ## Returns Origin IP, for example %{"origin" => "127.0.0.1"}
+      Maxwell.Conn.new
+      |> Maxwell.Conn.put_url("http://httpbin.org/ip")
+      |> Maxwell.get!
+      |> Maxwell.Conn.get_resp_body
+      |> Poison.decode!
+
   Find all `get_*&put_*` helper functions by `h Maxwell.Conn.xxx`
 
   ### Advanced Middleware Usage(Create API Client).
