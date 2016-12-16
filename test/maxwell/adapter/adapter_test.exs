@@ -5,13 +5,14 @@ defmodule MaxwellAdapterTest do
   import Maxwell.Conn
 
   defmodule TestAdapter do
-    def call(conn = %Conn{status: nil}) do
+    use Maxwell.Adapter
+    def send_direct(conn = %Conn{status: nil}) do
       {:ok, %{conn|status: 200,
               resp_headers: %{"Content-Type" => "text/plain"},
               resp_body: "testbody",
               state: :sent}}
     end
-    def call(conn) do
+    def send_direct(conn) do
       {:ok, %{conn| status: 400}}
     end
   end
@@ -27,7 +28,7 @@ defmodule MaxwellAdapterTest do
   end
 
   test "return :status 400" do
-    assert_raise(Maxwell.Error, "url: \nmethod: get\nreason: :response_status_not_match\nmodule: Elixir.MaxwellAdapterTest.Client\n",
+    assert_raise(Maxwell.Error, "url: \nmethod: get\nstatus: 400\nreason: :response_status_not_match\nmodule: Elixir.MaxwellAdapterTest.Client\n",
       fn() -> %Conn{status: 100} |> Client.get! end)
   end
 
@@ -89,6 +90,17 @@ defmodule MaxwellAdapterTest do
     assert conn.path == "/foo"
     assert conn.query_string == %{a: 1, b: "foo"}
     assert Conn.get_status(conn) == 200
+  end
+
+  test "adapter not implement send_file/1" do
+    assert_raise Maxwell.Error, "url: http://example.com\nmethod: post\nstatus: \nreason: \"Elixir.MaxwellAdapterTest.TestAdapter Adapter doesn't implement send_file/1\"\nmodule: Elixir.MaxwellAdapterTest.TestAdapter\n", fn ->
+        "http://example.com"
+        |> new
+        |> put_path("/foo")
+        |> put_query_string(%{a: 1, b: "foo"})
+        |> put_req_body({:file, "test"})
+        |> Client.post!
+    end
   end
 
 end

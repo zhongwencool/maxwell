@@ -72,6 +72,7 @@ defmodule Maxwell.Middleware.EncodeJson do
 
   """
   use Maxwell.Middleware
+  alias Maxwell.Conn
 
   def init(opts) do
     check_opts(opts)
@@ -80,16 +81,13 @@ defmodule Maxwell.Middleware.EncodeJson do
     {encode_func, content_type}
   end
 
-  def request(conn, {encode_func, content_type}) do
-    case conn.req_body do
-      nil -> conn
-      req_body when is_tuple(req_body) -> conn
-      _ ->
-        {:ok, req_body} = encode_func.(conn.req_body)
-        conn = %{conn | req_body: req_body}
-        headers = %{"content-type" => content_type}
-        Maxwell.Middleware.Headers.request(conn, headers)
-    end
+  def request(conn = %Conn{req_body: req_body}, _opts)when is_nil(req_body) or is_tuple(req_body) or is_atom(req_body), do: conn
+  def request(conn = %Conn{req_body: %Stream{}}, _opts), do: conn
+  def request(conn = %Conn{req_body: req_body}, {encode_func, content_type}) do
+    {:ok, req_body} = encode_func.(req_body)
+    conn = %{conn | req_body: req_body}
+    headers = %{"content-type" => content_type}
+    Maxwell.Middleware.Headers.request(conn, headers)
   end
 
   defp check_opts(opts) do

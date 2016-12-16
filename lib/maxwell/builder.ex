@@ -152,41 +152,41 @@ defmodule Maxwell.Builder do
 
   defp generate_call_adapter(module) do
     adapter = Module.get_attribute(module, :adapter)
-    env = quote do: env
-    adapter_call = quote_adapter_call(adapter, env)
+    conn = quote do: conn
+    adapter_call = quote_adapter_call(adapter, conn)
     quote do
-      defp call_adapter(unquote(env)) do
+      defp call_adapter(unquote(conn)) do
         unquote(adapter_call)
       end
     end
   end
 
   defp generate_call_middleware(module) do
-    env = quote do: env
-    call_adapter = quote do: call_adapter(unquote(env))
+    conn = quote do: conn
+    call_adapter = quote do: call_adapter(unquote(conn))
     middleware = Module.get_attribute(module, :middleware)
-    middleware_call = middleware |> Enum.reduce(call_adapter, &quote_middleware_call(env, &1, &2))
+    middleware_call = middleware |> Enum.reduce(call_adapter, &quote_middleware_call(conn, &1, &2))
     quote do
-      defp call_middleware(unquote(env)) do
+      defp call_middleware(unquote(conn)) do
         unquote(middleware_call)
       end
     end
   end
 
-  defp quote_middleware_call(env, {mid, args}, acc) do
+  defp quote_middleware_call(conn, {mid, args}, acc) do
     quote do
-      unquote(mid).call(unquote(env), fn(unquote(env)) -> unquote(acc) end, unquote(Macro.escape(args)))
+      unquote(mid).call(unquote(conn), fn(unquote(conn)) -> unquote(acc) end, unquote(Macro.escape(args)))
     end
   end
 
-  defp quote_adapter_call(nil, env) do
+  defp quote_adapter_call(nil, conn) do
     quote do
-      unquote(Maxwell.Builder.Util.default_adapter).call(unquote(env))
+      unquote(Maxwell.Builder.Util.default_adapter).call(unquote(conn))
     end
   end
-  defp quote_adapter_call(mod, env) when is_atom(mod) do
+  defp quote_adapter_call(mod, conn) when is_atom(mod) do
     quote do
-      unquote(mod).call(unquote(env))
+      unquote(mod).call(unquote(conn))
     end
   end
 
@@ -194,10 +194,10 @@ defmodule Maxwell.Builder do
     raise ArgumentError, "Adapter must be Module"
   end
 
-  defmacro __before_compile__(env) do
+  defmacro __before_compile__(conn) do
     [
-      generate_call_adapter(env.module),
-      generate_call_middleware(env.module),
+      generate_call_adapter(conn.module),
+      generate_call_middleware(conn.module),
     ]
   end
 

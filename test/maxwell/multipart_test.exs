@@ -15,7 +15,7 @@ defmodule MultipartTest do
   test "File base" do
     boundary = Maxwell.Multipart.new_boundary
     file_path = "test/maxwell/multipart_test_file.sh"
-    {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path}])
+    {body, size} = Maxwell.Multipart.encode_form(boundary, [{:file, file_path}])
     #hackney = :hackney_multipart.encode_form([{:file, file_path}], boundary)
     assert size == 279
     assert String.starts_with?(body, "--" <> boundary) == true
@@ -27,7 +27,7 @@ defmodule MultipartTest do
     boundary = Maxwell.Multipart.new_boundary
     file_path = "test/maxwell/multipart_test_file.sh"
     extra_headers = [{"Content-Type", "image/jpeg"}]
-    {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, extra_headers}])
+    {body, size} = Maxwell.Multipart.encode_form(boundary, [{:file, file_path, extra_headers}])
     # hackney = :hackney_multipart.encode_form([{:file, file_path, extra_headers}], boundary)
     assert size == 273
     assert String.starts_with?(body, "--" <> boundary) == true
@@ -40,7 +40,7 @@ defmodule MultipartTest do
     file_path = "test/maxwell/multipart_test_file.sh"
     extra_headers = [{"Content-Type", "image/jpeg"}]
     disposition = {'form-data', [{"name", "content"}, {"filename", file_path}]}
-    {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, disposition, extra_headers}])
+    {body, size} = Maxwell.Multipart.encode_form(boundary, [{:file, file_path, disposition, extra_headers}])
     # hackney = :hackney_multipart.encode_form([{:file, file_path, disposition, extra_headers}], boundary)
     assert size == 285
     assert String.starts_with?(body, "--" <> boundary) == true
@@ -53,7 +53,7 @@ defmodule MultipartTest do
     name = "mp_mixed_test_name"
     mixed_boundary = Maxwell.Multipart.new_boundary
     # hackney = :hackney_multipart.encode_form([{:mp_mixed, name, mixed_boundary}], boundary)
-    {body, size} = Maxwell.Multipart.encode(boundary, [{:mp_mixed, name, mixed_boundary}])
+    {body, size} = Maxwell.Multipart.encode_form(boundary, [{:mp_mixed, name, mixed_boundary}])
     body1 = "--#{mixed_boundary}\r\nContent-Disposition: form-data; name=\"mp_mixed_test_name\"\r\nContent-Type: multipart/mixed; boundary=#{mixed_boundary}\r\n\r\n\r\n--#{boundary}--\r\n"
     assert size == 244
     assert body1 == body
@@ -64,7 +64,7 @@ defmodule MultipartTest do
     boundary = Maxwell.Multipart.new_boundary
     mixed_boundary = Maxwell.Multipart.new_boundary
     # hackney = :hackney_multipart.encode_form([{:mp_mixed_eof, mixed_boundary}], boundary)
-    {body, size} = Maxwell.Multipart.encode(boundary, [{:mp_mixed_eof, mixed_boundary}])
+    {body, size} = Maxwell.Multipart.encode_form(boundary, [{:mp_mixed_eof, mixed_boundary}])
     body1 = "--#{mixed_boundary}--\r\n\r\n--#{boundary}--\r\n"
     assert size == 100
     assert body1 == body
@@ -76,7 +76,7 @@ defmodule MultipartTest do
     name = "test_name"
     bin = "test_binary"
     # hackney = :hackney_multipart.encode_form([{name, bin}], boundary)
-    {body, size} = Maxwell.Multipart.encode(boundary, [{name, bin}])
+    {body, size} = Maxwell.Multipart.encode_form(boundary, [{name, bin}])
     body1 = "--#{boundary}\r\ncontent-length: 11\r\ncontent-type: application/octet-stream\r\ncontent-disposition: form-data; name=\"test_name\"\r\n\r\ntest_binary\r\n--#{boundary}--\r\n"
     assert size == 221
     assert body1 == body
@@ -89,7 +89,7 @@ defmodule MultipartTest do
     bin = "test_binary"
     extra_headers = [{"Content-Type", "image/jpeg"}]
     # hackney = :hackney_multipart.encode_form([{name, bin, extra_headers}], boundary)
-    {body, size} = Maxwell.Multipart.encode(boundary, [{name, bin, extra_headers}])
+    {body, size} = Maxwell.Multipart.encode_form(boundary, [{name, bin, extra_headers}])
     body1 = "--#{boundary}\r\ncontent-length: 11\r\ncontent-type: image/jpeg\r\ncontent-disposition: form-data; name=\"test_name\"\r\n\r\ntest_binary\r\n--#{boundary}--\r\n"
     assert size == 207
     assert body1 == body
@@ -103,7 +103,7 @@ defmodule MultipartTest do
     extra_headers = [{"Content-Type", "image/jpeg"}]
     disposition = {"form-data", [{"name", "content"}, {"testname", name}]}
     # hackney = :hackney_multipart.encode_form([{name, bin, disposition, extra_headers}], boundary)
-    {body, size} = Maxwell.Multipart.encode(boundary, [{name, bin, disposition, extra_headers}])
+    {body, size} = Maxwell.Multipart.encode_form(boundary, [{name, bin, disposition, extra_headers}])
     body1 = "--#{boundary}\r\ncontent-length: 11\r\ncontent-type: image/jpeg\r\ncontent-disposition: form-data; name=content; testname=test_name\r\n\r\ntest_binary\r\n--#{boundary}--\r\n"
     assert size == 223
     assert body1 == body
@@ -112,7 +112,7 @@ defmodule MultipartTest do
 
   test "encode without boundary" do
     file_path = "test/maxwell/multipart_test_file.sh"
-    {_body, size} = Maxwell.Multipart.encode([{:file, file_path}])
+    {_body, size} = Maxwell.Multipart.encode_form([{:file, file_path}])
     assert size == 279
   end
 
@@ -185,7 +185,7 @@ defmodule MultipartTest do
     boundary = Maxwell.Multipart.new_boundary
     file_path = "test/maxwell/multipart_test_file.sh"
     extra_headers = [{"Content-Type", "image/jpeg"|> String.to_atom}]
-    {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, extra_headers}])
+    {body, size} = Maxwell.Multipart.encode_form(boundary, [{:file, file_path, extra_headers}])
     # hackney = :hackney_multipart.encode_form([{:file, file_path, extra_headers}], boundary)
     assert size == 273
     assert String.starts_with?(body, "--" <> boundary) == true
@@ -197,7 +197,7 @@ defmodule MultipartTest do
     boundary = Maxwell.Multipart.new_boundary
     file_path = "test/maxwell/multipart_test_file.sh"
     extra_headers = [{"Content-Type", 'image/jpeg'}]
-    {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, extra_headers}])
+    {body, size} = Maxwell.Multipart.encode_form(boundary, [{:file, file_path, extra_headers}])
     # hackney = :hackney_multipart.encode_form([{:file, file_path, extra_headers}], boundary)
     assert size == 273
     assert String.starts_with?(body, "--" <> boundary) == true
@@ -209,7 +209,7 @@ defmodule MultipartTest do
     boundary = Maxwell.Multipart.new_boundary
     file_path = "test/maxwell/multipart_test_file.sh"
     extra_headers = [{"integer", 12}]
-    {body, size} = Maxwell.Multipart.encode(boundary, [{:file, file_path, extra_headers}])
+    {body, size} = Maxwell.Multipart.encode_form(boundary, [{:file, file_path, extra_headers}])
     # hackney = :hackney_multipart.encode_form([{:file, file_path, extra_headers}], boundary)
     assert size == 292
     assert String.starts_with?(body, "--" <> boundary) == true

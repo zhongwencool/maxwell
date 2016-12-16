@@ -13,6 +13,7 @@ defmodule Maxwell.Error do
     message = """
     url: #{url}
     method: #{method}
+    status: #{status}
     reason: #{inspect reason}
     module: #{module}
     """
