@@ -180,10 +180,6 @@ See [Maxwell.Middleware.BaseUrl](https://github.com/zhongwencool/maxwell/blob/ma
 
 ## TODO
 
-* Support stream
-* Support multipart
-* More clear readme
-
 ## Test
 ```ex
   mix test

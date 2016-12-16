@@ -80,14 +80,6 @@ defmodule Maxwell.HackneyTest do
       |> Client.post!
     end
 
-    def stream_timeout_test() do
-      "/cache/10"
-      |> put_path
-      |> put_option(:recv_timeout, 10)
-      |> put_req_body(Stream.map(["1", "2", "3"], fn(x) -> List.duplicate(x, 2) end))
-      |> Client.put
-    end
-
   end
 
   setup do
@@ -152,11 +144,6 @@ defmodule Maxwell.HackneyTest do
 
   test "adapter return error" do
     {:error, :timeout, conn} = Client.timeout_test
-    assert conn.state == :error
-  end
-
-  test "adapter stream timeout" do
-    {:error, :timeout, conn} = Client.stream_timeout_test
     assert conn.state == :error
   end
 
