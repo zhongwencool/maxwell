@@ -23,11 +23,8 @@ defmodule Maxwell.Conn do
   ### Connection fields
 
      * `state` - the connection state
-     * `mode`  - the connection mode
   The connection state is used to track the connection lifecycle. It starts
-  as `:unsent` but is changed to `:sending`, Its final result is `:sent` or `:error`.
-  The connection mode is used to guide adapter how to request,
-  `:direct`, `:stream`. default is `:direct`.
+  as `:unsent` but is changed to `:sending`, Its final result is `:sent` or `:error`. 
 
   ### Protocols
   `Maxwell.Conn` implements both the Collectable and Inspect protocols
@@ -43,7 +40,6 @@ defmodule Maxwell.Conn do
 
   """
   @type conn_t :: %__MODULE__{
-    mode: :direct | :stream,
     state: :unsent | :sending | :sent | :error,
     method: Atom.t,
     url: String.t,
@@ -57,8 +53,7 @@ defmodule Maxwell.Conn do
     resp_body: iodata | Map.t
   }
 
-  defstruct mode: :direct,
-    state: :unsent,
+  defstruct state: :unsent,
     method: nil,
     url: "",
     path: "",
