@@ -86,7 +86,7 @@ defmodule Maxwell.Middleware.EncodeJson do
   def request(conn = %Conn{req_body: req_body}, {encode_func, content_type}) do
     {:ok, req_body} = encode_func.(req_body)
     conn = %{conn | req_body: req_body}
-    headers = %{"content-type" => content_type}
+    headers = %{"content-type" => {"content-type", content_type}}
     Maxwell.Middleware.Headers.request(conn, headers)
   end
 
@@ -131,17 +131,18 @@ defmodule Maxwell.Middleware.DecodeJson do
   def response(response, {decode_fun, valid_content_types}) do
     with {:ok, conn = %Maxwell.Conn{}} <- response do
       headers = conn.resp_headers
-      content_type = headers['Content-Type'] || headers["Content-Type"]
-      || headers['content-type'] || headers["content-type"] || ''
-      content_type = content_type |> to_string
-      case is_json_content(content_type, conn.resp_body, valid_content_types) do
-        true ->
-          case decode_fun.(conn.resp_body) do
-            {:ok, resp_body}  -> {:ok, %{conn | resp_body: resp_body}}
-            {:error, reason} -> {:error, {:decode_json_error, reason}, conn}
+      case Maxwell.Conn.get_resp_header(conn, "content-type") do
+      {_, content_type} ->
+          case is_json_content(content_type, conn.resp_body, valid_content_types) do
+            true ->
+              case decode_fun.(conn.resp_body) do
+                {:ok, resp_body}  -> {:ok, %{conn | resp_body: resp_body}}
+                {:error, reason} -> {:error, {:decode_json_error, reason}, conn}
+              end
+            _ ->
+              {:ok, conn}
           end
-        _ ->
-          {:ok, conn}
+        _ -> {:ok, conn}
       end
     end
 

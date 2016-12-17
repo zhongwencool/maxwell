@@ -17,9 +17,12 @@ defmodule Maxwell.Middleware.Headers do
 
   use Maxwell.Middleware
 
+  def init(headers) do
+    Enum.reduce(headers, %{}, fn({key, value}, acc) -> Map.put(acc, String.downcase(key), {key, value}) end)
+  end
+
   def request(conn, req_headers) do
-    headers = Map.merge(req_headers, conn.req_headers)
-    %{conn | req_headers: headers}
+    %{conn| req_headers: Map.merge(req_headers, conn.req_headers)}
   end
 end
 

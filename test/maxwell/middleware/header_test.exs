@@ -7,15 +7,15 @@ defmodule HeaderTest do
     conn =
       request(Maxwell.Middleware.Headers,
         %Conn{req_headers: %{}},
-        %{"Content-Type" => "text/plain"})
-    assert conn.req_headers == %{"Content-Type" => "text/plain"}
+        %{"content-type" => {"Content-Type", "text/plain"}})
+    assert conn.req_headers == %{"content-type" => {"Content-Type", "text/plain"}}
   end
 
   test "Replace Middleware Headers" do
     conn = request(Maxwell.Middleware.Headers,
-      %{req_headers: %{"Content-Type" => "application/json"}},
-      %{"Content-Type" => "text/plain"})
-    assert conn.req_headers == %{"Content-Type" => "application/json"}
+      %Conn{req_headers: %{"content-type" => {"Content-Type", "application/json"}}},
+      %{"content-type" => {"Content-Type", "text/plain"}})
+    assert conn.req_headers == %{"content-type" => {"Content-Type", "application/json"}}
   end
 
 end

@@ -7,25 +7,32 @@ defmodule JsonTest do
       case conn.path do
         "/decode" ->
           {:ok,
-           %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: "{\"value\": 123}"}}
+           %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
+             resp_body: "{\"value\": 123}"}}
         "/decode_error" ->
           {:ok,
-           %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: "\"123"}}
+           %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
+             resp_body: "\"123"}}
         "/encode" ->
           {:ok,
-           %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: conn.req_body |> String.replace("foo", "baz")}}
+           %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
+             resp_body: conn.req_body |> String.replace("foo", "baz")}}
         "/empty" ->
           {:ok,
-           %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: nil}}
+           %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
+             resp_body: nil}}
         "/tuple" ->
           {:ok,
-           %{conn| status: 200, resp_headers: %{"Content-Type" => "application/json"}, resp_body: {:key, :value}}}
+           %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
+             resp_body: {:key, :value}}}
         "/invalid-content-type" ->
           {:ok,
-           %{conn| status: 200, resp_headers: %{"Content-Type" => "text/plain"}, resp_body: "hello"}}
+           %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "text/plain"}},
+             resp_body: "hello"}}
         "/use-defined-content-type" ->
           {:ok,
-           %{conn| status: 200, resp_headers: %{"Content-Type" => "text/html"}, resp_body: "{\"value\": 124}"}};
+           %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "text/html"}},
+             resp_body: "{\"value\": 124}"}};
         "/not_found_404" ->
           {:ok, %{conn| status: 404, resp_body: "404 Not Found"}}
         "/redirection_301" ->
@@ -58,7 +65,7 @@ defmodule JsonTest do
     assert conn == %Conn{method: :get, opts: [connect_timeout: 3000],
                          path: "/decode_error", query_string: %{},
                          req_body: nil, req_headers: %{},
-                         resp_body: "\"123", resp_headers: %{"Content-Type" => "application/json"},
+                         resp_body: "\"123", resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
                          state: :sent, status: 200, url: ""}
   end
 
@@ -131,7 +138,7 @@ defmodule ModuleAdapter2 do
   def call(conn) do
     {:ok, %{conn|status: 200,
             state: :sent,
-            resp_headers: %{"Content-Type" => "text/javascript"},
+            resp_headers: %{"content-type" => {"Content-Type","text/javascript"}},
             resp_body: "{\"value\": 124}"}}
   end
 end

@@ -35,9 +35,10 @@ defmodule ConnTest do
   test "put_req_header/2 put_req_header/3 test" do
     assert put_req_header(%Conn{}, "cache-control", "no-cache")
     assert put_req_header(%Conn{state: :unsent}, "cache-control", "no-cache")
-    == %Conn{state: :unsent, req_headers: %{"cache-control" => "no-cache"}}
+    == %Conn{state: :unsent, req_headers: %{"cache-control" => {"cache-control", "no-cache"}}}
     assert put_req_header(%{"cache-control" => "no-cache", "ETag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="})
-    == %Conn{state: :unsent, req_headers: %{"cache-control" => "no-cache", "ETag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="}}
+    == %Conn{state: :unsent, req_headers: %{"cache-control" => {"cache-control", "no-cache"},
+                                            "etag" => {"ETag", "rFjdsDtv2qxk7K1CwG4VMlF836E="}}}
 
     assert_raise AlreadySentError, "the request was already sent", fn ->
       put_req_header(%Conn{state: :sent}, %{"cache-control" => "no-cache"})
@@ -74,10 +75,10 @@ defmodule ConnTest do
   end
 
   test "get_resp_header/2 get_resp_header/3 test" do
-    assert get_resp_header(%Conn{state: :sent, resp_headers: %{"Server" => "Microsoft-IIS/8.5"}})
+    assert get_resp_header(%Conn{state: :sent, resp_headers: %{"server" => {"Server", "Microsoft-IIS/8.5"}}})
     == %{"Server" => "Microsoft-IIS/8.5"}
-    assert get_resp_header(%Conn{state: :sent, resp_headers: %{"Server" => "Microsoft-IIS/8.5"}}, "Server")
-    == "Microsoft-IIS/8.5"
+    assert get_resp_header(%Conn{state: :sent, resp_headers: %{"server" => {"Server", "Microsoft-IIS/8.5"}}}, "Server")
+    == {"Server", "Microsoft-IIS/8.5"}
     assert_raise NotSentError, "the request was not sent yet", fn ->
       get_resp_header(%Conn{state: :unsent}, "Server")
     end

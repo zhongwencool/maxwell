@@ -46,10 +46,10 @@ defmodule Maxwell.Conn do
     path: String.t,
     query_string: Map.t,
     opts: Keyword.t,
-    req_headers: %{binary => binary},
+    req_headers: %{binary => {binary, binary}},
     req_body: iodata | Map.t,
     status: non_neg_integer | nil,
-    resp_headers: Map.t,
+    resp_headers: %{binary => {binary, binary}},
     resp_body: iodata | Map.t
   }
 
@@ -170,7 +170,14 @@ defmodule Maxwell.Conn do
   """
   def put_req_header(conn \\ %Conn{}, map_headers)
   def put_req_header(conn = %Conn{state: :unsent, req_headers: headers}, map_headers)when is_map(map_headers) do
-    %{conn| req_headers: Map.merge(headers, map_headers)}
+    downcase_func =
+    fn({downcase_header, {_original_header, _header_value} = value}, acc) ->
+      Map.put(acc, downcase_header, value)
+      ({header, _val} = value, acc) ->
+        Map.put(acc, String.downcase(header), value)
+    end
+    new_headers = Enum.reduce(map_headers, headers, downcase_func)
+    %{conn| req_headers: new_headers}
   end
   def put_req_header(_conn, _map_headers), do: raise AlreadySentError
 
@@ -183,14 +190,14 @@ defmodule Maxwell.Conn do
 
   ### Examples
 
-      # %Conn{headers: %{"Content-Type" => "application/json", "User-Agent" => "zhongwenool"}
-      %Conn{headers: %{"Content-Type" => "text/javascript"}
+      # %Conn{headers: %{"content-type" => {"Content-Type", "application/json"}, "user-agent" => {"user-agent", "zhongwenool"}}
+      %Conn{headers: %{"content-type" => {"Content-Type", "text/javascript"}}
       |> put_req_header("Content-Type", "application/json")
       |> put_req_header("User-Agent", "zhongwencool")
 
   """
   def put_req_header(conn = %Conn{state: :unsent, req_headers: headers}, key, value) do
-    %{conn| req_headers: Map.put(headers,  key, value)}
+    %{conn| req_headers: Map.put(headers,  String.downcase(key), {key, value})}
   end
   def put_req_header(_conn, _key, _value), do: raise AlreadySentError
 
@@ -250,15 +257,18 @@ defmodule Maxwell.Conn do
 
   ### Examples
 
-      # "xyz"
-      %Conn{resp_headers: %{"cookie" => "xyz"}} |> get_resp_header("cookie")
-      # %{"cookie" => "xyz"}
-      %Conn{resp_headers: %{"cookie" => "xyz"} |> get_resp_header
+      # {"Cookie", "xyz"}
+      %Conn{resp_headers: %{"cookie" => {"Cookie", "xyz"}} |> get_resp_header("cookie")
+      # %{"Cookie" => "xyz"}
+      %Conn{resp_headers: %{"cookie" => {"Cookie", "xyz"}} |> get_resp_header
   """
   def get_resp_header(conn, key \\ nil)
   def get_resp_header(%Conn{state: :unsent}, _key), do: raise NotSentError
-  def get_resp_header(%Conn{resp_headers: headers}, nil), do: headers
-  def get_resp_header(%Conn{resp_headers: headers}, key), do: headers[key]
+  def get_resp_header(%Conn{resp_headers: headers}, nil) do
+    IO.inspect {:xxxxx, headers}
+    Enum.reduce(headers, %{}, fn({_, {key, value}}, acc) -> Map.put(acc, key, value) end)
+  end
+  def get_resp_header(%Conn{resp_headers: headers}, key), do: headers[String.downcase(key)]
 
   @doc """
   * `get_resp_body/1` - get all response body.
