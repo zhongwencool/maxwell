@@ -16,13 +16,22 @@ defmodule Maxwell.Middleware.Headers do
   """
 
   use Maxwell.Middleware
+  alias Maxwell.Conn
 
   def init(headers) do
-    for {key, value} <- headers, into: %{}, do: {String.downcase(key), {key, value}}
+    check_headers(headers)
+    Conn.put_req_header(%Conn{}, headers) |> Map.get(:req_headers)
   end
 
   def request(conn, req_headers) do
     %{conn| req_headers: Map.merge(req_headers, conn.req_headers)}
+  end
+
+  defp check_headers(headers) do
+    case Enum.all?(headers, fn({key, _value}) -> is_binary(key) end) do
+      true -> :ok
+      false -> raise(ArgumentError, "Headers_map key only accpect string but got: #{inspect headers}");
+    end
   end
 end
 
