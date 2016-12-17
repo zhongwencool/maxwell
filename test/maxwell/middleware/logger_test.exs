@@ -17,17 +17,30 @@ defmodule LoggerTest do
   test "Logger Call" do
     conn = %Conn{method: :get, url: "http://example.com", status: 200}
     outputstr = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:error, "bad request"} end, :info) end
-    output301 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:ok, %{conn| status: 301}} end, :info) end
-    output404 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:ok, %{conn| status: 404}} end, :info) end
-    output500 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:ok, %{conn| status: 500}} end, :info) end
+    output301 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> {:ok, %{x| status: 301}} end, :info) end
+    output404 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> {:ok, %{x| status: 404}} end, :info) end
+    output500 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> {:ok, %{x| status: 500}} end, :info) end
+    outputok  = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> {:ok, x} end, :info) end
     assert outputstr =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  GET http://example.com>> \e\[31mERROR: <<\"bad request\">>\n\e\[0m"
 
-    assert output301 =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[33m301\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, mode: :direct, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 301, url: \"http://example.com\"\}\n\e\[0m"
+    assert output301 =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[33m301\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 301, url: \"http://example.com\"\}\n\e\[0m"
 
-    assert output404 =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[31m404\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, mode: :direct, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 404, url: \"http://example.com\"\}\n\e\[0m"
+    assert output404 =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[31m404\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 404, url: \"http://example.com\"\}\n\e\[0m"
 
-    assert output500 =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[31m500\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, mode: :direct, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 500, url: \"http://example.com\"\}\n\e\[0m"
+    assert output500 =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[31m500\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 500, url: \"http://example.com\"\}\n\e\[0m"
 
+    assert outputok  =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[32m200\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 200, url: \"http://example.com\"}\n\e\[0m"
+
+  end
+
+  test "Change Middleware Logger's log_level" do
+    assert_raise RuntimeError, "ok", fn ->
+      defmodule TAtom0 do
+        use Maxwell.Builder, [:get, :post]
+        middleware Maxwell.Middleware.Logger, [log_level: :debug]
+      end
+      raise "ok"
+    end
   end
 
   test "Middleware Logger with invalid log_level" do

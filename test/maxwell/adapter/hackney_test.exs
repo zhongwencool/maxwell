@@ -46,6 +46,40 @@ defmodule Maxwell.HackneyTest do
       |> get_resp_body("data")
     end
 
+    def timeout_test() do
+      "/delay/5"
+      |> put_path
+      |> put_option(:recv_timeout, 1000)
+      |> Client.get
+    end
+
+    def multipart_test() do
+      "/post"
+      |> put_path
+      |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh"}]})
+      |> Client.post!
+    end
+    def multipart_with_extra_header_test() do
+      "/post"
+      |> put_path
+      |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]})
+      |> Client.post!
+    end
+
+    def file_test() do
+      "/post"
+      |> put_path
+      |> put_req_body({:file, "test/maxwell/multipart_test_file.sh"})
+      |> Client.post!
+    end
+
+    def stream_test() do
+      "/post"
+      |> put_path
+      |> put_req_body(Stream.map(["1", "2", "3"], fn(x) -> List.duplicate(x, 2) end))
+      |> Client.post!
+    end
+
   end
 
   setup do
@@ -76,23 +110,25 @@ defmodule Maxwell.HackneyTest do
   #  end
   #end
 
-  #test "mutilpart body file" do
-  #  data =
-  #    [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh"}]]
-  #    |> Client.post!
+  test "mutilpart body file" do
+    conn = Client.multipart_test
+    assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+  end
 
-  #  assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+  test "mutilpart body file extra headers" do
+    conn = Client.multipart_with_extra_header_test
+    assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+  end
 
-  # end
+  test "send file" do
+    conn = Client.file_test
+    assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
+  end
 
-  # test "mutilpart body file extra headers" do
-  #  data =
-  #    [url: "/post", multipart: [{"name", "value"}, {:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]]
-  #    |> Client.post!
-
-  #  assert data.body["files"] == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
-
-  # end
+  test "send stream" do
+    conn = Client.stream_test
+    assert get_resp_body(conn, "data") == "112233"
+  end
 
   test "user-agent header test" do
     assert "test" |> Client.user_agent_test == "test"
@@ -107,11 +143,7 @@ defmodule Maxwell.HackneyTest do
   end
 
   test "adapter return error" do
-    {:error, :timeout, conn} =
-      "/delay/9"
-      |> put_path
-      |> put_option(:recv_timeout, 1000)
-      |> Client.get
+    {:error, :timeout, conn} = Client.timeout_test
     assert conn.state == :error
   end
 

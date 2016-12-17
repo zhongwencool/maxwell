@@ -5,6 +5,7 @@ defmodule Maxwell.Multipart do
   @eof_size 2
   @doc """
   Receives lists list's member format:
+
   1. `{:file, path}`
   2. `{:file, path, extra_headers}`
   3. `{:file, path, disposition, extra_headers}`
@@ -17,21 +18,22 @@ defmodule Maxwell.Multipart do
   Returns `{body_binary, size}`
 
   """
-  def encode(parts), do: encode(new_boundary, parts)
+  def encode_form(parts), do: encode_form(new_boundary, parts)
   @doc """
-  See `encode/1`
+  See `encode_form/1`
   """
-  def encode(boundary, parts)when is_list(parts) do
+  def encode_form(boundary, parts)when is_list(parts) do
     encode_form(parts, boundary, "", 0)
   end
 
   @doc """
   Return a random boundary(binary)
-  ## Examples
-  ```
-  # "---------------------------mtynipxrmpegseog"
-  boundary = new_boundary()
-  ```
+
+  ### Examples
+
+        # "---------------------------mtynipxrmpegseog"
+        boundary = new_boundary()
+
   """
   def new_boundary, do: "---------------------------" <> unique(16)
 
@@ -255,3 +257,4 @@ defmodule Maxwell.Multipart do
   defp join([s | rest], separator, acc), do: join(rest, separator, [s, separator | acc])
 
 end
+

@@ -1,18 +1,17 @@
 defmodule Maxwell.Middleware.Logger do
   @moduledoc  """
-  Log the request and response by Logger, default log_level is :info
+  Log the request and response by Logger, default log_level is :info.
 
-  ## Examples
-  
-  ```ex
-  # Client.ex
-  use Maxwell.Builder ~(get)a
-  @middleware Maxwell.Middleware.Log [log_level: :debug]
+  ### Examples
 
-  def request do
-  "/test" |> url |> get!
-  end
-  ```
+        # Client.ex
+        use Maxwell.Builder ~(get)a
+        @middleware Maxwell.Middleware.Log [log_level: :debug]
+
+        def request do
+          "/test" |> url |> get!
+        end
+
   """
   use Maxwell.Middleware
   require Logger

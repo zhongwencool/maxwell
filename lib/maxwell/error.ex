@@ -1,10 +1,10 @@
 defmodule Maxwell.Error do
   @moduledoc  """
   Exception `%Maxwell.Error{:url, :reason, :message, :status, :conn}`
-  ## Examples
-  ```
-  raise Maxwell.Error, {__MODULE__, reason, conn};
-  ```
+  ### Examples
+
+      raise Maxwell.Error, {__MODULE__, reason, conn}
+
   """
   defexception [:url, :status, :method, :reason, :message, :conn]
 
@@ -13,6 +13,7 @@ defmodule Maxwell.Error do
     message = """
     url: #{url}
     method: #{method}
+    status: #{status}
     reason: #{inspect reason}
     module: #{module}
     """

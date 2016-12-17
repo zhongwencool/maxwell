@@ -1,12 +1,13 @@
 defmodule Maxwell.Middleware.Rels do
   @moduledoc  """
-  Decode reponse's body's rels
-  ## Examples
-  ```ex
-  # Client.ex
-  use Maxwell.Builder ~(get)a
-  @middleware Maxwell.Middleware.Rels
-  ```
+  Decode reponse's body's rels.
+
+  ### Examples
+
+         # Client.ex
+         use Maxwell.Builder ~(get)a
+         @middleware Maxwell.Middleware.Rels
+
   """
   use Maxwell.Middleware
 

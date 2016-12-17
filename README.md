@@ -9,8 +9,6 @@ Maxwell is an HTTP client that provides a common interface over many adapters.
 
 [Documentation for Maxwell is available online](https://hexdocs.pm/maxwell).
 
-[See the specific example here](https://gist.github.com/zhongwencool/6cd44df1acd699fc9c7159882ef3b597).
-
 ## Usage
 
 Use `Maxwell.Builder` module to create the API wrappers.
@@ -35,7 +33,7 @@ defmodule GitHubClient do
   #                [],
   #                [connect_timeout: 3000])
   def user_repos(username) do
-    url("/users/" <> username <> "/repos") |> get
+    put_path("/users/" <> username <> "/repos") |> get
   end
 
   # Edit owner repositories
@@ -45,7 +43,7 @@ defmodule GitHubClient do
   #                  "{\"name\":\"name\",\"description\":\"desc\"}",
   #                  [connect_timeout: 3000])
   def edit_repo_desc(owner, repo, name, desc) do
-    url("/repos/#{owner}/#{repo}")
+    put_path("/repos/#{owner}/#{repo}")
     |> body(%{name: name, description: desc})
     |> patch
   end
@@ -80,7 +78,7 @@ if you don't want to defined a client module:
 iex(2)> Maxwell.new("http://httpbin.org/drip") |> Maxwell.put_querystring(%{numbytes: 25, duration: 1, delay: 1, code: 200}) |> Maxwell.get
 {:ok,
  %Maxwell{body: '*************************',
-  headers: %{'Access-Control-Allow-Credentials' => 'true',
+  resp_headers: %{'Access-Control-Allow-Credentials' => 'true',
     'Access-Control-Allow-Origin' => '*', 'Connection' => 'keep-alive',
     'Content-Length' => '25', 'Content-Type' => 'application/octet-stream',
     'Date' => 'Thu, 24 Nov 2016 16:04:21 GMT', 'Server' => 'nginx'},
@@ -96,7 +94,7 @@ iex(2)> Maxwell.new("http://httpbin.org/drip") |> Maxwell.put_querystring(%{numb
   |> put_req_body(request_body_term)
   |> YourClient.{http_method}!
 ```
-For more examples see `h Maxwell.Conn`
+For more examples see `h Maxwell.Conn.XXX`
 
 ## Response result
 ```ex
@@ -119,7 +117,7 @@ For more examples see `h Maxwell.Conn`
   1. Add maxwell to your list of dependencies in `mix.exs`:
 ```ex
    def deps do
-     [{:maxwell, "~> 2.0.0"}]
+     [{:maxwell, "~> 2.0.1"}]
    end
 ```
   2. Ensure maxwell has started before your application:
@@ -181,10 +179,6 @@ See more by `h Maxwell.Middleware.{name}`
 See [Maxwell.Middleware.BaseUrl](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/baseurl.ex) and [Maxwell.Middleware.DecodeJson](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/json.ex#L84)
 
 ## TODO
-
-* Support stream
-* Support multipart
-* More clear readme
 
 ## Test
 ```ex
