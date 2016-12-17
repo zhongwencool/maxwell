@@ -4,23 +4,38 @@ defmodule Maxwell.Multipart do
   """
   @eof_size 2
   @doc """
-  Receives lists list's member format:
+  multipart form encode.
 
-  1. `{:file, path}`
-  2. `{:file, path, extra_headers}`
-  3. `{:file, path, disposition, extra_headers}`
-  4. `{:mp_mixed, name, mixed_boundary}`
-  5. `{:mp_mixed_eof, mixed_boundary}`
-  6. `{name, bin_data}`
-  7. `{name, bin_data, extra_headers}`
-  8. `{name, bin_data, disposition, extra_headers}`
+      * `parts` - receives lists list's member format:
+
+           1. `{:file, path}`
+           2. `{:file, path, extra_headers}`
+           3. `{:file, path, disposition, extra_headers}`
+           4. `{:mp_mixed, name, mixed_boundary}`
+           5. `{:mp_mixed_eof, mixed_boundary}`
+           6. `{name, bin_data}`
+           7. `{name, bin_data, extra_headers}`
+           8. `{name, bin_data, disposition, extra_headers}`
 
   Returns `{body_binary, size}`
 
   """
   def encode_form(parts), do: encode_form(new_boundary, parts)
   @doc """
-  See `encode_form/1`
+  multipart form encode.
+
+     * `boundary` - multipart boundary.
+     * `parts` - receives lists list's member format:
+
+          1. `{:file, path}`
+          2. `{:file, path, extra_headers}`
+          3. `{:file, path, disposition, extra_headers}`
+          4. `{:mp_mixed, name, mixed_boundary}`
+          5. `{:mp_mixed_eof, mixed_boundary}`
+          6. `{name, bin_data}`
+          7. `{name, bin_data, extra_headers}`
+          8. `{name, bin_data, disposition, extra_headers}`
+
   """
   def encode_form(boundary, parts)when is_list(parts) do
     encode_form(parts, boundary, "", 0)
@@ -40,7 +55,8 @@ defmodule Maxwell.Multipart do
   @doc """
   Get the size of a mp stream. Useful to calculate the content-length of a full multipart stream and send it as an identity
 
-  Receives parameter as `Maxwell.Multipart.encode`
+      * `boundary` - multipart boundary
+      * `parts` - see `Maxwell.Multipart.encode_form`.
 
   Return stream size(integer)
   """

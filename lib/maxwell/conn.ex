@@ -140,8 +140,8 @@ defmodule Maxwell.Conn do
   Add query string to `conn.query_string`.
 
   * `conn` - `%Conn{}`
-  * `query_key` - query key, for example `"name"`.
-  * `query_value` - query value, for example `"lucy"`.
+  * `key` - query key, for example `"name"`.
+  * `value` - query value, for example `"lucy"`.
 
   ### Examples
 
