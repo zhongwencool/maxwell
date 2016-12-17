@@ -1,9 +1,11 @@
 if Code.ensure_loaded?(:ibrowse) do
   defmodule Maxwell.Adapter.Ibrowse do
-    use Maxwell.Adapter
     @moduledoc  """
     [`ibrowse`](https://github.com/cmullaparthi/ibrowse) adapter
     """
+
+    @chunk_size 5*1024*1024
+    use Maxwell.Adapter
 
     @doc """
     * `conn` - `%Maxwell.Conn{}`
@@ -28,10 +30,10 @@ if Code.ensure_loaded?(:ibrowse) do
     def send_multipart(conn) do
       %Maxwell.Conn{url: url, req_headers: req_headers,
                     query_string: query_string, path: path,
-                    method: method, opts: opts, req_body: {:multipart, req_body}} = conn
+                    method: method, opts: opts, req_body: {:multipart, multiparts}} = conn
       url = url_serialize(url, path, query_string)
+      {req_headers, req_body} = multipart_encode(req_headers, multiparts)
       req_headers = header_serialize(req_headers)
-      {req_headers, req_body} = multipart_encode(req_headers, req_body)
       result = :ibrowse.send_req(url, req_headers, method, req_body, opts)
       format_response(result, conn)
     end
@@ -39,10 +41,22 @@ if Code.ensure_loaded?(:ibrowse) do
     def send_file(conn) do
       %Maxwell.Conn{url: url, req_headers: req_headers,
                     query_string: query_string, path: path,
-                    method: method, opts: opts, req_body: {:file, req_body}} = conn
+                    method: method, opts: opts, req_body: {:file, filepath}} = conn
       url = url_serialize(url, path, query_string)
-      req_headers = header_serialize(req_headers)
-      {req_headers, req_body} = file_encode(req_headers, req_body)
+      opts = Keyword.put(opts, :transfer_encoding, :chunked) # it auto add "transfer_encodeing: chunked" header
+      req_headers =
+        req_headers
+        |> Map.has_key?("content-type")
+        |> case do
+             true ->
+               req_headers |> header_serialize
+             false ->
+               content_type = :mimerl.filename(filepath)
+               req_headers
+               |> Map.put("content-type", content_type)
+               |> header_serialize
+           end
+      req_body = {&stream_iterate/1, filepath}
       result = :ibrowse.send_req(url, req_headers, method, req_body, opts)
       format_response(result, conn)
     end
@@ -53,7 +67,8 @@ if Code.ensure_loaded?(:ibrowse) do
                     method: method, opts: opts, req_body: req_body} = conn
       url = url_serialize(url, path, query_string)
       req_headers = header_serialize(req_headers)
-      req_body = stream_encode(req_body)
+      req_body = {&stream_iterate/1, req_body}
+      opts = Keyword.put(opts, :transfer_encoding, :chunked) # it auto add "transfer_encodeing: chunked" header
       result = :ibrowse.send_req(url, req_headers, method, req_body, opts)
       format_response(result, conn)
     end
@@ -78,38 +93,46 @@ if Code.ensure_loaded?(:ibrowse) do
       {:error, reason, %{conn | state: :error}}
     end
 
-    def multipart_encode(headers, multiparts) do
+    defp multipart_encode(headers, multiparts) do
       boundary = Maxwell.Multipart.new_boundary
-      body =
-        {fn(:start) ->
-                  {body, _size} = Maxwell.Multipart.encode_form(boundary, multiparts)
-                  {:ok, body, :end}
-           (:end) -> :eof
-        end, :start}
-      len = Maxwell.Multipart.len_mp_stream(boundary, multiparts)
-      headers = [{'Content-Type', "multipart/form-data; boundary=#{boundary}"}, {'Content-Length', len}|headers]
+      body = {&multipart_body/1, {:start, boundary, multiparts}}
+      headers =
+        case Map.has_key?(headers, "content-type") do
+          true ->
+            headers
+          false ->
+            len = Maxwell.Multipart.len_mp_stream(boundary, multiparts)
+            headers
+            |> Map.put("content-type", "multipart/form-data; boundary=#{boundary}")
+            |> Map.put("content-length", len)
+        end
       {headers, body}
     end
 
-    def file_encode(headers, filepath) do
-      body =
-        {fn(:start) ->
-            with {:ok, body} <- File.read(filepath) do
-            {:ok, body, :end}
-            end
-          (:end) -> :eof
-        end, :start}
-      size = :filelib.file_size(filepath)
-      content_type = :mimerl.filename(filepath)
-      headers = [{'Content-Type', content_type}, {'Content-Length', size}|headers]
-      {headers, body}
+    defp multipart_body({:start, boundary, multiparts}) do
+      {body, _size} = Maxwell.Multipart.encode_form(boundary, multiparts)
+      {:ok, body, :end}
     end
+    defp multipart_body(:end), do: :eof
 
-    def stream_encode(body) do
-      {fn(:start) ->
-        {:ok, body |> Enum.to_list |> IO.iodata_to_binary, :end}
-        (:end) -> :eof
-      end, :start}
+    defp stream_iterate(filepath) when is_binary(filepath) do
+      filepath
+      |> File.stream!([], @chunk_size)
+      |> stream_iterate
+    end
+    defp stream_iterate(next_stream_fun)when is_function(next_stream_fun, 1) do
+      case next_stream_fun.({:cont, nil}) do
+        {:suspended, elem, next_stream_fun} -> {:ok, elem, next_stream_fun}
+        {:halted, _} -> :eof
+        {:done, _} -> :eof
+      end
+    end
+    defp stream_iterate(stream) do
+		  case Enumerable.reduce(stream, {:cont, nil}, fn(elem, nil) -> {:suspend, elem} end) do
+        {:suspended, elem, next_stream} -> {:ok, elem, next_stream}
+			  {:done, _} -> :eof
+        {:halted, _} -> :eof
+		  end
     end
 
   end
