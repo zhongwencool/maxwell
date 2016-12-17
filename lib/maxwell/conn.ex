@@ -265,8 +265,7 @@ defmodule Maxwell.Conn do
   def get_resp_header(conn, key \\ nil)
   def get_resp_header(%Conn{state: :unsent}, _key), do: raise NotSentError
   def get_resp_header(%Conn{resp_headers: headers}, nil) do
-    IO.inspect {:xxxxx, headers}
-    Enum.reduce(headers, %{}, fn({_, {key, value}}, acc) -> Map.put(acc, key, value) end)
+    for {_, origin_header} <- headers, into: %{}, do: origin_header
   end
   def get_resp_header(%Conn{resp_headers: headers}, key), do: headers[String.downcase(key)]
 

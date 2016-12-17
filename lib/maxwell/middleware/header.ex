@@ -18,7 +18,7 @@ defmodule Maxwell.Middleware.Headers do
   use Maxwell.Middleware
 
   def init(headers) do
-    Enum.reduce(headers, %{}, fn({key, value}, acc) -> Map.put(acc, String.downcase(key), {key, value}) end)
+    for {key, value} <- headers, into: %{}, do: {String.downcase(key), {key, value}}
   end
 
   def request(conn, req_headers) do
