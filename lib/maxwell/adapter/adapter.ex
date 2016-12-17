@@ -10,6 +10,8 @@ defmodule Maxwell.Adapter do
     quote location: :keep do
       @behaviour Maxwell.Adapter
 
+      alias Maxwell.Conn
+
       @doc false
       def call(conn) do
         case conn.req_body do

@@ -1,19 +1,21 @@
 if Code.ensure_loaded?(:hackney) do
   defmodule Maxwell.Adapter.Hackney do
-    use Maxwell.Adapter
     @moduledoc  """
     [`hackney`](https://github.com/benoitc/hackney) adapter
     """
+
+    use Maxwell.Adapter
 
     @doc """
     * `conn` - `%Maxwell.Conn{}`
 
     Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term, %Maxwell.Conn{}}`.
     """
+
     def send_direct(conn) do
-      %Maxwell.Conn{url: url, req_headers: req_headers,
-                    path: path,method: method, query_string: query_string,
-                    opts: opts, req_body: req_body} = conn
+      %Conn{url: url, req_headers: req_headers,
+            path: path,method: method, query_string: query_string,
+            opts: opts, req_body: req_body} = conn
       url = url_serialize(url, path, query_string)
       req_headers = header_serialize(req_headers)
       result = :hackney.request(method, url, req_headers, req_body || "", opts)
@@ -25,9 +27,9 @@ if Code.ensure_loaded?(:hackney) do
     def send_file(conn), do: send_direct(conn)
 
     def send_stream(conn) do
-      %Maxwell.Conn{url: url, req_headers: req_headers,
-                    path: path,method: method, query_string: query_string,
-                    opts: opts, req_body: req_body} = conn
+      %Conn{url: url, req_headers: req_headers,
+            path: path,method: method, query_string: query_string,
+            opts: opts, req_body: req_body} = conn
       url = url_serialize(url, path, query_string)
       req_headers = header_serialize(req_headers)
       with {:ok, ref} <- :hackney.request(method, url, req_headers, :stream, opts) do
@@ -40,10 +42,10 @@ if Code.ensure_loaded?(:hackney) do
 
 
     defp url_serialize(url, path, query_string) do
-      url |> Maxwell.Conn.append_query_string(path, query_string)
+      url |> Conn.append_query_string(path, query_string)
     end
     defp header_serialize(headers) do
-      for {_, origin_header} <- headers, into: [], do: origin_header
+      headers |> Enum.map(&elem(&1, 1))
     end
 
     defp format_response({:ok, status, headers, body}, conn) when is_binary(body) do
