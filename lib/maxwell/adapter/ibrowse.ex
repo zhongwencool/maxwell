@@ -53,7 +53,7 @@ if Code.ensure_loaded?(:ibrowse) do
              false ->
                content_type = :mimerl.filename(filepath)
                req_headers
-               |> Map.put("content-type", content_type)
+               |> Map.put("content-type", {"content-type", content_type})
                |> header_serialize
            end
       req_body = {&stream_iterate/1, filepath}
@@ -77,16 +77,15 @@ if Code.ensure_loaded?(:ibrowse) do
       url |> Maxwell.Conn.append_query_string(path, query_string) |> to_char_list
     end
     defp header_serialize(headers) do
-      headers |> Enum.map(fn({_, origin_header}) -> origin_header end)
+      for {_, origin_header} <- headers, into: [], do: origin_header
     end
 
     defp format_response({:ok, status, headers, body}, conn) do
       {status, _} = status |> to_string |> Integer.parse
-      headers = headers
-      |> Enum.reduce(%{}, fn({key, value}, acc) ->
-        key = key |> to_string |> String.downcase
-        Map.put(acc, key, {key, to_string(value)})
-      end)
+      headers = for {key, value}<- headers, into: %{} do
+        down_key = key |> to_string |> String.downcase
+        {down_key, {key, to_string(value)}}
+      end
       {:ok, %{conn |status:   status,
               resp_headers:  headers,
               resp_body:     body,
@@ -108,8 +107,8 @@ if Code.ensure_loaded?(:ibrowse) do
           false ->
             len = Maxwell.Multipart.len_mp_stream(boundary, multiparts)
             headers
-            |> Map.put("content-type", "multipart/form-data; boundary=#{boundary}")
-            |> Map.put("content-length", len)
+            |> Map.put("content-type", {"content-type", "multipart/form-data; boundary=#{boundary}"})
+            |> Map.put("content-length", {"content-length",len})
         end
       {headers, body}
     end
