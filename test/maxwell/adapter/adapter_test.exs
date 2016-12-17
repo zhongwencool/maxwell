@@ -8,7 +8,7 @@ defmodule MaxwellAdapterTest do
     use Maxwell.Adapter
     def send_direct(conn = %Conn{status: nil}) do
       {:ok, %{conn|status: 200,
-              resp_headers: %{"Content-Type" => "text/plain"},
+              resp_headers: %{"content-type" => {"Content-Type", "text/plain"}},
               resp_body: "testbody",
               state: :sent}}
     end
@@ -35,7 +35,7 @@ defmodule MaxwellAdapterTest do
   test "return resp content-type header" do
     {:ok, conn} = Client.get()
     assert conn |> get_resp_header == %{"Content-Type" => "text/plain"}
-    assert conn |> get_resp_header("Content-Type") == "text/plain"
+    assert conn |> get_resp_header("Content-Type") == {"Content-Type", "text/plain"}
   end
 
   test "return resp_body" do

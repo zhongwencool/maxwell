@@ -76,14 +76,19 @@ if Code.ensure_loaded?(:ibrowse) do
     defp url_serialize(url, path, query_string) do
       url |> Maxwell.Conn.append_query_string(path, query_string) |> to_char_list
     end
-    defp header_serialize(header) do
-      header |> Map.to_list
+    defp header_serialize(headers) do
+      headers |> Enum.map(fn({_, origin_header}) -> origin_header end)
     end
 
     defp format_response({:ok, status, headers, body}, conn) do
       {status, _} = status |> to_string |> Integer.parse
+      headers = headers
+      |> Enum.reduce(%{}, fn({key, value}, acc) ->
+        key = key |> to_string |> String.downcase
+        Map.put(acc, key, {key, to_string(value)})
+      end)
       {:ok, %{conn |status:   status,
-              resp_headers:  headers |> :maps.from_list,
+              resp_headers:  headers,
               resp_body:     body,
               state:         :sent,
               req_body:      nil}
