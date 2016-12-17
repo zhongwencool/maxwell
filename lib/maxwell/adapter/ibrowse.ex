@@ -100,16 +100,12 @@ if Code.ensure_loaded?(:ibrowse) do
     defp multipart_encode(headers, multiparts) do
       boundary = Maxwell.Multipart.new_boundary
       body = {&multipart_body/1, {:start, boundary, multiparts}}
-      headers =
-        case Map.has_key?(headers, "content-type") do
-          true ->
-            headers
-          false ->
-            len = Maxwell.Multipart.len_mp_stream(boundary, multiparts)
-            headers
-            |> Map.put("content-type", {"content-type", "multipart/form-data; boundary=#{boundary}"})
-            |> Map.put("content-length", {"content-length",len})
-        end
+
+      len = Maxwell.Multipart.len_mp_stream(boundary, multiparts)
+      headers = headers
+      |> Map.put("content-type", {"content-type", "multipart/form-data; boundary=#{boundary}"})
+      |> Map.put("content-length", {"content-length",len})
+
       {headers, body}
     end
 
