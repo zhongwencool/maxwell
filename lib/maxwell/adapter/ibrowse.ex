@@ -4,7 +4,7 @@ if Code.ensure_loaded?(:ibrowse) do
     [`ibrowse`](https://github.com/cmullaparthi/ibrowse) adapter
     """
 
-    @chunk_size 5*1024*1024
+    @chunk_size 4*1024*1024
     use Maxwell.Adapter
 
     @doc """
