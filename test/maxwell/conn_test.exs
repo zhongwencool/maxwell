@@ -39,6 +39,9 @@ defmodule ConnTest do
     assert put_req_header(%{"cache-control" => "no-cache", "ETag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="})
     == %Conn{state: :unsent, req_headers: %{"cache-control" => {"cache-control", "no-cache"},
                                             "etag" => {"ETag", "rFjdsDtv2qxk7K1CwG4VMlF836E="}}}
+    assert put_req_header(%{"cache-control" => {"cache-control", "no-cache"}, "ETag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="})
+    == %Conn{state: :unsent, req_headers: %{"cache-control" => {"cache-control", "no-cache"},
+                                            "etag" => {"ETag", "rFjdsDtv2qxk7K1CwG4VMlF836E="}}}
 
     assert_raise AlreadySentError, "the request was already sent", fn ->
       put_req_header(%Conn{state: :sent}, %{"cache-control" => "no-cache"})

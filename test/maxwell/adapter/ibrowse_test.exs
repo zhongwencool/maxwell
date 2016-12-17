@@ -72,6 +72,14 @@ defmodule Maxwell.IbrowseTest do
       |> Client.post!
     end
 
+    def file_test(filepath, content_type) do
+      "/post"
+      |> put_path
+      |> put_req_body({:file, filepath})
+      |> put_req_header("content-type", content_type)
+      |> Client.post!
+    end
+
     def stream_test() do
       "/post"
       |> put_path
@@ -109,8 +117,13 @@ defmodule Maxwell.IbrowseTest do
     assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
   end
 
-  test "send file" do
+  test "send file without content-type" do
     conn = Client.file_test("test/maxwell/multipart_test_file.sh")
+    assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
+  end
+
+  test "send file with content-type" do
+    conn = Client.file_test("test/maxwell/multipart_test_file.sh", "application/x-sh")
     assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
   end
 
