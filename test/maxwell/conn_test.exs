@@ -97,10 +97,5 @@ defmodule ConnTest do
     end
   end
 
-  test "append_query_string/2 test" do
-    assert "http://example.com/home?name=zhong+wen" == append_query_string("http://example.com", "/home", %{"name" => "zhong wen"})
-    assert "http://example.com/home" == append_query_string("http://example.com", "/home", %{})
-  end
-
 end
 

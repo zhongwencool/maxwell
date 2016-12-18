@@ -11,6 +11,7 @@ defmodule Maxwell.Adapter do
       @behaviour Maxwell.Adapter
 
       alias Maxwell.Conn
+      alias Maxwell.Adapter.Util
 
       @doc false
       def call(conn) do
