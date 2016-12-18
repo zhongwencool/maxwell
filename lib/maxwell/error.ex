@@ -9,9 +9,10 @@ defmodule Maxwell.Error do
   defexception [:url, :status, :method, :reason, :message, :conn]
 
   def exception({module, reason, conn}) do
-    %Maxwell.Conn{url: url, status: status, method: method} = conn
+    %Maxwell.Conn{url: url, status: status, method: method, path: path} = conn
     message = """
     url: #{url}
+    path: #{inspect path}
     method: #{method}
     status: #{status}
     reason: #{inspect reason}

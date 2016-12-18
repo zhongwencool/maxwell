@@ -1,6 +1,11 @@
 defmodule Maxwell.IbrowseTest do
-  use ExUnit.Case
+  use Maxwell.Adapter.TestHelper, adapter: Maxwell.Adapter.Ibrowse
+end
+
+defmodule Maxwell.IbrowseMockTest do
+  use ExUnit.Case, async: false
   import Maxwell.Conn
+  import Mock
 
   defmodule Client do
     use Maxwell.Builder
@@ -93,58 +98,151 @@ defmodule Maxwell.IbrowseTest do
 
   setup do
     :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
-    {:ok, _} = Application.ensure_all_started(:ibrowse)
     :ok
   end
 
-  test "sync request" do
+  test_with_mock "sync request", :ibrowse,
+    [send_req:
+     fn(_,_,_,_,_) ->
+       {:ok, '200',
+        [{'Server', 'nginx'}, {'Date', 'Sun, 18 Dec 2016 03:02:14 GMT'},
+         {'Content-Type', 'application/json'}, {'Content-Length', '33'},
+         {'Connection', 'keep-alive'}, {'Access-Control-Allow-Origin', '*'},
+         {'Access-Control-Allow-Credentials', 'true'}],
+        '{\n  "origin": "183.240.20.213"\n}\n'}
+     end] do
     assert Client.get_ip_test |> Maxwell.Conn.get_status == 200
   end
 
-  test "encode decode json test" do
+  test_with_mock "encode decode json test", :ibrowse,
+    [send_req:
+     fn(_,_,_,_,_) ->
+       {:ok, '200',
+        [{'Server', 'nginx'}, {'Date', 'Sun, 18 Dec 2016 03:12:20 GMT'},
+         {'Content-Type', 'application/json'}, {'Content-Length', '383'},
+         {'Connection', 'keep-alive'}, {'Access-Control-Allow-Origin', '*'},
+         {'Access-Control-Allow-Credentials', 'true'}],
+        '{\n  "args": {}, \n  "data": "{\\"josnkey2\\":\\"jsonvalue2\\",\\"josnkey1\\":\\"jsonvalue1\\"}", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "49", \n    "Content-Type": "application/json", \n    "Host": "httpbin.org"\n  }, \n  "json": {\n    "josnkey1": "jsonvalue1", \n    "josnkey2": "jsonvalue2"\n  }, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}
+     end] do
     result = %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"} |> Client.encode_decode_json_test
     assert result == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
 
   end
 
-  test "mutilpart body file" do
+  test_with_mock "mutilpart body file", :ibrowse,
+    [send_req:
+     fn(_,_,_,_,_) ->
+       {:ok, '200',
+        [{'Server', 'nginx'}, {'Date', 'Sun, 18 Dec 2016 03:13:54 GMT'},
+         {'Content-Type', 'application/json'}, {'Content-Length', '392'},
+         {'Connection', 'keep-alive'}, {'Access-Control-Allow-Origin', '*'},
+         {'Access-Control-Allow-Credentials', 'true'}],
+        '{\n  "args": {}, \n  "data": "", \n  "files": {\n    "file": "#!/usr/bin/env bash\\necho \\"test multipart file\\"\\n"\n  }, \n  "form": {}, \n  "headers": {\n    "Content-Length": "279", \n    "Content-Type": "multipart/form-data; boundary=---------------------------hknycbtpcxdlluen", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}
+     end] do
     conn = Client.multipart_test
     assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
   end
 
-  test "mutilpart body file extra headers" do
+  test_with_mock "mutilpart body file extra headers", :ibrowse,
+    [send_req:
+     fn(_,_,_,_,_) ->
+       {:ok, '200',
+        [{'Server', 'nginx'}, {'Date', 'Sun, 18 Dec 2016 03:15:23 GMT'},
+         {'Content-Type', 'application/json'}, {'Content-Length', '392'},
+         {'Connection', 'keep-alive'}, {'Access-Control-Allow-Origin', '*'},
+         {'Access-Control-Allow-Credentials', 'true'}],
+        '{\n  "args": {}, \n  "data": "", \n  "files": {\n    "file": "#!/usr/bin/env bash\\necho \\"test multipart file\\"\\n"\n  }, \n  "form": {}, \n  "headers": {\n    "Content-Length": "273", \n    "Content-Type": "multipart/form-data; boundary=---------------------------myyesqvzohlzgweh", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}
+     end] do
     conn = Client.multipart_with_extra_header_test
     assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
   end
 
-  test "send file without content-type" do
+  test_with_mock "send file without content-type", :ibrowse,
+    [send_req:
+     fn(_,_,_,_,_) ->
+       {:ok, '200',
+        [{'Server', 'nginx'}, {'Date', 'Sun, 18 Dec 2016 03:16:37 GMT'},
+         {'Content-Type', 'application/json'}, {'Content-Length', '316'},
+         {'Connection', 'keep-alive'}, {'Access-Control-Allow-Origin', '*'},
+         {'Access-Control-Allow-Credentials', 'true'}],
+        '{\n  "args": {}, \n  "data": "#!/usr/bin/env bash\\necho \\"test multipart file\\"\\n", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "47", \n    "Content-Type": "application/x-sh", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}
+     end] do
     conn = Client.file_test("test/maxwell/multipart_test_file.sh")
     assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
   end
 
-  test "send file with content-type" do
+  test_with_mock "send file with content-type", :ibrowse,
+    [send_req:
+     fn(_,_,_,_,_) ->
+       {:ok, '200',
+        [{'Server', 'nginx'}, {'Date', 'Sun, 18 Dec 2016 03:17:51 GMT'},
+         {'Content-Type', 'application/json'}, {'Content-Length', '316'},
+         {'Connection', 'keep-alive'}, {'Access-Control-Allow-Origin', '*'},
+         {'Access-Control-Allow-Credentials', 'true'}],
+        '{\n  "args": {}, \n  "data": "#!/usr/bin/env bash\\necho \\"test multipart file\\"\\n", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "47", \n    "Content-Type": "application/x-sh", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}
+     end] do
     conn = Client.file_test("test/maxwell/multipart_test_file.sh", "application/x-sh")
     assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
   end
 
-  test "send stream" do
+  test_with_mock "send stream", :ibrowse,
+    [send_req:
+     fn(_,_,_,_,_) ->
+       {:ok, '200',
+        [{'Server', 'nginx'}, {'Date', 'Sun, 18 Dec 2016 03:21:15 GMT'},
+         {'Content-Type', 'application/json'}, {'Content-Length', '283'},
+         {'Connection', 'keep-alive'}, {'Access-Control-Allow-Origin', '*'},
+         {'Access-Control-Allow-Credentials', 'true'}],
+        '{\n  "args": {}, \n  "data": "112233", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "6", \n    "Content-Type": "application/vnd.lotus-1-2-3", \n    "Host": "httpbin.org"\n  }, \n  "json": 112233, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}
+     end] do
     conn = Client.stream_test
     assert get_resp_body(conn, "data") == "112233"
   end
 
-  test "user-agent header test" do
+  test_with_mock "user-agent header test", :ibrowse,
+    [send_req:
+     fn(_,_,_,_,_) ->
+       {:ok, '200',
+        [{'Server', 'nginx'}, {'Date', 'Sun, 18 Dec 2016 03:21:57 GMT'},
+         {'Content-Type', 'application/json'}, {'Content-Length', '27'},
+         {'Connection', 'keep-alive'}, {'Access-Control-Allow-Origin', '*'},
+         {'Access-Control-Allow-Credentials', 'true'}],
+        '{\n  "user-agent": "test"\n}\n'}
+     end] do
     assert "test" |> Client.user_agent_test == "test"
   end
 
-  test "/put" do
+  test_with_mock "/put", :ibrowse,
+    [send_req:
+     fn(_,_,_,_,_) ->
+       {:ok, '200',
+        [{'Server', 'nginx'}, {'Date', 'Sun, 18 Dec 2016 03:23:00 GMT'},
+         {'Content-Type', 'application/json'}, {'Content-Length', '303'},
+         {'Connection', 'keep-alive'}, {'Access-Control-Allow-Origin', '*'},
+         {'Access-Control-Allow-Credentials', 'true'}],
+        '{\n  "args": {}, \n  "data": "{\\"key\\":\\"value\\"}", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "15", \n    "Content-Type": "application/json", \n    "Host": "httpbin.org"\n  }, \n  "json": {\n    "key": "value"\n  }, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/put"\n}\n'}
+     end] do
     assert %{"key" => "value"} |> Client.put_json_test == "{\"key\":\"value\"}"
   end
 
-  test "/delete" do
+  test_with_mock "/delete", :ibrowse,
+    [send_req:
+     fn(_,_,_,_,_) ->
+       {:ok, '200',
+        [{'Server', 'nginx'}, {'Date', 'Sun, 18 Dec 2016 03:24:08 GMT'},
+         {'Content-Type', 'application/json'}, {'Content-Length', '225'},
+         {'Connection', 'keep-alive'}, {'Access-Control-Allow-Origin', '*'},
+         {'Access-Control-Allow-Credentials', 'true'}],
+        '{\n  "args": {}, \n  "data": "", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "0", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/delete"\n}\n'}
+     end] do
     assert Client.delete_test == ""
   end
 
-  test "adapter return error" do
+  test_with_mock "adapter return error", :ibrowse,
+    [send_req:
+     fn(_,_,_,_,_) ->
+       {:error, :req_timedout}
+     end] do
     {:error, :req_timedout, conn} = Client.timeout_test
     assert conn.state == :error
   end
