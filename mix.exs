@@ -41,6 +41,7 @@ defmodule Maxwell.Mixfile do
       {:cmark, "~> 0.6", only: [:dev]},
       {:inch_ex, "~> 0.5.4", only: :docs},
       {:credo, "~> 0.5", only: [:dev]},
+      {:mock, "~> 0.2.0", only: :test},
     ]
   end
 

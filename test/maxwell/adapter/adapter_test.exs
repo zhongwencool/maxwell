@@ -28,7 +28,7 @@ defmodule MaxwellAdapterTest do
   end
 
   test "return :status 400" do
-    assert_raise(Maxwell.Error, "url: \nmethod: get\nstatus: 400\nreason: :response_status_not_match\nmodule: Elixir.MaxwellAdapterTest.Client\n",
+    assert_raise(Maxwell.Error, "url: \npath: \"\"\nmethod: get\nstatus: 400\nreason: :response_status_not_match\nmodule: Elixir.MaxwellAdapterTest.Client\n",
       fn() -> %Conn{status: 100} |> Client.get! end)
   end
 
@@ -93,7 +93,7 @@ defmodule MaxwellAdapterTest do
   end
 
   test "adapter not implement send_file/1" do
-    assert_raise Maxwell.Error, "url: http://example.com\nmethod: post\nstatus: \nreason: \"Elixir.MaxwellAdapterTest.TestAdapter Adapter doesn't implement send_file/1\"\nmodule: Elixir.MaxwellAdapterTest.TestAdapter\n", fn ->
+    assert_raise Maxwell.Error, "url: http://example.com\npath: \"/foo\"\nmethod: post\nstatus: \nreason: \"Elixir.MaxwellAdapterTest.TestAdapter Adapter doesn't implement send_file/1\"\nmodule: Elixir.MaxwellAdapterTest.TestAdapter\n", fn ->
         "http://example.com"
         |> new
         |> put_path("/foo")

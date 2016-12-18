@@ -45,11 +45,11 @@ if Code.ensure_loaded?(:hackney) do
       url |> Conn.append_query_string(path, query_string)
     end
     defp header_serialize(headers) do
-      headers |> Enum.map(&elem(&1, 1))
+      headers |> Map.values
     end
 
     defp format_response({:ok, status, headers, body}, conn) when is_binary(body) do
-      headers = for {key, value}<- headers, into: %{} do
+      headers = for {key, value} <- headers, into: %{} do
         down_key = key |> to_string |> String.downcase
         {down_key, {key, to_string(value)}}
       end

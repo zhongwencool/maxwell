@@ -1,6 +1,6 @@
 defmodule RelsTest do
   use ExUnit.Case
-  import Maxwell.MiddlewareTestHelper
+  import Maxwell.Middleware.TestHelper
 
   test "Header Without Link Middleware Rels" do
     conn = response(Maxwell.Middleware.Rels, %{headers: %{}}, [])

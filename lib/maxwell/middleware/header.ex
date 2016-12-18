@@ -20,7 +20,7 @@ defmodule Maxwell.Middleware.Headers do
 
   def init(headers) do
     check_headers(headers)
-    Conn.put_req_header(%Conn{}, headers) |> Map.get(:req_headers)
+    %Conn{} |> Conn.put_req_header(headers) |> Map.get(:req_headers)
   end
 
   def request(conn, req_headers) do

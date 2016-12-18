@@ -1,6 +1,6 @@
 defmodule OptsTest do
   use ExUnit.Case
-  import Maxwell.MiddlewareTestHelper
+  import Maxwell.Middleware.TestHelper
 
   alias Maxwell.Conn
   test "Base Middleware Opts" do
