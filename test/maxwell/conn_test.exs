@@ -87,6 +87,13 @@ defmodule ConnTest do
     end
   end
 
+  test "get_req_header/2 get_req_header/3 test" do
+    assert get_req_header(%Conn{req_headers: %{"server" => {"Server", "Microsoft-IIS/8.5"}}})
+    == %{"Server" => "Microsoft-IIS/8.5"}
+    assert get_req_header(%Conn{resp_headers: %{"server" => {"Server", "Microsoft-IIS/8.5"}}}, "Server")
+    == {"Server", "Microsoft-IIS/8.5"}
+  end
+
   test "get_resp_body/2 get_resp_body/3 test" do
     assert get_resp_body(%Conn{state: :sent, resp_body: "I'm ok"}) ==  "I'm ok"
     assert get_resp_body(%Conn{state: :sent, resp_body: %{"foo" => %{"addr" => "China"}}}, ["foo", "addr"]) == "China"

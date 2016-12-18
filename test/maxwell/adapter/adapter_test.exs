@@ -27,6 +27,12 @@ defmodule MaxwellAdapterTest do
     assert result |> Conn.get_status == 200
   end
 
+  test "test :query string" do
+    {:ok, result} = %{"name" => "china"} |> Conn.put_query_string |> Client.get
+    assert result.query_string == %{"name" => "china"}
+    assert result |> Conn.get_status == 200
+  end
+
   test "return :status 400" do
     assert_raise(Maxwell.Error, "url: \npath: \"\"\nmethod: get\nstatus: 400\nreason: :response_status_not_match\nmodule: Elixir.MaxwellAdapterTest.Client\n",
       fn() -> %Conn{status: 100} |> Client.get! end)
