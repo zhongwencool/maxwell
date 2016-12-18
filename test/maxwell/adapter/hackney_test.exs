@@ -193,7 +193,6 @@ defmodule Maxwell.HackneyMockTest do
      start_response: fn(_) -> {:ok, 200, [], make_ref} end,
      body: fn(_) -> {:ok, "error connection closed"}
      end ] do
-    conn = 
     assert_raise(Maxwell.Error,
       "url: http://httpbin.org\npath: \"/post\"\nmethod: post\nstatus: \nreason: :closed\nmodule: Elixir.Maxwell.HackneyMockTest.Client\n",
       fn() -> Client.stream_test |> get_resp_body("data")  end)

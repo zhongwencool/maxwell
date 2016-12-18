@@ -78,7 +78,7 @@ if Code.ensure_loaded?(:ibrowse) do
       url |> Conn.append_query_string(path, query_string) |> to_char_list
     end
     defp header_serialize(headers) do
-      headers |> Enum.map(&elem(&1, 1))
+      headers |> Map.values
     end
 
     defp format_response({:ok, status, headers, body}, conn) do
