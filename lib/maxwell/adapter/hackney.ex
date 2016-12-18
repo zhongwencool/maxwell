@@ -49,7 +49,7 @@ if Code.ensure_loaded?(:hackney) do
     end
 
     defp format_response({:ok, status, headers, body}, conn) when is_binary(body) do
-      headers = for {key, value}<- headers, into: %{} do
+      headers = for {key, value} <- headers, into: %{} do
         down_key = key |> to_string |> String.downcase
         {down_key, {key, to_string(value)}}
       end

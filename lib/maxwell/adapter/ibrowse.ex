@@ -4,7 +4,7 @@ if Code.ensure_loaded?(:ibrowse) do
     [`ibrowse`](https://github.com/cmullaparthi/ibrowse) adapter
     """
 
-    @chunk_size 4*1024*1024
+    @chunk_size 4 * 1024 * 1024
     use Maxwell.Adapter
 
 
@@ -83,7 +83,7 @@ if Code.ensure_loaded?(:ibrowse) do
 
     defp format_response({:ok, status, headers, body}, conn) do
       {status, _} = status |> to_string |> Integer.parse
-      headers = for {key, value}<- headers, into: %{} do
+      headers = for {key, value} <- headers, into: %{} do
         down_key = key |> to_string |> String.downcase
         {down_key, {key, to_string(value)}}
       end
@@ -124,14 +124,14 @@ if Code.ensure_loaded?(:ibrowse) do
     end
     defp stream_iterate(next_stream_fun)when is_function(next_stream_fun, 1) do
       case next_stream_fun.({:cont, nil}) do
-        {:suspended, elem, next_stream_fun} -> {:ok, elem, next_stream_fun}
+        {:suspended, item, next_stream_fun} -> {:ok, item, next_stream_fun}
         {:halted, _} -> :eof
         {:done, _} -> :eof
       end
     end
     defp stream_iterate(stream) do
-		  case Enumerable.reduce(stream, {:cont, nil}, fn(elem, nil) -> {:suspend, elem} end) do
-        {:suspended, elem, next_stream} -> {:ok, elem, next_stream}
+		  case Enumerable.reduce(stream, {:cont, nil}, fn(item, nil)-> {:suspend, item} end) do
+        {:suspended, item, next_stream} -> {:ok, item, next_stream}
 			  {:done, _} -> :eof
         {:halted, _} -> :eof
 		  end
