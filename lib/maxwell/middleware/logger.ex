@@ -26,7 +26,7 @@ defmodule Maxwell.Middleware.Logger do
     new_result = next_fn.(request_env)
     method = request_env.method |> to_string |> String.upcase
     case new_result do
-      {:error, reason} ->
+      {:error, reason, _conn} ->
         error_reason = to_string(:io_lib.format("~p", [reason]))
         Logger.log(level, "#{method} #{request_env.url}>> #{IO.ANSI.red}ERROR: " <> error_reason)
       {:ok, response_conn} ->

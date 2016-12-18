@@ -16,7 +16,8 @@ defmodule LoggerTest do
 
   test "Logger Call" do
     conn = %Conn{method: :get, url: "http://example.com", status: 200}
-    outputstr = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(_x) -> {:error, "bad request"} end, :info) end
+    outputstr = capture_log fn ->
+      Maxwell.Middleware.Logger.call(conn,fn(x) ->{:error, "bad request", %{x| status: 400}} end, :info) end
     output301 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> {:ok, %{x| status: 301}} end, :info) end
     output404 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> {:ok, %{x| status: 404}} end, :info) end
     output500 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> {:ok, %{x| status: 500}} end, :info) end

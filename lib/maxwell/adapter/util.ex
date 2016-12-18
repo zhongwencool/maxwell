@@ -23,7 +23,6 @@ defmodule Maxwell.Adapter.Util do
 
   """
   def url_serialize(url, path, query_string, type \\ :string) do
-    IO.inspect {:xxxxx, url, path, query_string}
     url = url |> append_query_string(path, query_string)
     case type do
       :string -> url
