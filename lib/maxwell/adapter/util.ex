@@ -18,8 +18,9 @@ defmodule Maxwell.Adapter.Util do
 
   ### Examples
 
-  # http://example.com/home?name=foo
-  iex> url_serialize("http://example.com", "/home", %{"name" => "foo"})
+      #http://example.com/home?name=foo
+      iex> url_serialize("http://example.com", "/home", %{"name" => "foo"})
+
   """
   def url_serialize(url, path, query_string, type \\ :string) do
     url = url |> append_query_string(path, query_string)
@@ -29,12 +30,32 @@ defmodule Maxwell.Adapter.Util do
     end
   end
 
+  @doc """
+  Make headers to key word list.
+
+     * `headers`   - `Map.t`, for example: `%{"content-type" => {"Content-Type", "application/json"}}`
+
+  ### Examples
+
+       #[{"Content-Type", "application/json"}]
+       iex> headers_serialize(%{"content-type" => {"Content-Type", "application/json"}})
+
+  """
+
   def header_serialize(headers) do
     headers |> Map.values
   end
 
-  def file_header_transform(chunked, conn, req_headers) do
-    %Conn{req_body: {:file, filepath}} = conn
+  @doc """
+  Add `content-type` to headers if don't have;
+  Add `content-length` to headers if not chunked
+
+     * `chunked`  - `boolean`, is chunked mode
+     * `conn`  - `Maxwell.Conn`
+
+  """
+  def file_header_transform(chunked, conn) do
+    %Conn{req_body: {:file, filepath}, req_headers: req_headers} = conn
     req_headers =
       case Map.has_key?(req_headers, "content-type") do
         true -> req_headers
@@ -54,6 +75,12 @@ defmodule Maxwell.Adapter.Util do
       end
   end
 
+  @doc """
+  Check req_headers has transfer-encoding: chunked.
+
+     * `conn`  - `Maxwell.Conn`
+
+  """
   def chunked?(conn) do
     case Conn.get_req_header(conn, "transfer-encoding") do
       {_, "chunked"} -> true
@@ -62,6 +89,13 @@ defmodule Maxwell.Adapter.Util do
     end
   end
 
+  @doc """
+  Encode multipart form.
+
+    * `conn`  - `Maxwell.Conn`
+    * `multiparts` - see `Maxwell.Multipart.encode_form/2`
+
+  """
   def multipart_encode(conn, multiparts) do
     boundary = Multipart.new_boundary
     body = {&multipart_body/1, {:start, boundary, multiparts}}
@@ -75,12 +109,10 @@ defmodule Maxwell.Adapter.Util do
     {headers, body}
   end
 
-  def multipart_body({:start, boundary, multiparts}) do
-    {body, _size} = Multipart.encode_form(boundary, multiparts)
-    {:ok, body, :end}
-  end
-  def multipart_body(:end), do: :eof
+  @doc """
+  Fetch the first element from stream.
 
+  """
   def stream_iterate(filepath) when is_binary(filepath) do
     filepath
     |> File.stream!([], @chunk_size)
@@ -100,6 +132,12 @@ defmodule Maxwell.Adapter.Util do
       {:halted, _} -> :eof
 		end
   end
+
+  defp multipart_body({:start, boundary, multiparts}) do
+    {body, _size} = Multipart.encode_form(boundary, multiparts)
+    {:ok, body, :end}
+  end
+  defp multipart_body(:end), do: :eof
 
   defp append_query_string(url, path, query)when query == %{}, do: url <> path
   defp append_query_string(url, path, query) do

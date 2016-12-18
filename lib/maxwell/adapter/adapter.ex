@@ -23,19 +23,49 @@ defmodule Maxwell.Adapter do
         end
       end
 
-      @doc false
+      @doc """
+      Send request without chang it's body formant.
+
+      * `conn` - `%Maxwell.Conn{}`
+
+      Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term, %Maxwell.Conn{}}`.
+      """
       def send_direct(conn) do
         raise Maxwell.Error, {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_direct/1", conn}
       end
-      @doc false
+
+      @doc """
+      Send multipart form request.
+
+      * `conn` - `%Maxwell.Conn{}`, the req_body is `{:multipart, form_list}`
+      see `Maxwell.Multipart.encode_form/2` for form_list
+
+      Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term, %Maxwell.Conn{}}`.
+      """
       def send_multipart(conn) do
         raise Maxwell.Error, {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_multipart/1", conn}
       end
-      @doc false
+
+      @doc """
+      Send file request.
+
+      * `conn` - `%Maxwell.Conn{}`, the req_body is `{:file, filepath}`.
+      Auto change to chunked mode if req_headers has `%{"transfer-encoding" => "chunked"`
+
+      Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term, %Maxwell.Conn{}}`.
+      """
       def send_file(conn) do
         raise Maxwell.Error, {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_file/1", conn}
       end
-      @doc false
+
+      @doc """
+      Send stream request.
+
+      * `conn` - `%Maxwell.Conn{}`, the req_body is `Stream`.
+      Always chunked mode
+
+      Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term, %Maxwell.Conn{}}`.
+      """
       def send_stream(conn) do
         raise Maxwell.Error, {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_stream/1", conn}
       end

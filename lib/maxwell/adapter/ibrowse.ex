@@ -26,8 +26,7 @@ if Code.ensure_loaded?(:ibrowse) do
     end
 
     def send_file(conn) do
-      %Conn{url: url, req_headers: req_headers,
-            query_string: query_string, path: path,
+      %Conn{url: url, query_string: query_string, path: path,
             method: method, opts: opts, req_body: {:file, filepath}} = conn
       url = Util.url_serialize(url, path, query_string, :char_list)
       chunked = Util.chunked?(conn)
@@ -38,7 +37,7 @@ if Code.ensure_loaded?(:ibrowse) do
         end
       req_headers =
         chunked
-        |> Util.file_header_transform(conn, req_headers)
+        |> Util.file_header_transform(conn)
         |> Util.header_serialize
       req_body = {&Util.stream_iterate/1, filepath}
       result = :ibrowse.send_req(url, req_headers, method, req_body, opts)
