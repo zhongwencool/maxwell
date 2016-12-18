@@ -36,7 +36,10 @@ if Code.ensure_loaded?(:ibrowse) do
           true -> Keyword.put(opts, :transfer_encoding, :chunked)
           false -> opts
         end
-      req_headers = Util.file_header_serialize(chunked, conn, req_headers)
+      req_headers =
+        chunked
+        |> Util.file_header_transform(conn, req_headers)
+        |> Util.header_serialize
       req_body = {&Util.stream_iterate/1, filepath}
       result = :ibrowse.send_req(url, req_headers, method, req_body, opts)
       format_response(result, conn)

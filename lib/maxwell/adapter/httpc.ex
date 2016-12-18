@@ -34,7 +34,7 @@ defmodule Maxwell.Adapter.Httpc do
           method: method, opts: opts, req_body: {:file, filepath}} = conn
     url = Util.url_serialize(url, path, query_string, :char_list)
     chunked = Util.chunked?(conn)
-    req_headers = Util.file_header_serialize(chunked, conn, req_headers)
+    req_headers = Util.file_header_transform(chunked, conn, req_headers)
     req_body =
       case chunked do
         true -> {:chunkify, &Util.stream_iterate/1, filepath}

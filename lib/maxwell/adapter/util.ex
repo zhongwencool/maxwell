@@ -33,7 +33,7 @@ defmodule Maxwell.Adapter.Util do
     headers |> Map.values
   end
 
-  def file_header_serialize(chunked, conn, req_headers) do
+  def file_header_transform(chunked, conn, req_headers) do
     %Conn{req_body: {:file, filepath}} = conn
     req_headers =
       case Map.has_key?(req_headers, "content-type") do
@@ -44,7 +44,6 @@ defmodule Maxwell.Adapter.Util do
           |> Conn.put_req_header("content-type", content_type)
           |> Map.get(:req_headers)
       end
-    req_headers =
       case chunked or Map.has_key?(req_headers, "content-length") do
         true -> req_headers
         false ->
@@ -53,7 +52,6 @@ defmodule Maxwell.Adapter.Util do
           |> Conn.put_req_header("content-length", len)
           |> Map.get(:req_headers)
       end
-    req_headers |> header_serialize
   end
 
   def chunked?(conn) do
