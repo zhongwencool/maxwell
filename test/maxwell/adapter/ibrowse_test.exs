@@ -53,6 +53,7 @@ defmodule Maxwell.IbrowseMockTest do
     def timeout_test() do
       "/delay/5"
       |> put_path
+      |> put_query_string("foo", "bar")
       |> put_option(:inactivity_timeout, 1000)
       |> Client.get
     end

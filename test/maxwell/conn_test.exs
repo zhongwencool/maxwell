@@ -82,9 +82,20 @@ defmodule ConnTest do
     == %{"Server" => "Microsoft-IIS/8.5"}
     assert get_resp_header(%Conn{state: :sent, resp_headers: %{"server" => {"Server", "Microsoft-IIS/8.5"}}}, "Server")
     == {"Server", "Microsoft-IIS/8.5"}
+    assert get_resp_header(%Conn{state: :sent, resp_headers: %{"server" => {"Server", "Microsoft-IIS/8.5"}}}, "Server1")
+    == nil
     assert_raise NotSentError, "the request was not sent yet", fn ->
       get_resp_header(%Conn{state: :unsent}, "Server")
     end
+  end
+
+  test "get_req_header/2 get_req_header/3 test" do
+    assert get_req_header(%Conn{req_headers: %{"server" => {"Server", "Microsoft-IIS/8.5"}}})
+    == %{"Server" => "Microsoft-IIS/8.5"}
+    assert get_req_header(%Conn{req_headers: %{"server" => {"Server", "Microsoft-IIS/8.5"}}}, "Server")
+    == {"Server", "Microsoft-IIS/8.5"}
+    assert get_req_header(%Conn{req_headers: %{"server" => {"Server", "Microsoft-IIS/8.5"}}}, "Server1")
+    == nil
   end
 
   test "get_resp_body/2 get_resp_body/3 test" do
@@ -95,11 +106,6 @@ defmodule ConnTest do
     assert_raise NotSentError, "the request was not sent yet", fn ->
       get_resp_body(%Conn{state: :unsent})
     end
-  end
-
-  test "append_query_string/2 test" do
-    assert "http://example.com/home?name=zhong+wen" == append_query_string("http://example.com", "/home", %{"name" => "zhong wen"})
-    assert "http://example.com/home" == append_query_string("http://example.com", "/home", %{})
   end
 
 end

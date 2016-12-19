@@ -64,11 +64,21 @@ defmodule Maxwell.Adapter.TestHelper do
         def file_test(filepath) do
           "/post"
           |> put_path
+          |> put_req_header("transfer-encoding", "chunked")
           |> put_req_body({:file, filepath})
           |> post!
         end
 
         def file_test(filepath, content_type) do
+          "/post"
+          |> put_path
+          |> put_req_header("transfer-encoding", "Chunked")
+          |> put_req_body({:file, filepath})
+          |> put_req_header("content-type", content_type)
+          |> post!
+        end
+
+        def file_without_transfer_encoding_test(filepath, content_type) do
           "/post"
           |> put_path
           |> put_req_body({:file, filepath})
@@ -98,7 +108,6 @@ defmodule Maxwell.Adapter.TestHelper do
       test "encode decode json test" do
         result = %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"} |> unquote(client).encode_decode_json_test
         assert result == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
-
       end
 
       test "mutilpart body file" do
@@ -118,6 +127,10 @@ defmodule Maxwell.Adapter.TestHelper do
 
       test "send file with content-type" do
         conn = unquote(client).file_test("test/maxwell/multipart_test_file.sh", "application/x-sh")
+        assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
+      end
+      test "file_without_transfer_encoding" do
+        conn = unquote(client).file_without_transfer_encoding_test("test/maxwell/multipart_test_file.sh", "application/x-sh")
         assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
       end
 

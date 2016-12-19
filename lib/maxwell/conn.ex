@@ -202,6 +202,25 @@ defmodule Maxwell.Conn do
   def put_req_header(_conn, _key, _value), do: raise AlreadySentError
 
   @doc """
+
+  * `get_req_header/1` - get all request headers, return `Map.t`.
+  * `get_req_header/2` - get request header by `key`, return value.
+  * `conn` - `%Conn{}`
+
+  ### Examples
+
+  # {"Cookie", "xyz"}
+  %Conn{req_headers: %{"cookie" => {"Cookie", "xyz"}} |> get_req_header("cookie")
+  # %{"Cookie" => "xyz"}
+  %Conn{req_headers: %{"cookie" => {"Cookie", "xyz"}} |> get_req_header
+  """
+  def get_req_header(conn, key \\ nil)
+  def get_req_header(%Conn{req_headers: headers}, nil) do
+    for {_, origin_header} <- headers, into: %{}, do: origin_header
+  end
+  def get_req_header(%Conn{req_headers: headers}, key), do: headers[key] || headers[String.downcase(key)]
+
+  @doc """
   Merge adapter's request options.
 
    * `conn` - `%Conn{}`.
@@ -267,7 +286,7 @@ defmodule Maxwell.Conn do
   def get_resp_header(%Conn{resp_headers: headers}, nil) do
     for {_, origin_header} <- headers, into: %{}, do: origin_header
   end
-  def get_resp_header(%Conn{resp_headers: headers}, key), do: headers[String.downcase(key)]
+  def get_resp_header(%Conn{resp_headers: headers}, key), do: headers[key] || headers[String.downcase(key)]
 
   @doc """
   * `get_resp_body/1` - get all response body.
@@ -294,25 +313,6 @@ defmodule Maxwell.Conn do
   def get_resp_body(%Conn{resp_body: body}, func)when is_function(func, 1), do: func.(body)
   def get_resp_body(%Conn{resp_body: body}, keys)when is_list(keys), do: get_in(body, keys)
   def get_resp_body(%Conn{resp_body: body}, key), do: body[key]
-
-  @doc """
-    Append path and query string to url,
-    query string encode by `URI.encode_query/1`.
-
-    * `url`   - `conn.url`
-    * `path`  - `conn.path`
-    * `query` - `conn.query`
-
-  ### Examples
-
-       # http://example.com/home?name=foo
-       iex> append_query_string("http://example.com", "/home", %{"name" => "foo"})
-  """
-  def append_query_string(url, path, query)when query == %{}, do: url <> path
-  def append_query_string(url, path, query) do
-    query_string = URI.encode_query(query)
-    url <> path <> "?" <> query_string
-  end
 
   defimpl Inspect, for: Conn do
     def inspect(conn, opts) do
