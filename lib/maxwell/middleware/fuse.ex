@@ -45,7 +45,10 @@ defmodule Maxwell.Middleware.Fuse do
         :fuse.install(name, Keyword.get(opts, :fuse_opts))
         run(conn, next, name)
     end
-    response(conn, opts)
+    case conn do
+      %Maxwell.Conn{} = conn -> response(conn, opts)
+      err -> err
+    end
   end
 
   defp run(conn, next, name) do

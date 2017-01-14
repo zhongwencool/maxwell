@@ -12,6 +12,7 @@ rel/example_project
 ### Elixir template
 /_build
 /deps
+/cover
 erl_crash.dump
 *.ez
 

@@ -68,6 +68,12 @@ if Code.ensure_loaded?(:ibrowse) do
                state:         :sent,
                req_body:      nil}
     end
+    defp format_response({:error, {:conn_failed, {:error, :econnrefused}}}, conn) do
+      {:error, :econnrefused, %{conn | state: :error}}
+    end
+    defp format_response({:error, {:conn_failed, {:error, reason}}}, conn) do
+      {:error, reason, %{conn | state: :error}}
+    end
     defp format_response({:error, reason}, conn) do
       {:error, reason, %{conn | state: :error}}
     end

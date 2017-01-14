@@ -50,6 +50,13 @@ defmodule Maxwell.HttpcMockTest do
       |> get_resp_body("data")
     end
 
+    def normalized_error_test() do
+      "/"
+      |> put_path
+      |> Map.put(:url, "http://broken.local")
+      |> get
+    end
+
     def timeout_test() do
       "/delay/2"
       |> put_path
@@ -241,6 +248,38 @@ defmodule Maxwell.HttpcMockTest do
         '{\n  "args": {}, \n  "data": "", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "0", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/delete"\n}\n'}}
     end] do
     assert Client.delete_test == ""
+  end
+
+  test_with_mock "connection refused error is normalized", :httpc,
+    [request: fn (_,_,_,_) ->
+        {:error, {:failed_connect, [{:inet, [], :econnrefused}]}}
+     end] do
+     {:error, :econnrefused, conn} = Client.normalized_error_test
+     assert conn.state == :error
+  end
+
+  test_with_mock "timeout error is normalized", :httpc,
+    [request: fn (_,_,_,_) ->
+        {:error, {:failed_connect, [{:inet, [], :timeout}]}}
+     end] do
+     {:error, :timeout, conn} = Client.normalized_error_test
+     assert conn.state == :error
+  end
+
+  test_with_mock "unrecognized connection failed error is normalized", :httpc,
+    [request: fn (_,_,_,_) ->
+        {:error, {:failed_connect, [{:tcp, [], :i_made_this_up}]}}
+     end] do
+     {:error, {:failed_connect, [{:tcp, [], :i_made_this_up}]}, conn} = Client.normalized_error_test
+     assert conn.state == :error
+  end
+
+  test_with_mock "internal error is normalized", :httpc,
+    [request: fn (_,_,_,_) ->
+        {:error, :internal}
+     end] do
+     {:error, :internal, conn} = Client.normalized_error_test
+     assert conn.state == :error
   end
 
   test_with_mock "adapter return error", :httpc,

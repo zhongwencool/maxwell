@@ -7,7 +7,7 @@ defmodule FuseTest do
       send self(), :request_made
       conn = %{conn | state: :sent}
       case path do
-        "/ok" -> {:ok, %{conn | status: 200, resp_body: "ok"}}
+        "/ok" -> %{conn | status: 200, resp_body: "ok"}
         "/unavailable" -> {:error, :econnrefused, conn}
       end
     end
