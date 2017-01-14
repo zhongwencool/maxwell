@@ -32,7 +32,7 @@ defmodule Maxwell.Mixfile do
   defp deps do
     [
       {:mimerl, "~> 1.0.2"}, # for find multipart ctype
-      {:poison, "~> 2.1", optional: true},
+      {:poison, "~> 2.1 or ~> 3.0", optional: true},
       {:ibrowse, "~> 4.2", optional: true},
       {:hackney, "~> 1.6", optional: true},
       {:excoveralls, "~> 0.5.1", only: :test},
