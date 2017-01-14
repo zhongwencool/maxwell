@@ -130,7 +130,6 @@ defmodule Maxwell.Middleware.DecodeJson do
 
   def response(response, {decode_fun, valid_content_types}) do
     with {:ok, conn = %Maxwell.Conn{}} <- response do
-      headers = conn.resp_headers
       case Maxwell.Conn.get_resp_header(conn, "content-type") do
       {_, content_type} ->
           case is_json_content(content_type, conn.resp_body, valid_content_types) do

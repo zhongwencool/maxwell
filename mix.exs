@@ -18,7 +18,7 @@ defmodule Maxwell.Mixfile do
      ],
      test_coverage: [tool: ExCoveralls],
      xref: [exclude: [Poison, Maxwell.Adapter.Ibrowse]],
-     deps: deps]
+     deps: deps()]
   end
 
   # Type "mix help compile.app" for more information

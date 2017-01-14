@@ -65,8 +65,6 @@ defmodule Maxwell.Conn do
     resp_headers: %{},
     resp_body: ""
 
-  @done [:sent, :error]
-
   alias Maxwell.Conn
 
   defmodule AlreadySentError do
