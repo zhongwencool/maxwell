@@ -20,7 +20,7 @@ defmodule Maxwell.Multipart do
   Returns `{body_binary, size}`
 
   """
-  def encode_form(parts), do: encode_form(new_boundary, parts)
+  def encode_form(parts), do: encode_form(new_boundary(), parts)
   @doc """
   multipart form encode.
 
