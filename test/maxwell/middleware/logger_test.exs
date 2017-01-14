@@ -18,10 +18,10 @@ defmodule LoggerTest do
     conn = %Conn{method: :get, url: "http://example.com", status: 200}
     outputstr = capture_log fn ->
       Maxwell.Middleware.Logger.call(conn,fn(x) ->{:error, "bad request", %{x| status: 400}} end, :info) end
-    output301 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> {:ok, %{x| status: 301}} end, :info) end
-    output404 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> {:ok, %{x| status: 404}} end, :info) end
-    output500 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> {:ok, %{x| status: 500}} end, :info) end
-    outputok  = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> {:ok, x} end, :info) end
+    output301 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> %{x| status: 301} end, :info) end
+    output404 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> %{x| status: 404} end, :info) end
+    output500 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> %{x| status: 500} end, :info) end
+    outputok  = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> x end, :info) end
     assert outputstr =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  GET http://example.com>> \e\[31mERROR: <<\"bad request\">>\n\e\[0m"
 
     assert output301 =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[33m301\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 301, url: \"http://example.com\"\}\n\e\[0m"
