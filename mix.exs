@@ -35,6 +35,7 @@ defmodule Maxwell.Mixfile do
       {:poison, "~> 2.1 or ~> 3.0", optional: true},
       {:ibrowse, "~> 4.2", optional: true},
       {:hackney, "~> 1.6", optional: true},
+      {:fuse, "~> 2.4", optional: true},
       {:excoveralls, "~> 0.5.1", only: :test},
       {:ex_doc, ">= 0.11.4", only: [:dev]},
       {:markdown, github: "devinus/markdown", only: [:dev]},
