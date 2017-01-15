@@ -6,11 +6,11 @@ defmodule MiddlewareTest do
       conn = %{conn| state: :sent}
       body = unless conn.req_body, do: %{}, else: Poison.decode!(conn.req_body)
       if Map.equal?(body, %{"key2" => 101, "key1" => 201}) do
-        {:ok, %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
-                resp_body: "{\"key2\":101,\"key1\":201}"}}
+        %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
+                resp_body: "{\"key2\":101,\"key1\":201}"}
       else
-          {:ok, %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
-                  resp_body: "{\"key2\":2,\"key1\":1}"}}
+        %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
+                resp_body: "{\"key2\":2,\"key1\":1}"}
       end
     end
   end

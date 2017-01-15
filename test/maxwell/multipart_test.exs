@@ -1,9 +1,16 @@
 defmodule MultipartTest do
   use ExUnit.Case
 
-  setup do
-    :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
-    :ok
+  if Code.ensure_loaded?(:rand) do
+    setup do
+      :rand.seed(:exs1024, {:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer})
+      :ok
+    end
+  else
+    setup do
+      :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
+      :ok
+    end
   end
 
   test "Boundary" do

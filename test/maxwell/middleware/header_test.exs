@@ -19,7 +19,7 @@ defmodule HeaderTest do
   end
 
   test "header key is not string" do
-    assert_raise ArgumentError, "Headers_map key only accpect string but got: %{key: \"value\"}", fn ->
+    assert_raise ArgumentError, "Header keys must be strings, but got: %{key: \"value\"}", fn ->
       defmodule TAtom111 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.Headers, %{:key => "value"}

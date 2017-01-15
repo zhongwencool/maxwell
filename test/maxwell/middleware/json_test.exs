@@ -6,41 +6,34 @@ defmodule JsonTest do
       conn = %{conn|state: :sent}
       case conn.path do
         "/decode" ->
-          {:ok,
            %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
-             resp_body: "{\"value\": 123}"}}
+             resp_body: "{\"value\": 123}"}
         "/decode_error" ->
-          {:ok,
            %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
-             resp_body: "\"123"}}
+             resp_body: "\"123"}
         "/encode" ->
-          {:ok,
            %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
-             resp_body: conn.req_body |> String.replace("foo", "baz")}}
+             resp_body: conn.req_body |> String.replace("foo", "baz")}
         "/empty" ->
-          {:ok,
            %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
-             resp_body: nil}}
+             resp_body: nil}
         "/tuple" ->
-          {:ok,
            %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "application/json"}},
-             resp_body: {:key, :value}}}
+             resp_body: {:key, :value}}
         "/invalid-content-type" ->
-          {:ok,
            %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "text/plain"}},
-             resp_body: "hello"}}
+             resp_body: "hello"}
         "/use-defined-content-type" ->
-          {:ok,
            %{conn| status: 200, resp_headers: %{"content-type" => {"Content-Type", "text/html"}},
-             resp_body: "{\"value\": 124}"}};
+             resp_body: "{\"value\": 124}"}
         "/not_found_404" ->
-          {:ok, %{conn| status: 404, resp_body: "404 Not Found"}}
+          %{conn| status: 404, resp_body: "404 Not Found"}
         "/redirection_301" ->
-          {:ok, %{conn| status: 301, resp_body: "301 Moved Permanently"}}
+          %{conn| status: 301, resp_body: "301 Moved Permanently"}
         "/error" ->
-          {:error, "hahahaha"}
+          {:error, "hahahaha", conn}
         _ ->
-          {:ok, %{conn| status: 200}}
+          %{conn| status: 200}
       end
     end
   end
@@ -130,16 +123,16 @@ defmodule JsonTest do
       |> Conn.put_path
       |> Conn.put_req_body(%{"foo" => "bar"})
     |> Client.post
-    assert result == {:error, "hahahaha"}
+    assert {:error, "hahahaha", %Conn{}} = result
   end
 end
 
 defmodule ModuleAdapter2 do
   def call(conn) do
-    {:ok, %{conn|status: 200,
+    %{conn|status: 200,
             state: :sent,
             resp_headers: %{"content-type" => {"Content-Type","text/javascript"}},
-            resp_body: "{\"value\": 124}"}}
+            resp_body: "{\"value\": 124}"}
   end
 end
 

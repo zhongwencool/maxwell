@@ -29,7 +29,7 @@ defmodule Maxwell.Middleware.Logger do
       {:error, reason, _conn} ->
         error_reason = to_string(:io_lib.format("~p", [reason]))
         Logger.log(level, "#{method} #{request_env.url}>> #{IO.ANSI.red}ERROR: " <> error_reason)
-      {:ok, response_conn} ->
+      %Maxwell.Conn{} = response_conn ->
         finish_time = :os.timestamp()
         duration = :timer.now_diff(finish_time, start_time)
         duration_ms = :io_lib.format("~.3f", [duration / 10_000])

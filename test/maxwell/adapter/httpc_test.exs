@@ -96,9 +96,16 @@ defmodule Maxwell.HttpcMockTest do
 
   end
 
-  setup do
-    :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
-    :ok
+  if Code.ensure_loaded?(:rand) do
+    setup do
+      :rand.seed(:exs1024, {:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer})
+      :ok
+    end
+  else
+    setup do
+      :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
+      :ok
+    end
   end
   test_with_mock "sync request", :httpc,
     [request: fn(_,_,_,_) ->
@@ -240,7 +247,7 @@ defmodule Maxwell.HttpcMockTest do
     [request: fn(_,_,_,_) ->
       {:error, :timeout}
     end] do
-    {:error, :timeout, conn} = Client.timeout_test |> IO.inspect
+    {:error, :timeout, conn} = Client.timeout_test
     assert conn.state == :error
   end
 

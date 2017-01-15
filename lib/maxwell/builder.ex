@@ -168,14 +168,22 @@ defmodule Maxwell.Builder do
     middleware_call = middleware |> Enum.reduce(call_adapter, &quote_middleware_call(conn, &1, &2))
     quote do
       defp call_middleware(unquote(conn)) do
-        unquote(middleware_call)
+        case unquote(middleware_call) do
+          {:error, _} = err -> err
+          {:error, _, _} = err -> err
+          %Maxwell.Conn{} = ok -> {:ok, ok}
+        end
       end
     end
   end
 
   defp quote_middleware_call(conn, {mid, args}, acc) do
     quote do
-      unquote(mid).call(unquote(conn), fn(unquote(conn)) -> unquote(acc) end, unquote(Macro.escape(args)))
+      unquote(mid).call(unquote(conn), fn
+        ({:error, _} = err)    -> err
+        ({:error, _, _} = err) -> err
+        (unquote(conn))        -> unquote(acc)
+      end, unquote(Macro.escape(args)))
     end
   end
 

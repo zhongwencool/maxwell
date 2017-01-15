@@ -8,14 +8,19 @@ defmodule Maxwell.Middleware.Json do
 
   Default json_lib is Poison
 
-  ### Examples
+  ## Examples
 
         # Client.ex
         use Maxwell.Builder ~(get)a
-        @middleware Maxwell.Middleware.Json
-        # or
-        @middleware Maxwell.Middleware.Json, [encode_content_type: "application/json", encode_func: &other_json_lib.encode/1,
-        decode_content_types: ["yourowntype"],   decode_func: &other_json_lib.decode/1]
+        middleware Maxwell.Middleware.Json
+
+        # OR
+
+        middleware Maxwell.Middleware.Json,
+          encode_content_type: "application/json",
+          encode_func: &other_json_lib.encode/1,
+          decode_content_types: ["yourowntype"],
+          decode_func: &other_json_lib.decode/1
 
   """
   use Maxwell.Middleware
@@ -29,10 +34,10 @@ defmodule Maxwell.Middleware.Json do
      {decode_func, decode_content_types}}
   end
 
-  def request(conn, {encode_opts, _decode_opts}) do
+  def request(%Maxwell.Conn{} = conn, {encode_opts, _decode_opts}) do
     Maxwell.Middleware.EncodeJson.request(conn, encode_opts)
   end
-  def response(conn, {_encode_opts, decode_opts}) do
+  def response(%Maxwell.Conn{} = conn, {_encode_opts, decode_opts}) do
     Maxwell.Middleware.DecodeJson.response(conn, decode_opts)
   end
 
@@ -62,13 +67,17 @@ defmodule Maxwell.Middleware.EncodeJson do
 
   Default json_lib is Poison
 
-  ### Examples
+  ## Examples
 
         # Client.ex
         use Maxwell.Builder ~(get)a
-        @middleware Maxwell.Middleware.EncodeJson
-        # or
-        @middleware Maxwell.Middleware.EncodeJson, [encode_content_type: "application/json", encode_func: &other_json_lib.encode/1]
+        middleware Maxwell.Middleware.EncodeJson
+
+        # OR
+
+        middleware Maxwell.Middleware.EncodeJson,
+          encode_content_type: "application/json",
+          encode_func: &other_json_lib.encode/1
 
   """
   use Maxwell.Middleware
@@ -101,7 +110,6 @@ defmodule Maxwell.Middleware.EncodeJson do
       end
     end
   end
-
 end
 
 defmodule Maxwell.Middleware.DecodeJson do
@@ -113,38 +121,41 @@ defmodule Maxwell.Middleware.DecodeJson do
 
   Default json_lib is Poison
 
-  ### Examples
+  ## Examples
 
         # Client.ex
         use Maxwell.Builder ~(get)a
-        @middleware Maxwell.Middleware.DecodeJson
-        # or
-        @middleware Maxwell.Middleware.DecodeJson, [decode_content_types: ["text/javascript"], decode_func: &other_json_lib.decode/1]
+        middleware Maxwell.Middleware.DecodeJson
+
+        # OR
+
+        middleware Maxwell.Middleware.DecodeJson,
+          decode_content_types: ["text/javascript"],
+          decode_func: &other_json_lib.decode/1
 
   """
   use Maxwell.Middleware
+
   def init(opts) do
     check_opts(opts)
     {opts[:decode_func] || &Poison.decode/1, opts[:decode_content_types] || []}
   end
 
-  def response(response, {decode_fun, valid_content_types}) do
-    with {:ok, conn = %Maxwell.Conn{}} <- response do
-      case Maxwell.Conn.get_resp_header(conn, "content-type") do
+  def response(%Maxwell.Conn{} = conn, {decode_fun, valid_content_types}) do
+    case Maxwell.Conn.get_resp_header(conn, "content-type") do
       {_, content_type} ->
           case is_json_content(content_type, conn.resp_body, valid_content_types) do
             true ->
               case decode_fun.(conn.resp_body) do
-                {:ok, resp_body}  -> {:ok, %{conn | resp_body: resp_body}}
+                {:ok, resp_body}  -> %{conn | resp_body: resp_body}
                 {:error, reason} -> {:error, {:decode_json_error, reason}, conn}
               end
             _ ->
-              {:ok, conn}
+              conn
           end
-        _ -> {:ok, conn}
-      end
+       _ ->
+         conn
     end
-
   end
 
   defp is_json_content(content_type, body, valid_types) do
@@ -165,6 +176,5 @@ defmodule Maxwell.Middleware.DecodeJson do
       end
     end
   end
-
 end
 
