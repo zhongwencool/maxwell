@@ -50,6 +50,13 @@ defmodule Maxwell.IbrowseMockTest do
       |> get_resp_body("data")
     end
 
+    def normalized_error_test() do
+      "/"
+      |> put_path
+      |> Map.put(:url, "http://broken.local")
+      |> get
+    end
+
     def timeout_test() do
       "/delay/5"
       |> put_path
@@ -244,6 +251,33 @@ defmodule Maxwell.IbrowseMockTest do
         '{\n  "args": {}, \n  "data": "", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "0", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/delete"\n}\n'}
      end] do
     assert Client.delete_test == ""
+  end
+
+  test_with_mock "connection refused errors are normalized", :ibrowse,
+    [send_req:
+      fn(_,_,_,_,_) ->
+        {:error, {:conn_failed, {:error, :econnrefused}}}
+      end] do
+    {:error, :econnrefused, conn} = Client.normalized_error_test
+    assert conn.state == :error
+  end
+
+  test_with_mock "timeout errors are normalized", :ibrowse,
+    [send_req:
+      fn(_,_,_,_,_) ->
+        {:error, {:conn_failed, {:error, :timeout}}}
+      end] do
+    {:error, :timeout, conn} = Client.normalized_error_test
+    assert conn.state == :error
+  end
+
+  test_with_mock "internal errors are normalized", :ibrowse,
+    [send_req:
+      fn(_,_,_,_,_) ->
+        {:error, :somethings_wrong}
+      end] do
+    {:error, :somethings_wrong, conn} = Client.normalized_error_test
+    assert conn.state == :error
   end
 
   test_with_mock "adapter return error", :ibrowse,

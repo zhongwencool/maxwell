@@ -91,6 +91,19 @@ defmodule Maxwell.Adapter.Httpc do
              req_body:      nil}
   end
   ## todo {:ok, request_id}
+
+  # normalize :econnrefused for the Retry/Fuse middleware
+  defp format_response({:error, {:failed_connect, info} = err}, conn) do
+    conn = %{conn | state: :error}
+    case List.keyfind(info, :inet, 0) do
+      {:inet, _, :econnrefused} ->
+         {:error, :econnrefused, conn}
+      {:inet, _, reason} ->
+         {:error, reason, conn}
+      _ ->
+         {:error, err, conn}
+    end
+  end
   defp format_response({:error, reason}, conn) do
     {:error, reason, %{conn | state: :error}}
   end
