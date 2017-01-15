@@ -11,11 +11,12 @@ Maxwell is an HTTP client that provides a common interface over [:httpc](http://
 
 ## Usage
 
-Use `Maxwell.Builder` module to create the API wrappers.
+Use `Maxwell.Builder` module to create the API wrappers. The following is a simple example:
 
-```ex
+```elixir
 defmodule GitHubClient do
-  #generate 4 function get/1, get!/1 patch/1 patch!/1 function
+  # Generates `get/1`, `get!/1`, `patch/1`, `patch!/1` public functions
+  # You can omit the list and functions for all HTTP methods will be generated
   use Maxwell.Builder, ~w(get patch)a
 
   middleware Maxwell.Middleware.BaseUrl, "https://api.github.com"
@@ -26,22 +27,12 @@ defmodule GitHubClient do
 
   adapter Maxwell.Adapter.Hackney # default adapter is Maxwell.Adapter.Httpc
 
-  #List public repositories for the specified user.
-  #:hackney.request(:get,
-  #                'https://api.github.com/users/zhongwencool/repos',
-  #                ['Content-Type': "application/vnd.github.v3+json", 'User-Agent': 'zhongwenool'],
-  #                [],
-  #                [connect_timeout: 3000])
+  # List public repositories for the specified user.
   def user_repos(username) do
     put_path("/users/" <> username <> "/repos") |> get
   end
 
   # Edit owner repositories
-  # :hackney.request(:patch,
-  #                  'https://api.github.com/repos/owner/repo',
-  #                  ['Content-Type': "application/vnd.github.v3+json", 'User-Agent': 'zhongwenool'],
-  #                  "{\"name\":\"name\",\"description\":\"desc\"}",
-  #                  [connect_timeout: 3000])
   def edit_repo_desc(owner, repo, name, desc) do
     new
     |> put_path("/repos/#{owner}/#{repo}")
@@ -50,8 +41,11 @@ defmodule GitHubClient do
   end
 end
 ```
-```ex
-MIX_ENV=TEST iex -S mix
+
+Example usage is as follows:
+
+```elixir
+$ MIX_ENV=TEST iex -S mix
 iex(1)> GitHubClient.
 edit_repo_desc/4    get!/0              get!/1
 get!/2              get/0               get/1
@@ -61,11 +55,16 @@ iex(1)> GitHubClient.user_repos("zhongwencool")
 22:23:42.307 [info]  get https://api.github.com <<<200(3085.772ms)
 %Maxwell.Conn{method: :get, opts: [connect_timeout: 3000, recv_timeout: 20000]
 ...(truncated)
-
 ```
-if you don't want to defined a client module:
-```ex
-iex(2)> Maxwell.Conn.new("http://httpbin.org/drip") |> Maxwell.Conn.put_query_string(%{numbytes: 25, duration: 1, delay: 1, code: 200}) |> Maxwell.get
+
+You can also use Maxwell without defining a module:
+
+```elixir
+iex(1)> alias Maxwell.Conn
+iex(2)> Conn.new("http://httpbin.org") |>
+    Conn.put_path("/drip") |> 
+    Conn.put_query_string(%{numbytes: 25, duration: 1, delay: 1, code: 200}) |> 
+    Maxwell.get
 {:ok,
  %Maxwell.Conn{method: :get, opts: [], path: "",
   query_string: %{code: 200, delay: 1, duration: 1, numbytes: 25},
@@ -80,35 +79,34 @@ iex(2)> Maxwell.Conn.new("http://httpbin.org/drip") |> Maxwell.Conn.put_query_st
     "server" => {"server", "nginx"}}, state: :sent, status: 200,
   url: "http://httpbin.org/drip"}}
 ```
-### Maxwell.Conn helper functions
-```ex
-  new(request_url_string)
-  |> put_query_string(request_query_map)
-  |> put_req_header(request_headers_map)
-  |> put_option(request_opts_keyword_list)
-  |> put_req_body(request_body_term)
-  |> YourClient.{http_method}!
-  |> get_resp_body
-```
-For more examples see `h Maxwell.Conn.XXX`
 
-## Response result
-```ex
-{:ok,
-  %Maxwell{
-    resp_headers: reponse_headers_map,
-    status:  reponse_http_status_integer,
-    resp_body:    reponse_body_term,
-    url:     request_urlwithquery_string,
-  }}
+### Helper functions for Maxwell.Conn
 
-# or
-{:error, reason_term, conn}
-
+```elixir
+new(request_url_string)
+|> put_query_string(request_query_map)
+|> put_req_header(request_headers_map)
+|> put_option(request_opts_keyword_list)
+|> put_req_body(request_body_term)
+|> YourClient.{http_method}!
+|> get_resp_body
 ```
 
-## Request Examples
-```ex
+See the documentation of `Maxwell.Conn` for more information.
+
+## Responses
+
+When calling one of (non-bang versions) of the HTTP method functions on a client module or the `Maxwell` module, you
+can expect either `{:ok, Maxwell.Conn.t}` or `{:error, reason, Maxwell.Conn.t}` to be returned.
+
+When calling of the bang versions of the HTTP method functions, e.g. `get!`, you can expect `Maxwell.Conn.t` if successful,
+or a `Maxwell.Error` will be raised.
+
+## Example Client
+
+The following is a full implementation of a client showing various features of Maxwell.
+
+```elixir
 defmodule Client do
   #generate 4 function get/1, get!/1 post/1 post!/1 function
   use Maxwell.Builder, ~w(get post)a
@@ -200,81 +198,110 @@ end
   2. Ensure maxwell has started before your application:
 ```ex
    def application do
-      [applications: [:maxwell]] # **also add your adapter(ibrowse,hackney) here **
+      [applications: [:maxwell]] # also add your adapter(ibrowse, hackney)
    end
 ```
+
 ## Adapters
 
 Maxwell has support for different adapters that do the actual HTTP request processing.
 
 ### httpc
 
-Maxwell has built-in support for [httpc](http://erlang.org/doc/man/httpc.html) Erlang HTTP client.
+Maxwell has built-in support for the [httpc](http://erlang.org/doc/man/httpc.html) Erlang HTTP client.
 
-To use it simply include `adapter Maxwell.Adapter.Httpc` line in your API client definition.
-Setting global default adapter
+To use it simply place `adapter Maxwell.Adapter.Httpc` in your API client definition, or by
+setting the global default adapter, as shown below:
 
 ```ex
 config :maxwell,
   default_adapter: Maxwell.Adapter.Httpc
 ```
 
+**NOTE**: Remember to include `:ibrowse` in your applications list.
+
 ### ibrowse
 
-Maxwell has built-in support for [ibrowse](https://github.com/cmullaparthi/ibrowse) Erlang HTTP client.
+Maxwell has built-in support for the [ibrowse](https://github.com/cmullaparthi/ibrowse) Erlang HTTP client.
 
-To use it simply include `adapter Maxwell.Adapter.Ibrowse` line in your API client definition.
-Setting global default adapter
+To use it simply place `adapter Maxwell.Adapter.Ibrowse` in your API client definition, or by
+setting the global default adapter, as shown previously.
 
-```ex
-config :maxwell,
-  default_adapter: Maxwell.Adapter.Ibrowse
-```
+**NOTE**: Remember to include `:ibrowse` in your applications list.
 
-NOTE: Remember to include `:ibrowse` in applications list.
 ### hackney
 
-Maxwell has built-in support for [hackney](https://github.com/benoitc/hackney) Erlang HTTP client.
+Maxwell has built-in support for the [hackney](https://github.com/benoitc/hackney) Erlang HTTP client.
 
-To use it simply include `adapter Maxwell.Adapter.Hackney` line in your API client definition.
-Setting global default adapter
+To use it simply place `adapter Maxwell.Adapter.Hackney` in your API client definition, or by
+setting the global default adapter, as shown previously.
+
+**NOTE**: Remember to include `:hackney` in your applications list.
+
+## Built-in Middleware
+
+### Maxwell.Middleware.BaseUrl
+
+Sets the base url for all requests.
+
+### Maxwell.Middleware.Headers
+
+Sets default headers for all requests.
+
+### Maxwell.Middleware.Opts
+
+Sets adapter options for all requests.
+
+### Maxwell.Middleware.Rels
+
+Decodes rel links in the response, and places them in the `:rels` key of the `Maxwell.Conn` struct.
+
+### Maxwell.Middleware.Logger
+
+Logs information about all requests and responses. You can set `:log_level` to log the information at that level.
+
+### Maxwell.Middleware.Json
+
+Encodes all requests as `application/json` and decodes all responses as `application/json`.
+
+### Maxwell.Middleware.EncodeJson
+
+Encodes all requests as `application/json`.
+
+### Maxwell.Middleware.DecodeJson
+
+Decodes all responses as `application/json`.
+
+**NOTE**: The `*Json` middlewares require [Poison](https://github.com/devinus/poison) as dependency, versions 2.x and 3.x are supported.
+You may provide your own encoder/decoder by providing the following options:
 
 ```ex
-config :maxwell,
-  default_adapter: Maxwell.Adapter.Hackney
+# For the EncodeJson module
+middleware Maxwell.Middleware.EncodeJson, 
+  encode_content_type: "text/javascript", 
+  encode_func: &other_json_lib.encode/1]
+
+# For the DecodeJson module
+middleware Maxwell.Middleware.DecodeJson, 
+  decode_content_types: ["yourowntype"], 
+  decode_func: &other_json_lib.decode/1]
+
+# Both sets of options can be provided to the Json module
 ```
 
-NOTE: Remember to include `:hackney` in applications list.
+## Custom Middlewares
 
-## Available Middleware
-- [Maxwell.Middleware.BaseUrl](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/baseurl.ex) - set base url for all request
-- [Maxwell.Middleware.Headers](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/header.ex) - set request headers
-- [Maxwell.Middleware.Opts](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/opts.ex) - set options for all request
-- [Maxwell.Middleware.Rels](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/rels.ex) - decode reponse rels
-- [Maxwell.Middleware.Logger](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/logger.ex) - Logger your request and response
-- [Maxwell.Middleware.Json](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/json.ex) - encode/decode body made up by EncodeJson and DecodeJson
-- [Maxwell.Middleware.EncodeJson](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/json.ex) - encdode request body as JSON, it will add 'Content-Type' to headers
-- [Maxwell.Middleware.DecodeJson](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/json.ex) - decode response body as JSON
-NOTE: Default requires [poison](https://github.com/devinus/poison) as dependency
+Take a look at the [Maxwell.Middleware](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/middleware.ex) for more information
+on the behaviour. For example implementations take a look at any of the middleware modules in the repository.
 
-```ex
-@middleware Maxwell.Middleware.EncodeJson, [encode_content_type: "text/javascript", encode_func: &other_json_lib.encode/1]
-@middleware Maxwell.Middleware.DecodeJson, [decode_content_types: ["yourowntype"], decode_func: &other_json_lib.decode/1]
-```
-See more by `h Maxwell.Middleware.{name}`
+## Contributing
 
-## Writing your own middleware
+Contributions are more than welcome!
 
-See [Maxwell.Middleware.BaseUrl](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/baseurl.ex) and [Maxwell.Middleware.DecodeJson](https://github.com/zhongwencool/maxwell/blob/master/lib/maxwell/middleware/json.ex#L84)
+Check the issues tracker for anything marked "help wanted", and post a comment that you are planning to begin working on the issue. We can
+then provide guidance on implementation if necessary.
 
-## TODO
-
-## Test
-```ex
-  mix test
-```
-
-License
+## License
 
 See the [LICENSE](https://github.com/zhongwencool/maxwell/blob/master/LICENSE) file for license rights and limitations (MIT).
 
