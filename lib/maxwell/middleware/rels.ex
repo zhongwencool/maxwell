@@ -2,17 +2,17 @@ defmodule Maxwell.Middleware.Rels do
   @moduledoc  """
   Decode reponse's body's rels.
 
-  ### Examples
+  ## Examples
 
          # Client.ex
          use Maxwell.Builder ~(get)a
-         @middleware Maxwell.Middleware.Rels
+         middleware Maxwell.Middleware.Rels
 
   """
   use Maxwell.Middleware
 
-  def response(env, _opts) do
-    link = env.headers['Link'] || env.headers["Link"]
+  def response(%Maxwell.Conn{} = conn, _opts) do
+    link = conn.resp_headers['Link'] || conn.resp_headers["Link"]
     if link do
       rels =
       link
@@ -26,12 +26,10 @@ defmodule Maxwell.Middleware.Rels do
            end
          end)
 
-      env
-      |> Map.put(:rels, rels)
+      Map.put(conn, :rels, rels)
     else
-      env
+      conn
     end
   end
-
 end
 

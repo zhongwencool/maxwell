@@ -38,11 +38,11 @@ if Code.ensure_loaded?(:hackney) do
         down_key = key |> to_string |> String.downcase
         {down_key, {key, to_string(value)}}
       end
-      {:ok, %{conn | status: status,
-              resp_headers:  headers,
-              req_body:      nil,
-              state:         :sent,
-              resp_body:     body}}
+      %{conn | status:        status,
+               resp_headers:  headers,
+               req_body:      nil,
+               state:         :sent,
+               resp_body:     body}
     end
     defp format_response({:ok, status, headers, body}, conn) do
       case :hackney.body(body) do

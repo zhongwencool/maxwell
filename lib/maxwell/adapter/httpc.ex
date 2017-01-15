@@ -84,12 +84,11 @@ defmodule Maxwell.Adapter.Httpc do
       down_key = key |> String.downcase
       {down_key, {key, to_string(value)}}
     end
-    {:ok, %{conn |status:   status,
-            resp_headers:  headers,
-            resp_body:     body,
-            state:         :sent,
-            req_body:      nil}
-    }
+    %{conn | status:        status,
+             resp_headers:  headers,
+             resp_body:     body,
+             state:         :sent,
+             req_body:      nil}
   end
   ## todo {:ok, request_id}
   defp format_response({:error, reason}, conn) do

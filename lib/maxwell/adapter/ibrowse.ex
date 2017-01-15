@@ -62,12 +62,11 @@ if Code.ensure_loaded?(:ibrowse) do
         down_key = key |> to_string |> String.downcase
         {down_key, {key, to_string(value)}}
       end
-      {:ok, %{conn |status:   status,
-              resp_headers:  headers,
-              resp_body:     body,
-              state:         :sent,
-              req_body:      nil}
-      }
+      %{conn | status:        status,
+               resp_headers:  headers,
+               resp_body:     body,
+               state:         :sent,
+               req_body:      nil}
     end
     defp format_response({:error, reason}, conn) do
       {:error, reason, %{conn | state: :error}}

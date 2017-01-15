@@ -87,9 +87,16 @@ defmodule Maxwell.HackneyMockTest do
 
   end
 
-  setup do
-    :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
-    :ok
+  if Code.ensure_loaded?(:rand) do
+    setup do
+      :rand.seed(:exs1024, {:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer})
+      :ok
+    end
+  else
+    setup do
+      :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
+      :ok
+    end
   end
 
   test_with_mock "sync request", :hackney,
@@ -98,7 +105,7 @@ defmodule Maxwell.HackneyMockTest do
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:33:54 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "33"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-        {"Access-Control-Allow-Credentials", "true"}], make_ref}
+        {"Access-Control-Allow-Credentials", "true"}], make_ref()}
     end,
      body: fn(_) -> {:ok, "{\n  \"origin\": \"183.240.20.213\"\n}\n"} end
     ] do
@@ -111,7 +118,7 @@ defmodule Maxwell.HackneyMockTest do
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:40:41 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "419"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-        {"Access-Control-Allow-Credentials", "true"}], make_ref}
+        {"Access-Control-Allow-Credentials", "true"}], make_ref()}
     end,
      body: fn(_) -> {:ok,
                      "{\n  \"args\": {}, \n  \"data\": \"{\\\"josnkey2\\\":\\\"jsonvalue2\\\",\\\"josnkey1\\\":\\\"jsonvalue1\\\"}\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"49\", \n    \"Content-Type\": \"application/json\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": {\n    \"josnkey1\": \"jsonvalue1\", \n    \"josnkey2\": \"jsonvalue2\"\n  }, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/post\"\n}\n"}
@@ -128,7 +135,7 @@ defmodule Maxwell.HackneyMockTest do
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:42:07 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "428"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-        {"Access-Control-Allow-Credentials", "true"}], make_ref} end,
+        {"Access-Control-Allow-Credentials", "true"}], make_ref()} end,
      body: fn(_) -> {:ok,
                      "{\n  \"args\": {}, \n  \"data\": \"\", \n  \"files\": {\n    \"file\": \"#!/usr/bin/env bash\\necho \\\"test multipart file\\\"\\n\"\n  }, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"279\", \n    \"Content-Type\": \"multipart/form-data; boundary=---------------------------tvvbujkbhrbruqcy\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": null, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/post\"\n}\n"}
      end ] do
@@ -142,7 +149,7 @@ defmodule Maxwell.HackneyMockTest do
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:45:10 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "428"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-        {"Access-Control-Allow-Credentials", "true"}], make_ref}
+        {"Access-Control-Allow-Credentials", "true"}], make_ref()}
     end, body: fn(_) ->
       {:ok,
        "{\n  \"args\": {}, \n  \"data\": \"\", \n  \"files\": {\n    \"file\": \"#!/usr/bin/env bash\\necho \\\"test multipart file\\\"\\n\"\n  }, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"273\", \n    \"Content-Type\": \"multipart/form-data; boundary=---------------------------dlhrimiytrrvmxqk\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": null, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/post\"\n}\n"}
@@ -157,7 +164,7 @@ defmodule Maxwell.HackneyMockTest do
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:46:14 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "352"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-        {"Access-Control-Allow-Credentials", "true"}], make_ref}
+        {"Access-Control-Allow-Credentials", "true"}], make_ref()}
     end,
      body: fn(_) ->
        {:ok,
@@ -169,7 +176,7 @@ defmodule Maxwell.HackneyMockTest do
 
   test_with_mock "send stream", :hackney,
     [request: fn(_,_,_,_,_) ->
-      {:ok, make_ref}
+      {:ok, make_ref()}
     end,
      send_body: fn(_, _) -> :ok end,
      start_response: fn(_) ->
@@ -177,7 +184,7 @@ defmodule Maxwell.HackneyMockTest do
         [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:47:26 GMT"},
          {"Content-Type", "application/json"}, {"Content-Length", "267"},
          {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-         {"Access-Control-Allow-Credentials", "true"}], make_ref}
+         {"Access-Control-Allow-Credentials", "true"}], make_ref()}
      end,
      body: fn(_) ->
        {:ok,
@@ -190,7 +197,7 @@ defmodule Maxwell.HackneyMockTest do
   test_with_mock "send stream error", :hackney,
     [request: fn(_,_,_,_,_) -> {:error, :closed} end,
      send_body: fn(_, _) -> {:error, :closed} end,
-     start_response: fn(_) -> {:ok, 200, [], make_ref} end,
+     start_response: fn(_) -> {:ok, 200, [], make_ref()} end,
      body: fn(_) -> {:ok, "error connection closed"}
      end ] do
     assert_raise(Maxwell.Error,
@@ -204,7 +211,7 @@ defmodule Maxwell.HackneyMockTest do
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:52:41 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "27"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-        {"Access-Control-Allow-Credentials", "true"}], make_ref}
+        {"Access-Control-Allow-Credentials", "true"}], make_ref()}
     end,
      body: fn(_) ->
        {:ok, "{\n  \"user-agent\": \"test\"\n}\n"}
@@ -218,7 +225,7 @@ defmodule Maxwell.HackneyMockTest do
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:54:56 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "339"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-        {"Access-Control-Allow-Credentials", "true"}], make_ref}
+        {"Access-Control-Allow-Credentials", "true"}], make_ref()}
     end, body: fn(_) ->
       {:ok,
        "{\n  \"args\": {}, \n  \"data\": \"{\\\"key\\\":\\\"value\\\"}\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"15\", \n    \"Content-Type\": \"application/json\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": {\n    \"key\": \"value\"\n  }, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/put\"\n}\n"}
@@ -232,7 +239,7 @@ defmodule Maxwell.HackneyMockTest do
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:53:52 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "233"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-        {"Access-Control-Allow-Credentials", "true"}], make_ref}
+        {"Access-Control-Allow-Credentials", "true"}], make_ref()}
     end, body: fn(_) ->
       {:ok,
        "{\n  \"args\": {}, \n  \"data\": \"\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": null, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/delete\"\n}\n"}
@@ -246,7 +253,7 @@ defmodule Maxwell.HackneyMockTest do
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:53:52 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "233"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-        {"Access-Control-Allow-Credentials", "true"}], make_ref}
+        {"Access-Control-Allow-Credentials", "true"}], make_ref()}
     end, body: fn(_) ->
       {:error, {:closed, ""}}
     end ] do

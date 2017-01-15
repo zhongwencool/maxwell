@@ -7,13 +7,13 @@ defmodule MaxwellAdapterTest do
   defmodule TestAdapter do
     use Maxwell.Adapter
     def send_direct(conn = %Conn{status: nil}) do
-      {:ok, %{conn|status: 200,
-              resp_headers: %{"content-type" => {"Content-Type", "text/plain"}},
-              resp_body: "testbody",
-              state: :sent}}
+      %{conn|status: 200,
+             resp_headers: %{"content-type" => {"Content-Type", "text/plain"}},
+             resp_body: "testbody",
+             state: :sent}
     end
     def send_direct(conn) do
-      {:ok, %{conn| status: 400}}
+      %{conn| status: 400}
     end
   end
 
