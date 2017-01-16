@@ -157,7 +157,7 @@ defmodule DecodeJsonTest do
   end
 
   test "JsonTest with invalid options encode_func" do
-    assert_raise ArgumentError, "Json Middleware :encode_func only accpect function/1", fn ->
+    assert_raise ArgumentError, "Json Middleware :encode_func only accepts function/1", fn ->
       defmodule TAtom1 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.Json, [encode_func: :atom]
@@ -167,7 +167,7 @@ defmodule DecodeJsonTest do
   end
 
   test "JsonTest with invalid options encode_content_type" do
-    assert_raise ArgumentError, "Json Middleware :encode_content_types only accpect string", fn ->
+    assert_raise ArgumentError, "Json Middleware :encode_content_types only accepts string", fn ->
       defmodule TAtom2 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.Json, [encode_content_type: :atom]
@@ -177,7 +177,7 @@ defmodule DecodeJsonTest do
   end
 
   test "JsonTest with invalid options decode_func" do
-    assert_raise ArgumentError, "Json Middleware :decode_func only accpect function/1", fn ->
+    assert_raise ArgumentError, "Json Middleware :decode_func only accepts function/1", fn ->
       defmodule TAtom3 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.Json, [decode_func: 123]
@@ -187,7 +187,7 @@ defmodule DecodeJsonTest do
   end
 
   test "JsonTest with invalid options decode_content_types" do
-    assert_raise ArgumentError, "Json Middleware :decode_content_types only accpect lists", fn ->
+    assert_raise ArgumentError, "Json Middleware :decode_content_types only accepts lists", fn ->
       defmodule TAtom4 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.Json, [decode_content_types: "application/json"]
@@ -197,7 +197,7 @@ defmodule DecodeJsonTest do
   end
 
   test "JsonTest with wrong options" do
-    assert_raise ArgumentError, "Json Middleware Options don't accpect wrong_option", fn ->
+    assert_raise ArgumentError, "Json Middleware Options doesn't accept wrong_option", fn ->
       defmodule TAtom5 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.Json, [wrong_option: "application/json"]
@@ -207,7 +207,7 @@ defmodule DecodeJsonTest do
   end
 
   test "EncodeJsonTest with invalid options encode_func " do
-    assert_raise ArgumentError, "EncodeJson :encode_func only accpect function/1", fn ->
+    assert_raise ArgumentError, "EncodeJson :encode_func only accepts function/1", fn ->
       defmodule TAtom6 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.EncodeJson, [encode_func: "application/json"]
@@ -217,7 +217,7 @@ defmodule DecodeJsonTest do
   end
 
   test "EncodeJsonTest with invalid options encode_content_type" do
-    assert_raise ArgumentError, "EncodeJson :encode_content_types only accpect string", fn ->
+    assert_raise ArgumentError, "EncodeJson :encode_content_types only accepts string", fn ->
       defmodule TAtom7 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.EncodeJson, [encode_content_type: 1234]
@@ -227,7 +227,7 @@ defmodule DecodeJsonTest do
   end
 
   test "EncodeJsonTest with wrong option" do
-    assert_raise ArgumentError, "EncodeJson Options don't accpect wrong_option (:encode_func and :encode_content_type)", fn ->
+    assert_raise ArgumentError, "EncodeJson Options doesn't accept wrong_option (:encode_func and :encode_content_type)", fn ->
       defmodule TAtom8 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.EncodeJson, [wrong_option: 1234]
@@ -237,7 +237,7 @@ defmodule DecodeJsonTest do
   end
 
   test "DecodeJsonTest with invalid options decode_func " do
-    assert_raise ArgumentError, "DecodeJson :decode_func only accpect function/1", fn ->
+    assert_raise ArgumentError, "DecodeJson :decode_func only accepts function/1", fn ->
       defmodule TAtom9 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.DecodeJson, [decode_func: "application/json"]
@@ -247,7 +247,7 @@ defmodule DecodeJsonTest do
   end
 
   test "DecodeJsonTest with invalid options decode_content_types" do
-    assert_raise ArgumentError, "DecodeJson :decode_content_types only accpect lists", fn ->
+    assert_raise ArgumentError, "DecodeJson :decode_content_types only accepts lists", fn ->
       defmodule TAtom10 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.DecodeJson, [decode_content_types: 1234]
@@ -257,7 +257,7 @@ defmodule DecodeJsonTest do
   end
 
   test "DecodeJsonTest with wrong option" do
-    assert_raise ArgumentError, "DecodeJson Options don't accpect wrong_option (:decode_func and :decode_content_types)", fn ->
+    assert_raise ArgumentError, "DecodeJson Options doesn't accept wrong_option (:decode_func and :decode_content_types)", fn ->
       defmodule TAtom11 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.DecodeJson, [wrong_option: 1234]
@@ -267,4 +267,3 @@ defmodule DecodeJsonTest do
   end
 
 end
-

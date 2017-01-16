@@ -45,7 +45,7 @@ defmodule LoggerTest do
   end
 
   test "Middleware Logger with invalid log_level" do
-    assert_raise ArgumentError, "Logger Middleware :log_level only accpect atom", fn ->
+    assert_raise ArgumentError, "Logger Middleware :log_level only accepts atom", fn ->
       defmodule TAtom1 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.Logger, [log_level: 1234]
@@ -55,7 +55,7 @@ defmodule LoggerTest do
   end
 
   test "Middleware.Logger with wrong options" do
-    assert_raise ArgumentError, "Logger Middleware Options don't accpect wrong_option (:log_level)", fn ->
+    assert_raise ArgumentError, "Logger Middleware Options doesn't accept wrong_option (:log_level)", fn ->
       defmodule TAtom2 do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.Logger, [wrong_option: :haah]
@@ -65,4 +65,3 @@ defmodule LoggerTest do
   end
 
 end
-
