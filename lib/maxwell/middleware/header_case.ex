@@ -23,6 +23,9 @@ defmodule Maxwell.Middleware.HeaderCase do
   def init(casing) when casing in [:lower, :upper, :title] do
     casing
   end
+  def init(casing) do
+    raise ArgumentError, "HeaderCase middleware expects a casing style of :lower, :upper, or :title - got: #{casing}"
+  end
 
   def request(%Conn{req_headers: headers} = conn, :lower) do
     new_headers = headers

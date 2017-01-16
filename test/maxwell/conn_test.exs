@@ -2,13 +2,34 @@ defmodule ConnTest do
   use ExUnit.Case
 
   import Maxwell.Conn
+  import ExUnit.CaptureIO
   alias Maxwell.Conn
   alias Maxwell.Conn.AlreadySentError
   alias Maxwell.Conn.NotSentError
 
-  test "new/0 new/1 test" do
+  test "new/0" do
     assert new() == %Conn{}
+  end
+
+  test "new/1" do
+    assert new("localhost") == %Conn{url: "http://localhost"}
+    assert new("localhost:8080") == %Conn{url: "http://localhost:8080"}
+    assert new("example") == %Conn{path: "example"}
+    assert new("example.com") == %Conn{url: "http://example.com"}
+    assert new("example.com:8080") == %Conn{url: "http://example.com:8080"}
     assert new("http://example.com") == %Conn{url: "http://example.com"}
+    assert new("https://example.com") == %Conn{url: "https://example.com"}
+    assert new("https://example.com:8080") == %Conn{url: "https://example.com:8080"}
+    assert new("http://example.com/foo") == %Conn{url: "http://example.com", path: "/foo"}
+    assert new("http://example.com:8080/foo") == %Conn{url: "http://example.com:8080", path: "/foo"}
+    assert new("http://user:pass@example.com:8080/foo") == %Conn{url: "http://user:pass@example.com:8080", path: "/foo"}
+    assert new("http://example.com/foo?version=1") == %Conn{url: "http://example.com", path: "/foo", query_string: %{"version" => "1"}}
+  end
+
+  test "deprecated: put_path/1" do
+    assert capture_io(:stderr, fn ->
+      assert put_path("/login") == %Conn{state: :unsent, path: "/login"}
+    end) =~ "deprecated"
   end
 
   test "put_path/2 test" do
@@ -16,6 +37,13 @@ defmodule ConnTest do
     assert_raise AlreadySentError, "the request was already sent", fn ->
       put_path(%Conn{state: :sent}, "/login")
     end
+  end
+
+  test "deprecated: put_query_string/1" do
+    assert capture_io(:stderr, fn ->
+      assert put_query_string(%{"name" => "foo", "passwd" => "123"})
+        == %Conn{state: :unsent, query_string: %{"name" => "foo", "passwd" => "123"}}
+    end) =~ "deprecated"
   end
 
   test "put_query_string/2" do
@@ -47,6 +75,28 @@ defmodule ConnTest do
     end
   end
 
+  test "deprecated: put_req_header/1" do
+    assert capture_io(:stderr, fn ->
+      assert put_req_header(%{"cache-control" => "no-cache", "ETag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="})
+        == %Conn{state: :unsent, req_headers: %{"cache-control" => "no-cache",
+                                                "etag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="}}
+    end) =~ "deprecated"
+  end
+
+  test "deprecated: put_req_header/2" do
+    assert capture_io(:stderr, fn ->
+      assert put_req_header(new(), %{"cache-control" => "no-cache", "ETag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="})
+        == %Conn{state: :unsent, req_headers: %{"cache-control" => "no-cache",
+                                                "etag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="}}
+      assert put_req_header(new(), %{"cache-control" => "no-cache", "ETag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="})
+        == %Conn{state: :unsent, req_headers: %{"cache-control" => "no-cache",
+                                                "etag" => "rFjdsDtv2qxk7K1CwG4VMlF836E="}}
+      assert_raise AlreadySentError, "the request was already sent", fn ->
+        put_req_header(%Conn{state: :sent}, %{"cache-control" => "no-cache"})
+      end
+    end) =~ "deprecated"
+  end
+
   test "put_req_header/3" do
     assert put_req_header(new(), "cache-control", "no-cache")
     assert put_req_header(new(), "cache-control", "no-cache")
@@ -65,6 +115,23 @@ defmodule ConnTest do
     end
   end
 
+  test "deprecated: put_option/1" do
+    assert capture_io(:stderr, fn ->
+      conn = put_option(connect_timeout: 3000)
+      assert Keyword.equal?(conn.opts, [connect_timeout: 3000])
+    end) =~ "deprecated"
+  end
+
+  test "deprecated: put_option/2" do
+    assert capture_io(:stderr, fn ->
+      conn = put_option(%Conn{state: :unsent, opts: [max_attempts: 3]}, connect_timeout: 3000)
+      assert Keyword.equal?(conn.opts, [connect_timeout: 3000, max_attempts: 3])
+      assert_raise AlreadySentError, "the request was already sent", fn ->
+        put_option(%Conn{state: :sent}, connect_timeout: 3000)
+      end
+    end) =~ "deprecated"
+  end
+
   test "put_option/3" do
     conn0 = put_option(%Conn{state: :unsent, opts: [max_attempts: 3]}, :connect_timeout, 3000)
     assert Keyword.equal?(conn0.opts, [connect_timeout: 3000, max_attempts: 3])
@@ -73,6 +140,12 @@ defmodule ConnTest do
     assert_raise AlreadySentError, "the request was already sent", fn ->
       put_option(%Conn{state: :sent}, :connect_timeout, 3000)
     end
+  end
+
+  test "deprecated put_req_body/1" do
+    assert capture_io(:stderr, fn ->
+      assert put_req_body("new") == %Conn{state: :unsent, req_body: "new"}
+    end) =~ "deprecated"
   end
 
   test "put_req_body/2 test"  do
@@ -97,6 +170,18 @@ defmodule ConnTest do
     end
   end
 
+  test "deprecated: get_resp_header/1 and get_resp_header/2 with nil key" do
+    assert capture_io(:stderr, fn ->
+      assert get_resp_header(%Conn{state: :sent, resp_headers: %{"server" => "Microsoft-IIS/8.5"}})
+        == %{"server" => "Microsoft-IIS/8.5"}
+      assert get_resp_header(%Conn{state: :sent, resp_headers: %{"server" => "Microsoft-IIS/8.5"}}, nil)
+        == %{"server" => "Microsoft-IIS/8.5"}
+      assert_raise NotSentError, "the request was not sent yet", fn ->
+        get_resp_header(%Conn{state: :unsent})
+      end
+    end) =~ "deprecated"
+  end
+
   test "get_resp_header/2" do
     assert get_resp_header(%Conn{state: :sent, resp_headers: %{"server" => "Microsoft-IIS/8.5"}}, "Server")
       == "Microsoft-IIS/8.5"
@@ -112,7 +197,18 @@ defmodule ConnTest do
       == %{"server" => "Microsoft-IIS/8.5"}
   end
 
+  test "deprecated: get_req_header/1" do
+    assert capture_io(:stderr, fn ->
+      assert get_req_header(%Conn{req_headers: %{"server" => "Microsoft-IIS/8.5"}})
+        == %{"server" => "Microsoft-IIS/8.5"}
+    end) =~ "deprecated"
+  end
+
   test "get_req_header/2" do
+    assert capture_io(:stderr, fn ->
+      assert get_req_header(%Conn{req_headers: %{"server" => "Microsoft-IIS/8.5"}}, nil)
+        == %{"server" => "Microsoft-IIS/8.5"}
+    end) =~ "deprecated"
     assert get_req_header(%Conn{req_headers: %{"server" => "Microsoft-IIS/8.5"}}, "Server")
       == "Microsoft-IIS/8.5"
     assert get_req_header(%Conn{req_headers: %{"server" => "Microsoft-IIS/8.5"}}, "Server1")

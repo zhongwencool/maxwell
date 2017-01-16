@@ -108,10 +108,22 @@ defmodule Maxwell.Conn do
     scheme = uri.scheme || "http"
     path   = uri.path || ""
     conn = case uri do
-      %URI{host: nil} ->
-        %Conn{path: path}
-      %URI{userinfo: nil, port: nil} = uri ->
-        %Conn{url: "#{scheme}://#{uri.host}", path: path}
+      %URI{host: nil} = uri ->
+        # This is a badly formed URI, so we'll do best effort:
+        cond do
+          # example.com:8080
+          uri.scheme != nil and Integer.parse(uri.path) != :error ->
+            %Conn{url: "http://#{uri.scheme}:#{uri.path}"}
+          # example.com
+          String.contains?(path, ".") ->
+            %Conn{url: "#{scheme}://#{path}"}
+          # special case for localhost
+          uri.path == "localhost" ->
+            %Conn{url: "#{scheme}://localhost"}
+          # example - not a valid hostname, assume it's a path
+          :else ->
+            %Conn{path: path}
+        end
       %URI{userinfo: nil, scheme: "http", port: 80} = uri  ->
         %Conn{url: "#{scheme}://#{uri.host}", path: path}
       %URI{userinfo: nil, scheme: "https", port: 443} = uri  ->
@@ -141,7 +153,7 @@ defmodule Maxwell.Conn do
 
   @doc false
   def put_path(path) when is_binary(path) do
-    IO.warn "put_path/1 is deprecated, use new/1 or new/2 followed by put_path/2 instead", System.stacktrace
+    IO.warn "put_path/1 is deprecated, use new/1 or new/2 followed by put_path/2 instead"
     put_path(new(), path)
   end
 
@@ -165,7 +177,7 @@ defmodule Maxwell.Conn do
 
   @doc false
   def put_query_string(query) when is_map(query) do
-    IO.warn "put_query_string/1 is deprecated, use new/1 or new/2 followed by put_query_string/2 instead", System.stacktrace
+    IO.warn "put_query_string/1 is deprecated, use new/1 or new/2 followed by put_query_string/2 instead"
     put_query_string(new(), query)
   end
 
@@ -196,9 +208,7 @@ defmodule Maxwell.Conn do
     new_headers =
     extra_headers
     |> Enum.reduce(headers, fn {header_name, header_value}, acc ->
-      acc
-      |> Map.delete(header_name)
-      |> Map.put(String.downcase(header_name), header_value)
+      Map.put(acc, String.downcase(header_name), header_value)
     end)
     %{conn | req_headers: new_headers}
   end
@@ -207,14 +217,14 @@ defmodule Maxwell.Conn do
   # TODO: Remove
   @doc false
   def put_req_header(headers) do
-    IO.warn "put_req_header/1 is deprecated, use new/1 or new/2 followed by put_req_headers/2 instead", System.stacktrace
+    IO.warn "put_req_header/1 is deprecated, use new/1 or new/2 followed by put_req_headers/2 instead"
     put_req_headers(new(), headers)
   end
 
   # TODO: Remove
   @doc false
   def put_req_header(conn, headers) when is_map(headers) do
-    IO.warn "put_req_header/2 is deprecated, use put_req_headers/1 instead", System.stacktrace
+    IO.warn "put_req_header/2 is deprecated, use put_req_headers/1 instead"
     put_req_headers(conn, headers)
   end
 
@@ -229,10 +239,7 @@ defmodule Maxwell.Conn do
       %Maxwell.Conn{req_headers: %{"content-type" => "application/json", "user-agent" => "zhongwenool"}
   """
   def put_req_header(%Conn{state: :unsent, req_headers: headers} = conn, key, value) do
-    new_headers =
-    headers
-    |> Map.delete(key)
-    |> Map.put(String.downcase(key), value)
+    new_headers = Map.put(headers, String.downcase(key), value)
     %{conn | req_headers: new_headers}
   end
   def put_req_header(_conn, _key, _value), do: raise AlreadySentError
@@ -251,7 +258,7 @@ defmodule Maxwell.Conn do
   # TODO: Remove
   @doc false
   def get_req_header(conn) do
-    IO.warn "get_req_header/1 is deprecated, use get_req_headers/1 instead", System.stacktrace
+    IO.warn "get_req_header/1 is deprecated, use get_req_headers/1 instead"
     get_req_headers(conn)
   end
 
@@ -266,7 +273,7 @@ defmodule Maxwell.Conn do
   """
   @spec get_req_header(Conn.t, String.t) :: String.t | nil
   def get_req_header(conn, nil) do
-    IO.warn "get_req_header/2 with a nil key is deprecated, use get_req_headers/2 instead", System.stacktrace
+    IO.warn "get_req_header/2 with a nil key is deprecated, use get_req_headers/2 instead"
     get_req_headers(conn)
   end
   def get_req_header(%Conn{req_headers: headers}, key), do: Map.get(headers, String.downcase(key))
@@ -302,14 +309,14 @@ defmodule Maxwell.Conn do
   # TODO: remove
   @doc false
   def put_option(opts) when is_list(opts) do
-    IO.warn "put_option/1 is deprecated, use new/1 or new/2 followed by put_options/2 instead", System.stacktrace
+    IO.warn "put_option/1 is deprecated, use new/1 or new/2 followed by put_options/2 instead"
     put_options(new(), opts)
   end
 
   # TODO: remove
   @doc false
   def put_option(conn, opts) when is_list(opts) do
-    IO.warn "put_option/2 is deprecated, use put_options/2 instead", System.stacktrace
+    IO.warn "put_option/2 is deprecated, use put_options/2 instead"
     put_options(conn, opts)
   end
 
@@ -330,7 +337,7 @@ defmodule Maxwell.Conn do
   # TODO: remove
   @doc false
   def put_req_body(body) do
-    IO.warn "put_req_body/1 is deprecated, use new/1 or new/2 followed by put_req_body/2 instead", System.stacktrace
+    IO.warn "put_req_body/1 is deprecated, use new/1 or new/2 followed by put_req_body/2 instead"
     put_req_body(new(), body)
   end
 
@@ -362,7 +369,7 @@ defmodule Maxwell.Conn do
   # TODO: remove
   @doc false
   def get_resp_header(conn) do
-    IO.warn "get_resp_header/1 is deprecated, use get_resp_headers/1 instead", System.stacktrace
+    IO.warn "get_resp_header/1 is deprecated, use get_resp_headers/1 instead"
     get_resp_headers(conn)
   end
 
@@ -379,7 +386,7 @@ defmodule Maxwell.Conn do
   def get_resp_header(%Conn{state: :unsent}, _key), do: raise NotSentError
   # TODO: remove
   def get_resp_header(conn, nil) do
-    IO.warn "get_resp_header/2 with a nil key is deprecated, use get_resp_headers/1 instead", System.stacktrace
+    IO.warn "get_resp_header/2 with a nil key is deprecated, use get_resp_headers/1 instead"
     get_resp_headers(conn)
   end
   def get_resp_header(%Conn{resp_headers: headers}, key), do: Map.get(headers, String.downcase(key))
