@@ -312,6 +312,33 @@ defmodule Maxwell.Conn do
   def get_resp_body(%Conn{resp_body: body}, keys)when is_list(keys), do: get_in(body, keys)
   def get_resp_body(%Conn{resp_body: body}, key), do: body[key]
 
+  @doc """
+  Given a partial or full url as a string, returns a Conn struct with the appropriate fields set.
+  """
+  def parse_url(url) when is_binary(url) do
+    uri    = URI.parse(url)
+    scheme = uri.scheme || "http"
+    path   = uri.path || ""
+    conn = case uri do
+      %URI{host: nil} ->
+        %Conn{path: path}
+      %URI{userinfo: nil, port: nil} = uri ->
+        %Conn{url: "#{scheme}://#{uri.host}", path: path}
+      %URI{userinfo: nil, scheme: "http", port: 80} = uri  ->
+        %Conn{url: "#{scheme}://#{uri.host}", path: path}
+      %URI{userinfo: nil, scheme: "https", port: 443} = uri  ->
+        %Conn{url: "#{scheme}://#{uri.host}", path: path}
+      %URI{userinfo: nil, port: port} = uri  ->
+        %Conn{url: "#{scheme}://#{uri.host}:#{port}", path: path}
+      %URI{userinfo: userinfo, port: port} = uri ->
+        %Conn{url: "#{scheme}://#{userinfo}@#{uri.host}:#{port}", path: path}
+    end
+    case uri.query do
+      nil   -> conn
+      query -> put_query_string(conn, URI.decode_query(query))
+    end
+  end
+
   defimpl Inspect, for: Conn do
     def inspect(conn, opts) do
       Inspect.Any.inspect(conn, opts)
