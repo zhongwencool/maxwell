@@ -53,11 +53,10 @@ defmodule Maxwell.Middleware.Logger do
     for {key, value} <- opts do
       case key do
         :log_level ->
-          unless is_atom(value), do: raise(ArgumentError, "Logger Middleware :log_level only accpect atom");
-        _ -> raise(ArgumentError, "Logger Middleware Options don't accpect #{key} (:log_level)")
+          unless is_atom(value), do: raise(ArgumentError, "Logger Middleware :log_level only accepts atom");
+        _ -> raise(ArgumentError, "Logger Middleware Options doesn't accept #{key} (:log_level)")
       end
     end
   end
 
 end
-
