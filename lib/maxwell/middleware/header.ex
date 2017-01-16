@@ -10,7 +10,9 @@ defmodule Maxwell.Middleware.Headers do
 
         def request do
           # headers is merge to %{'User-Agent' => "zhongwencool", 'username' => "zhongwencool"}
-          %{'username' => "zhongwencool"} |> put_req_header |> get!
+          new()
+          |> put_req_header(%{'username' => "zhongwencool"})
+          |> get!
         end
 
   """
@@ -19,11 +21,13 @@ defmodule Maxwell.Middleware.Headers do
 
   def init(headers) do
     check_headers(headers)
-    %Conn{} |> Conn.put_req_header(headers) |> Map.get(:req_headers)
+    Conn.new()
+    |> Conn.put_req_headers(headers)
+    |> Map.get(:req_headers)
   end
 
   def request(%Conn{} = conn, req_headers) do
-    %{conn | req_headers: Map.merge(req_headers, conn.req_headers)}
+    Conn.put_req_headers(conn, req_headers)
   end
 
   defp check_headers(headers) do

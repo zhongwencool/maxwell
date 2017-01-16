@@ -31,19 +31,17 @@ defmodule Maxwell.Adapter.Util do
   end
 
   @doc """
-  Make headers to key word list.
+  Converts the headers map to a list of tuples.
 
-     * `headers`   - `Map.t`, for example: `%{"content-type" => {"Content-Type", "application/json"}}`
+     * `headers`   - `Map.t`, for example: `%{"content-type" => "application/json"}`
 
   ### Examples
 
-       #[{"Content-Type", "application/json"}]
-       iex> headers_serialize(%{"content-type" => {"Content-Type", "application/json"}})
-
+       iex> headers_serialize(%{"content-type" => "application/json"})
+       [{"content-type", "application/json"}]
   """
-
   def header_serialize(headers) do
-    headers |> Map.values
+    Enum.into(headers, [])
   end
 
   @doc """
@@ -83,9 +81,8 @@ defmodule Maxwell.Adapter.Util do
   """
   def chunked?(conn) do
     case Conn.get_req_header(conn, "transfer-encoding") do
-      {_, "chunked"} -> true
-      {_, type} -> "chunked" == String.downcase(type)
-      nil -> false
+      nil       -> false
+      type      -> "chunked" == String.downcase(type)
     end
   end
 
@@ -122,15 +119,15 @@ defmodule Maxwell.Adapter.Util do
     case next_stream_fun.({:cont, nil}) do
       {:suspended, item, next_stream_fun} -> {:ok, item, next_stream_fun}
       {:halted, _} -> :eof
-      {:done, _} -> :eof
+      {:done, _}   -> :eof
     end
   end
   def stream_iterate(stream) do
-		case Enumerable.reduce(stream, {:cont, nil}, fn(item, nil)-> {:suspend, item} end) do
+    case Enumerable.reduce(stream, {:cont, nil}, fn(item, nil)-> {:suspend, item} end) do
       {:suspended, item, next_stream} -> {:ok, item, next_stream}
-			{:done, _} -> :eof
+      {:done, _}   -> :eof
       {:halted, _} -> :eof
-		end
+	end
   end
 
   defp multipart_body({:start, boundary, multiparts}) do

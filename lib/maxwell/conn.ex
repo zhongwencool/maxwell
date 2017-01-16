@@ -1,32 +1,37 @@
 defmodule Maxwell.Conn do
   @moduledoc """
   The Maxwell connection.
+
   This module defines a `Maxwell.Conn` struct and the main functions
   for working with Maxwell connections.
 
   ### Request fields
+
   These fields contain request information:
 
      * `url` - the requested url as a binary, example: `"www.example.com:8080/path/?foo=bar"`.
      * `method` - the request method as a atom, example: `GET`.
-     * `req_headers` - the request headers as a list, example: `[{"content-type", "text/plain"}]`.
+     * `req_headers` - the request headers as a map, example: `%{"content-type" => "text/plain"}`.
      * `req_body` - the request body, by default is an empty string. It is set
         to nil after the request is set.
 
   ### Response fields
+
   These fields contain response information:
 
      * `status` - the response status
-     * `resp_headers` - the response headers as a list of tuples.
+     * `resp_headers` - the response headers as a map.
      * `resp_body` - the response body (todo desc).
 
   ### Connection fields
 
      * `state` - the connection state
+
   The connection state is used to track the connection lifecycle. It starts
   as `:unsent` but is changed to `:sending`, Its final result is `:sent` or `:error`. 
 
   ### Protocols
+
   `Maxwell.Conn` implements both the Collectable and Inspect protocols
     out of the box. The inspect protocol provides a nice representation
     of the connection while the collectable protocol allows developers
@@ -39,17 +44,17 @@ defmodule Maxwell.Conn do
          Enum.into(~w(each chunk as a word), conn)
 
   """
-  @type conn_t :: %__MODULE__{
+  @type t :: %__MODULE__{
     state: :unsent | :sending | :sent | :error,
     method: Atom.t,
     url: String.t,
     path: String.t,
     query_string: Map.t,
     opts: Keyword.t,
-    req_headers: %{binary => {binary, binary}},
+    req_headers: %{binary => binary},
     req_body: iodata | Map.t,
     status: non_neg_integer | nil,
-    resp_headers: %{binary => {binary, binary}},
+    resp_headers: %{binary => binary},
     resp_body: iodata | Map.t
   }
 
@@ -68,53 +73,77 @@ defmodule Maxwell.Conn do
   alias Maxwell.Conn
 
   defmodule AlreadySentError do
-    defexception message: "the request was already sent"
-
     @moduledoc """
     Error raised when trying to modify or send an already sent request
     """
+    defexception message: "the request was already sent"
   end
-  defmodule NotSentError do
-    defexception message: "the request was not sent yet"
 
+  defmodule NotSentError do
     @moduledoc """
     Error raised when no request is sent in a connection
     """
+    defexception message: "the request was not sent yet"
   end
 
   @doc """
-  Create a `%Maxwell.Conn{}`
-
-  * `url` - the base url.
+  Create a new connection.
+  The url provided will be parsed by `URI.parse/1`, and the relevant connection fields will
+  be set accordingly.
 
   ### Examples
 
-      # %Maxwell.Conn{}
-      conn = new()
-      # %Maxwell.Conn{url = "http://example.com"}
-      conn = new("http://example.com")
+      iex> new()
+      %Maxwell.Conn{}
 
+      iex> new("http://example.com/foo")
+      %Maxwell.Conn{url: "http://example.com", path: "/foo"}
+
+      iex> new("http://example.com/foo?bar=qux")
+      %Maxwell.Conn{url: "http://example.com", path: "/foo", query_string: %{"bar" => "qux"}}
   """
-  def new(url \\ ""), do: %Maxwell.Conn{url: url}
+  def new(), do: %Conn{}
+  def new(url) when is_binary(url) do
+    uri    = URI.parse(url)
+    scheme = uri.scheme || "http"
+    path   = uri.path || ""
+    conn = case uri do
+      %URI{host: nil} ->
+        %Conn{path: path}
+      %URI{userinfo: nil, port: nil} = uri ->
+        %Conn{url: "#{scheme}://#{uri.host}", path: path}
+      %URI{userinfo: nil, scheme: "http", port: 80} = uri  ->
+        %Conn{url: "#{scheme}://#{uri.host}", path: path}
+      %URI{userinfo: nil, scheme: "https", port: 443} = uri  ->
+        %Conn{url: "#{scheme}://#{uri.host}", path: path}
+      %URI{userinfo: nil, port: port} = uri  ->
+        %Conn{url: "#{scheme}://#{uri.host}:#{port}", path: path}
+      %URI{userinfo: userinfo, port: port} = uri ->
+        %Conn{url: "#{scheme}://#{userinfo}@#{uri.host}:#{port}", path: path}
+    end
+    case uri.query do
+      nil   -> conn
+      query -> put_query_string(conn, URI.decode_query(query))
+    end
+  end
 
   @doc """
-  Replace `path` in `conn.path`.
-
-    * `path` - path string, for example `"/path/to/home"`
-    * `conn` - `%Conn{}`
+  Set the path of the request.
 
   ### Examples
 
-       @middleware Maxwell.Middleware.BaseUrl "http://example.com"
-       #%Conn{path: "delete", url: "http://example.com"}
-       put_path("delete")
-       #or
-       new() |> put_path("delete")
-
+       iex> put_path(new(), "delete")
+       %Maxwell.Conn{path: "delete"}
   """
-  def put_path(conn \\ %Conn{}, path)
-  def put_path(conn = %Conn{state: :unsent}, path), do: %{conn| path: path}
+  @spec put_path(Conn.t, String.t) :: Conn.t | no_return
+  def put_path(%Conn{state: :unsent} = conn, path), do: %{conn | path: path}
   def put_path(_conn, _path), do: raise AlreadySentError
+
+  @doc false
+  def put_path(path) when is_binary(path) do
+    IO.warn "put_path/1 is deprecated, use new/1 or new/2 followed by put_path/2 instead", System.stacktrace
+    put_path(new(), path)
+  end
 
   @doc """
   Add query string to `conn.query_string`.
@@ -128,188 +157,263 @@ defmodule Maxwell.Conn do
       put_query_string(%Conn{}, %{name: "zhong wen"})
 
   """
-  def put_query_string(conn \\ %Conn{}, query_map)
-  def put_query_string(conn = %Conn{state: :unsent, query_string: query_string}, query_map) do
-    %{conn| query_string: Map.merge(query_string, query_map)}
+  @spec put_query_string(Conn.t, map()) :: Conn.t | no_return
+  def put_query_string(%Conn{state: :unsent, query_string: qs} = conn, query) do
+    %{conn | query_string: Map.merge(qs, query)}
   end
   def put_query_string(_conn, _query_map), do: raise AlreadySentError
 
-  @doc """
-  Add query string to `conn.query_string`.
+  @doc false
+  def put_query_string(query) when is_map(query) do
+    IO.warn "put_query_string/1 is deprecated, use new/1 or new/2 followed by put_query_string/2 instead", System.stacktrace
+    put_query_string(new(), query)
+  end
 
-  * `conn` - `%Conn{}`
-  * `key` - query key, for example `"name"`.
-  * `value` - query value, for example `"lucy"`.
+  @doc """
+  Set a query string value for the request.
 
   ### Examples
 
-        # %Conn{query_string: %{name: "zhong wen"}}
-        put_query_string(%Conn{}, :name, "zhong wen")
-
+        iex> put_query_string(new(), :name, "zhong wen")
+        %Maxwell.Conn{query_string: %{:name => "zhong wen"}}
   """
-  def put_query_string(conn = %Conn{state: :unsent, query_string: query_string}, key, value) do
-    %{conn| query_string: Map.put(query_string, key, value)}
+  def put_query_string(%Conn{state: :unsent, query_string: qs} = conn, key, value) do
+    %{conn | query_string: Map.put(qs, key, value)}
   end
   def put_query_string(_conn, _key, _value), do: raise AlreadySentError
 
   @doc """
-  Merge http headers.
-
-    * `conn` - `%Conn{}`
-    * `req_headers` - reqeust headers, for example `%{"content-type" => "text/javascript"}`
+  Merge a map of headers into the existing headers of the connection.
 
   ### Examples
 
-      # %Conn{headers: %{"Content-Type" => "application/json", "User-Agent" => "zhongwenool"}
-      %Conn{headers: %{"Content-Type" => "text/javascript"}
-      |> put_req_header(%{"Content-Type" => "application/json"})
-      |> put_req_header(%{"User-Agent" => "zhongwencool"})
-
+      iex> %Maxwell.Conn{headers: %{"content-type" => "text/javascript"}
+      |> put_req_headers(%{"Accept" => "application/json"})
+      %Maxwell.Conn{req_headers: %{"accept" => "application/json", "content-type" => "text/javascript"}}
   """
-  def put_req_header(conn \\ %Conn{}, map_headers)
-  def put_req_header(conn = %Conn{state: :unsent, req_headers: headers}, map_headers)when is_map(map_headers) do
-    downcase_func =
-    fn({downcase_header, {_original_header, _header_value} = value}, acc) ->
-      Map.put(acc, downcase_header, value)
-      ({header, _val} = value, acc) ->
-        Map.put(acc, String.downcase(header), value)
-    end
-    new_headers = Enum.reduce(map_headers, headers, downcase_func)
-    %{conn| req_headers: new_headers}
+  @spec put_req_headers(Conn.t, map()) :: Conn.t | no_return
+  def put_req_headers(%Conn{state: :unsent, req_headers: headers} = conn, extra_headers) when is_map(extra_headers) do
+    new_headers =
+    extra_headers
+    |> Enum.reduce(headers, fn {header_name, header_value}, acc ->
+      acc
+      |> Map.delete(header_name)
+      |> Map.put(String.downcase(header_name), header_value)
+    end)
+    %{conn | req_headers: new_headers}
   end
-  def put_req_header(_conn, _map_headers), do: raise AlreadySentError
+  def put_req_headers(_conn, _headers), do: raise AlreadySentError
+
+  # TODO: Remove
+  @doc false
+  def put_req_header(headers) do
+    IO.warn "put_req_header/1 is deprecated, use new/1 or new/2 followed by put_req_headers/2 instead", System.stacktrace
+    put_req_headers(new(), headers)
+  end
+
+  # TODO: Remove
+  @doc false
+  def put_req_header(conn, headers) when is_map(headers) do
+    IO.warn "put_req_header/2 is deprecated, use put_req_headers/1 instead", System.stacktrace
+    put_req_headers(conn, headers)
+  end
 
   @doc """
-  Merge http headers.
-
-  * `conn` - `%Conn{}`
-  * `key` - header key
-  * `value` - header value
+  Set a request header. If it already exists, it is updated.
 
   ### Examples
 
-      # %Conn{headers: %{"content-type" => {"Content-Type", "application/json"}, "user-agent" => {"user-agent", "zhongwenool"}}
-      %Conn{headers: %{"content-type" => {"Content-Type", "text/javascript"}}
+      iex> %Maxwell.Conn{req_headers: %{"content-type" => "text/javascript"}}
       |> put_req_header("Content-Type", "application/json")
       |> put_req_header("User-Agent", "zhongwencool")
-
+      %Maxwell.Conn{req_headers: %{"content-type" => "application/json", "user-agent" => "zhongwenool"}
   """
-  def put_req_header(conn = %Conn{state: :unsent, req_headers: headers}, key, value) do
-    %{conn| req_headers: Map.put(headers,  String.downcase(key), {key, value})}
+  def put_req_header(%Conn{state: :unsent, req_headers: headers} = conn, key, value) do
+    new_headers =
+    headers
+    |> Map.delete(key)
+    |> Map.put(String.downcase(key), value)
+    %{conn | req_headers: new_headers}
   end
   def put_req_header(_conn, _key, _value), do: raise AlreadySentError
 
   @doc """
-
-  * `get_req_header/1` - get all request headers, return `Map.t`.
-  * `get_req_header/2` - get request header by `key`, return value.
-  * `conn` - `%Conn{}`
+  Get all request headers as a map
 
   ### Examples
 
-  # {"Cookie", "xyz"}
-  %Conn{req_headers: %{"cookie" => {"Cookie", "xyz"}} |> get_req_header("cookie")
-  # %{"Cookie" => "xyz"}
-  %Conn{req_headers: %{"cookie" => {"Cookie", "xyz"}} |> get_req_header
+      iex> %Maxwell.Conn{req_headers: %{"cookie" => "xyz"} |> get_req_header
+      %{"cookie" => "xyz"}
   """
-  def get_req_header(conn, key \\ nil)
-  def get_req_header(%Conn{req_headers: headers}, nil) do
-    for {_, origin_header} <- headers, into: %{}, do: origin_header
+  @spec get_req_header(Conn.t) :: %{String.t => String.t}
+  def get_req_headers(%Conn{req_headers: headers}), do: headers
+
+  # TODO: Remove
+  @doc false
+  def get_req_header(conn) do
+    IO.warn "get_req_header/1 is deprecated, use get_req_headers/1 instead", System.stacktrace
+    get_req_headers(conn)
   end
-  def get_req_header(%Conn{req_headers: headers}, key), do: headers[key] || headers[String.downcase(key)]
 
   @doc """
-  Merge adapter's request options.
-
-   * `conn` - `%Conn{}`.
-   * `opts` - request's options, for example `[connect_timeout: 4000]`.
-   * `key_or_keyword` - for example: `:cookie` or `[cookie: "xyz"]`.
-   * `value` - for example: "xyz", only valid when `key_or_keyword` is a key.
+  Get a request header by key. The key lookup is case-insensitive.
+  Returns the value as a string, or nil if it doesn't exist.
 
   ### Examples
 
-      # %Conn{opts: [connect_timeout: 5000, cookie: "xyz"]}
-      %Conn{opts: [connect_timeout: 5000]} |> put_option('cookie', "xyz")
+      iex> %Maxwell.Conn{req_headers: %{"cookie" => "xyz"} |> get_req_header("cookie")
+      "xyz"
   """
-  def put_option(conn \\ %Conn{}, key_or_keyword, value \\ nil)
-  def put_option(conn = %Conn{state: :unsent, opts: opts}, key, value) do
-    new_opts = if value, do: [{key, value}], else: key
-    %{conn| opts: Keyword.merge(opts, new_opts)}
+  @spec get_req_header(Conn.t, String.t) :: String.t | nil
+  def get_req_header(conn, nil) do
+    IO.warn "get_req_header/2 with a nil key is deprecated, use get_req_headers/2 instead", System.stacktrace
+    get_req_headers(conn)
   end
-  def put_option(_conn, _key, _value), do: raise AlreadySentError
+  def get_req_header(%Conn{req_headers: headers}, key), do: Map.get(headers, String.downcase(key))
 
   @doc """
-  Replace req_body.
-
-    * `conn` - `%Conn{}`
-    * `req_body` - request's body iodata for example `"I Found You"`
+  Set adapter options for the request.
 
   ### Examples
-      # %Conn{req_body: "new body"}
-      %Conn{req_body: "old body"} |> body("new body")
+
+      iex> put_options(new(), connect_timeout: 4000)
+      %Maxwell.Conn{opts: [connect_timeout: 4000]}
   """
-  def put_req_body(conn \\ %Conn{}, req_body)
-  def put_req_body(conn = %Conn{state: :unsent}, req_body) do
-    %{conn| req_body: req_body}
+  @spec put_options(Conn.t, Keyword.t) :: Conn.t | no_return
+  def put_options(%Conn{state: :unsent, opts: opts} = conn, extra_opts) when is_list(extra_opts) do
+    %{conn | opts: Keyword.merge(opts, extra_opts)}
+  end
+  def put_options(_conn, extra_opts) when is_list(extra_opts), do: raise AlreadySentError
+
+  @doc """
+  Set an adapter option for the request.
+
+  ### Examples
+
+      iex> put_option(new(), :connect_timeout, 5000)
+      %Maxwell.Conn{opts: [connect_timeout: 5000]}
+  """
+  @spec put_option(Conn.t, atom(), term()) :: Conn.t | no_return
+  def put_option(%Conn{state: :unsent, opts: opts} = conn, key, value) when is_atom(key) do
+    %{conn | opts: [{key, value} | opts]}
+  end
+  def put_option(%Conn{}, key, _value) when is_atom(key), do: raise AlreadySentError
+
+  # TODO: remove
+  @doc false
+  def put_option(opts) when is_list(opts) do
+    IO.warn "put_option/1 is deprecated, use new/1 or new/2 followed by put_options/2 instead", System.stacktrace
+    put_options(new(), opts)
+  end
+
+  # TODO: remove
+  @doc false
+  def put_option(conn, opts) when is_list(opts) do
+    IO.warn "put_option/2 is deprecated, use put_options/2 instead", System.stacktrace
+    put_options(conn, opts)
+  end
+
+  @doc """
+  Set the request body.
+
+  ### Examples
+
+      iex> put_req_body(new(), "new body")
+      %Maxwell.Conn{req_body: "new_body"}
+  """
+  @spec put_req_body(Conn.t, Stream.t | binary()) :: Conn.t | no_return
+  def put_req_body(%Conn{state: :unsent} = conn, req_body) do
+    %{conn | req_body: req_body}
   end
   def put_req_body(_conn, _req_body), do: raise AlreadySentError
 
+  # TODO: remove
+  @doc false
+  def put_req_body(body) do
+    IO.warn "put_req_body/1 is deprecated, use new/1 or new/2 followed by put_req_body/2 instead", System.stacktrace
+    put_req_body(new(), body)
+  end
+
   @doc """
-  Get response status, raise `Maxwell.Conn.NotSentError` when request is unsent.
-  * `conn` - `%Conn{}`
+  Get response status.
+  Raises `Maxwell.Conn.NotSentError` when the request is unsent.
 
   ### Examples
 
-      # 200
-      %Conn{status: 200} |> get_status()
+      iex> get_status(%Maxwell.Conn{status: 200})
+      200
   """
-  def get_status(%Conn{status: status, state: state})when state !== :unsent, do: status
+  @spec get_status(Conn.t) :: pos_integer | no_return
+  def get_status(%Conn{status: status, state: state}) when state !== :unsent, do: status
   def get_status(_conn), do: raise NotSentError
 
   @doc """
-
-  * `get_resp_header/1` - get all response headers, return `Map.t`.
-  * `get_resp_header/2` - get response header by `key`, return value.
-  * `conn` - `%Conn{}`
+  Get all response headers as a map.
 
   ### Examples
 
-      # {"Cookie", "xyz"}
-      %Conn{resp_headers: %{"cookie" => {"Cookie", "xyz"}} |> get_resp_header("cookie")
-      # %{"Cookie" => "xyz"}
-      %Conn{resp_headers: %{"cookie" => {"Cookie", "xyz"}} |> get_resp_header
+      iex> %Maxwell.Conn{resp_headers: %{"cookie" => "xyz"} |> get_resp_header
+      %{"cookie" => "xyz"}
   """
-  def get_resp_header(conn, key \\ nil)
-  def get_resp_header(%Conn{state: :unsent}, _key), do: raise NotSentError
-  def get_resp_header(%Conn{resp_headers: headers}, nil) do
-    for {_, origin_header} <- headers, into: %{}, do: origin_header
+  @spec get_resp_headers(Conn.t) :: %{String.t => String.t} | no_return
+  def get_resp_headers(%Conn{state: :unsent}), do: raise NotSentError
+  def get_resp_headers(%Conn{resp_headers: headers}), do: headers
+
+  # TODO: remove
+  @doc false
+  def get_resp_header(conn) do
+    IO.warn "get_resp_header/1 is deprecated, use get_resp_headers/1 instead", System.stacktrace
+    get_resp_headers(conn)
   end
-  def get_resp_header(%Conn{resp_headers: headers}, key), do: headers[key] || headers[String.downcase(key)]
 
   @doc """
-  * `get_resp_body/1` - get all response body.
-  * `get_resp_body/2` - get response header by `key` or `func`(fn/1).
-  * `conn` - `%Conn{}`
+  Get a response header by key.
+  The value is returned as a string, or nil if the header is not set.
 
   ### Examples
 
-      # "best http client"
-      %Conn{resp_body: "best http client" |> get_resp_body
-      # "xyz"
-      %Conn{resp_body: %{"name" => "xyz"}} |> get_resp_body("name")
-      func = fn(x) ->
-          [key, value] = String.split(x, ":")
-          value
-      end
-      # "xyz"
-      %Conn{resp_body: "name:xyz" |> get_resp_body(func)
-
+      iex> %Maxwell.Conn{resp_headers: %{"cookie" => "xyz"}} |> get_resp_header("cookie")
+      "xyz"
   """
-  def get_resp_body(conn, func \\ nil)
-  def get_resp_body(%Conn{state: :unsent}, _keys), do: raise NotSentError
-  def get_resp_body(%Conn{resp_body: body}, nil), do: body
-  def get_resp_body(%Conn{resp_body: body}, func)when is_function(func, 1), do: func.(body)
-  def get_resp_body(%Conn{resp_body: body}, keys)when is_list(keys), do: get_in(body, keys)
+  @spec get_resp_header(Conn.t, String.t) :: String.t | nil | no_return
+  def get_resp_header(%Conn{state: :unsent}, _key), do: raise NotSentError
+  # TODO: remove
+  def get_resp_header(conn, nil) do
+    IO.warn "get_resp_header/2 with a nil key is deprecated, use get_resp_headers/1 instead", System.stacktrace
+    get_resp_headers(conn)
+  end
+  def get_resp_header(%Conn{resp_headers: headers}, key), do: Map.get(headers, String.downcase(key))
+
+  @doc """
+  Return the response body.
+
+  ### Examples
+
+      iex> get_resp_body(%Maxwell.Conn{state: :sent, resp_body: "best http client"})
+      "best http client"
+  """
+  @spec get_resp_body(Conn.t) :: binary() | map() | no_return
+  def get_resp_body(%Conn{state: :sent, resp_body: body}), do: body
+  def get_resp_body(_conn), do: raise NotSentError
+
+  @doc """
+  Return a value from the response body by key or with a parsing function.
+
+  ### Examples
+
+      iex> get_resp_body(%Maxwell.Conn{state: :sent, resp_body: %{"name" => "xyz"}}, "name")
+      "xyz"
+
+      iex> func = fn(x) ->
+      ...>   [key, value] = String.split(x, ":")
+      ...>   value
+      ...> end
+      ...> get_resp_body(%Maxwell.Conn{state: :sent, resp_body: "name:xyz"}, func)
+      "xyz"
+  """
+  def get_resp_body(%Conn{state: state}, _) when state != :sent,             do: raise NotSentError
+  def get_resp_body(%Conn{resp_body: body}, func) when is_function(func, 1), do: func.(body)
+  def get_resp_body(%Conn{resp_body: body}, keys) when is_list(keys),        do: get_in(body, keys)
   def get_resp_body(%Conn{resp_body: body}, key), do: body[key]
 
   defimpl Inspect, for: Conn do
@@ -317,6 +421,5 @@ defmodule Maxwell.Conn do
       Inspect.Any.inspect(conn, opts)
     end
   end
-
 end
 

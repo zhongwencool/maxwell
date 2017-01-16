@@ -29,20 +29,20 @@ defmodule FuseTest do
   end
 
   test "regular endpoint" do
-    assert Conn.put_path("/ok") |> Client.get! |> Conn.get_resp_body() == "ok"
+    assert Conn.new("/ok") |> Client.get! |> Conn.get_resp_body() == "ok"
   end
 
   test "unavailable endpoint" do
-    assert_raise Maxwell.Error, fn -> Conn.put_path("/unavailable") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get! end
     assert_receive :request_made
-    assert_raise Maxwell.Error, fn -> Conn.put_path("/unavailable") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get! end
     assert_receive :request_made
-    assert_raise Maxwell.Error, fn -> Conn.put_path("/unavailable") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get! end
     assert_receive :request_made
 
-    assert_raise Maxwell.Error, fn -> Conn.put_path("/unavailable") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get! end
     refute_receive :request_made
-    assert_raise Maxwell.Error, fn -> Conn.put_path("/unavailable") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get! end
     refute_receive :request_made
   end
 end

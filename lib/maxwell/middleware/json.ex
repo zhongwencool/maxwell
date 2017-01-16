@@ -94,9 +94,9 @@ defmodule Maxwell.Middleware.EncodeJson do
   def request(conn = %Conn{req_body: %Stream{}}, _opts), do: conn
   def request(conn = %Conn{req_body: req_body}, {encode_func, content_type}) do
     {:ok, req_body} = encode_func.(req_body)
-    conn = %{conn | req_body: req_body}
-    headers = %{"content-type" => {"content-type", content_type}}
-    Maxwell.Middleware.Headers.request(conn, headers)
+    conn
+    |> Conn.put_req_body(req_body)
+    |> Conn.put_req_header("content-type", content_type)
   end
 
   defp check_opts(opts) do
@@ -116,10 +116,10 @@ defmodule Maxwell.Middleware.DecodeJson do
   @moduledoc  """
   Decode response's body to json when
 
-  1. Reponse header contain `{'Content-Type', "application/json"}` and body is binary.
-  2. Reponse is list.
+  1. The reponse headers contain a content type of `application/json` and body is binary.
+  2. The response is a list
 
-  Default json_lib is Poison
+  Default json decoder is Poison
 
   ## Examples
 
@@ -143,26 +143,27 @@ defmodule Maxwell.Middleware.DecodeJson do
 
   def response(%Maxwell.Conn{} = conn, {decode_fun, valid_content_types}) do
     case Maxwell.Conn.get_resp_header(conn, "content-type") do
-      {_, content_type} ->
-          case is_json_content(content_type, conn.resp_body, valid_content_types) do
-            true ->
-              case decode_fun.(conn.resp_body) do
-                {:ok, resp_body}  -> %{conn | resp_body: resp_body}
-                {:error, reason} -> {:error, {:decode_json_error, reason}, conn}
-              end
-            _ ->
-              conn
-          end
-       _ ->
-         conn
+      nil ->
+        conn
+      content_type ->
+        case is_json_content(content_type, conn.resp_body, valid_content_types) do
+          true ->
+            case decode_fun.(conn.resp_body) do
+              {:ok, resp_body}  -> %{conn | resp_body: resp_body}
+              {:error, reason} -> {:error, {:decode_json_error, reason}, conn}
+            end
+          _ ->
+            conn
+        end
     end
   end
 
-  defp is_json_content(content_type, body, valid_types) do
-    valid_types = ["application/json", "text/javascript"| valid_types]
-    is_valid_type = Enum.find(valid_types, fn(x) -> String.starts_with?(content_type, x) end)
-    is_valid_type && (is_binary(body) || is_list(body))
+  defp is_json_content(content_type, body, valid_types) when is_binary(body) or is_list(body) do
+    String.starts_with?(content_type, "application/json") ||
+    String.starts_with?(content_type, "text/javascript") ||
+    Enum.find(valid_types, &String.starts_with?(content_type, &1)) != nil
   end
+  defp is_json_content(_content_type, _body, _valid_types), do: false
 
   defp check_opts(opts) do
     for {key, value} <- opts do
