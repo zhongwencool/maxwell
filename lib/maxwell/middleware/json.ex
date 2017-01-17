@@ -142,28 +142,36 @@ defmodule Maxwell.Middleware.DecodeJson do
   end
 
   def response(%Maxwell.Conn{} = conn, {decode_fun, valid_content_types}) do
-    case Maxwell.Conn.get_resp_header(conn, "content-type") do
-      nil ->
-        conn
-      content_type ->
-        case is_json_content(content_type, conn.resp_body, valid_content_types) do
-          true ->
-            case decode_fun.(conn.resp_body) do
-              {:ok, resp_body}  -> %{conn | resp_body: resp_body}
-              {:error, reason} -> {:error, {:decode_json_error, reason}, conn}
-            end
-          _ ->
-            conn
-        end
+    with {:ok, content_type} <- fetch_resp_content_type(conn),
+         true <- valid_content?(content_type, conn.resp_body, valid_content_types),
+         {:ok, resp_body} <- decode_fun.(conn.resp_body) do
+      %{conn | resp_body: resp_body}
+    else
+      :error -> conn
+      false -> conn
+      {:error, reason} -> {:error, {:decode_json_error, reason}, conn}
     end
   end
 
-  defp is_json_content(content_type, body, valid_types) when is_binary(body) or is_list(body) do
+  defp valid_content?(content_type, body, valid_types) do
+    present?(body) &&
     String.starts_with?(content_type, "application/json") ||
     String.starts_with?(content_type, "text/javascript") ||
-    Enum.find(valid_types, &String.starts_with?(content_type, &1)) != nil
+    Enum.any?(valid_types, &String.starts_with?(content_type, &1))
   end
-  defp is_json_content(_content_type, _body, _valid_types), do: false
+
+  defp fetch_resp_content_type(conn) do
+    if content_type = Maxwell.Conn.get_resp_header(conn, "content-type") do
+      {:ok, content_type}
+    else
+      :error
+    end
+  end
+
+  defp present?(""), do: false
+  defp present?([]), do: false
+  defp present?(term) when is_binary(term) or is_list(term), do: true
+  defp present?(_), do: false
 
   defp check_opts(opts) do
     for {key, value} <- opts do
