@@ -8,7 +8,7 @@ defmodule MaxwellAdapterTest do
     use Maxwell.Adapter
     def send_direct(conn = %Conn{status: nil}) do
       %{conn|status: 200,
-             resp_headers: %{"content-type" => {"Content-Type", "text/plain"}},
+             resp_headers: %{"content-type" => "text/plain"},
              resp_body: "testbody",
              state: :sent}
     end
@@ -28,20 +28,20 @@ defmodule MaxwellAdapterTest do
   end
 
   test "test :query string" do
-    {:ok, result} = %{"name" => "china"} |> Conn.put_query_string |> Client.get
+    {:ok, result} = new() |> Conn.put_query_string(%{"name" => "china"}) |> Client.get
     assert result.query_string == %{"name" => "china"}
     assert result |> Conn.get_status == 200
   end
 
   test "return :status 400" do
     assert_raise(Maxwell.Error, "url: \npath: \"\"\nmethod: get\nstatus: 400\nreason: :response_status_not_match\nmodule: Elixir.MaxwellAdapterTest.Client\n",
-      fn() -> %Conn{status: 100} |> Client.get! end)
+      fn -> %Conn{status: 100} |> Client.get! end)
   end
 
   test "return resp content-type header" do
     {:ok, conn} = Client.get()
-    assert conn |> get_resp_header == %{"Content-Type" => "text/plain"}
-    assert conn |> get_resp_header("Content-Type") == {"Content-Type", "text/plain"}
+    assert conn |> get_resp_headers() == %{"content-type" => "text/plain"}
+    assert conn |> get_resp_header("Content-Type") == "text/plain"
   end
 
   test "return resp_body" do
@@ -86,28 +86,20 @@ defmodule MaxwellAdapterTest do
   end
 
   test "path + query" do
-    conn =
-      "http://example.com"
-      |> new
-      |> put_path("/foo")
-      |> put_query_string(%{a: 1, b: "foo"})
+    conn = new("http://example.com/foo?a=1&b=foo")
       |> Client.get!
     assert conn.url == "http://example.com"
     assert conn.path == "/foo"
-    assert conn.query_string == %{a: 1, b: "foo"}
+    assert conn.query_string == %{"a" => "1", "b" => "foo"}
     assert Conn.get_status(conn) == 200
   end
 
   test "adapter not implement send_file/1" do
     assert_raise Maxwell.Error, "url: http://example.com\npath: \"/foo\"\nmethod: post\nstatus: \nreason: \"Elixir.MaxwellAdapterTest.TestAdapter Adapter doesn't implement send_file/1\"\nmodule: Elixir.MaxwellAdapterTest.TestAdapter\n", fn ->
-        "http://example.com"
-        |> new
-        |> put_path("/foo")
-        |> put_query_string(%{a: 1, b: "foo"})
+        new("http://example.com/foo?a=1&b=foo")
         |> put_req_body({:file, "test"})
         |> Client.post!
     end
   end
-
 end
 

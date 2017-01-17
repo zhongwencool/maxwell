@@ -9,9 +9,9 @@ Maxwell is an HTTP client that provides a common interface over [:httpc](http://
 
 [Documentation for Maxwell is available online](https://hexdocs.pm/maxwell).
 
-## Usage
+## Getting Started
 
-Use `Maxwell.Builder` module to create the API wrappers. The following is a simple example:
+The simplest way to use Maxwell is by creating a module which will be your API wrapper, using `Maxwell.Builder`:
 
 ```elixir
 defmodule GitHubClient do
@@ -19,173 +19,61 @@ defmodule GitHubClient do
   # You can omit the list and functions for all HTTP methods will be generated
   use Maxwell.Builder, ~w(get patch)a
 
+  # For a complete list of middlewares, see the docs
   middleware Maxwell.Middleware.BaseUrl, "https://api.github.com"
-  middleware Maxwell.Middleware.Headers, %{'Content-Type': "application/vnd.github.v3+json", 'User-Agent': 'zhongwenool'}
-  middleware Maxwell.Middleware.Opts, [connect_timeout: 3000]
+  middleware Maxwell.Middleware.Headers, %{"content-type": "application/vnd.github.v3+json", "user-agent": "zhongwenool"}
+  middleware Maxwell.Middleware.Opts,    connect_timeout: 3000
   middleware Maxwell.Middleware.Json
   middleware Maxwell.Middleware.Logger
 
-  adapter Maxwell.Adapter.Hackney # default adapter is Maxwell.Adapter.Httpc
+  # adapter can be omitted, and the default will be used (currently :httpc)
+  adapter Maxwell.Adapter.Hackney
 
   # List public repositories for the specified user.
   def user_repos(username) do
-    put_path("/users/" <> username <> "/repos") |> get
+    "/users/#{username}/repos"
+    |> new()
+    |> get()
   end
 
   # Edit owner repositories
   def edit_repo_desc(owner, repo, name, desc) do
-    new
-    |> put_path("/repos/#{owner}/#{repo}")
+    "/repos/#{owner}/#{repo}"
+    |> new()
     |> put_req_body(%{name: name, description: desc})
-    |> patch
+    |> patch()
   end
 end
 ```
 
-Example usage is as follows:
+`Maxwell.Builder` injects functions for all supported HTTP methods, in two flavors, the first (e.g. `get/1`) will
+return `{:ok, Maxwell.Conn.t}` or `{:error, term, Maxwell.Conn.t}`. The second (e.g. `get!/1`) will return
+`Maxwell.Conn.t` *only* if the request succeeds and returns a 2xx status code, otherwise it will raise `Maxwell.Error`.
 
-```elixir
-$ MIX_ENV=TEST iex -S mix
-iex(1)> GitHubClient.
-edit_repo_desc/4    get!/0              get!/1
-get!/2              get/0               get/1
-patch!/0            patch!/1            patch!/2
-patch/0             patch/1             user_repos/1
-iex(1)> GitHubClient.user_repos("zhongwencool")
-22:23:42.307 [info]  get https://api.github.com <<<200(3085.772ms)
-%Maxwell.Conn{method: :get, opts: [connect_timeout: 3000, recv_timeout: 20000]
-...(truncated)
-```
-
-You can also use Maxwell without defining a module:
+The same functions are also exported by the `Maxwell` module, which you can use if you do not wish to define a wrapper
+module for your API, as shown below:
 
 ```elixir
 iex(1)> alias Maxwell.Conn
-iex(2)> Conn.new("http://httpbin.org") |>
-    Conn.put_path("/drip") |> 
+iex(2)> Conn.new("http://httpbin.org/drip") |>
     Conn.put_query_string(%{numbytes: 25, duration: 1, delay: 1, code: 200}) |> 
     Maxwell.get
 {:ok,
- %Maxwell.Conn{method: :get, opts: [], path: "",
+ %Maxwell.Conn{method: :get, opts: [], path: "/drip",
   query_string: %{code: 200, delay: 1, duration: 1, numbytes: 25},
   req_body: nil, req_headers: %{}, resp_body: '*************************',
-  resp_headers: %{"access-control-allow-credentials" => {"access-control-allow-credentials",
-     "true"},
-    "access-control-allow-origin" => {"access-control-allow-origin", "*"},
-    "connection" => {"connection", "keep-alive"},
-    "content-length" => {"content-length", "25"},
-    "content-type" => {"content-type", "application/octet-stream"},
-    "date" => {"date", "Sun, 18 Dec 2016 14:32:38 GMT"},
-    "server" => {"server", "nginx"}}, state: :sent, status: 200,
-  url: "http://httpbin.org/drip"}}
+  resp_headers: %{"access-control-allow-credentials" => "true",
+    "access-control-allow-origin" => "*",
+    "connection" => "keep-alive",
+    "content-length" => "25",
+    "content-type" => "application/octet-stream",
+    "date" => "Sun, 18 Dec 2016 14:32:38 GMT",
+    "server" => "nginx"}, state: :sent, status: 200,
+  url: "http://httpbin.org"}}
 ```
 
-### Helper functions for Maxwell.Conn
-
-```elixir
-new(request_url_string)
-|> put_query_string(request_query_map)
-|> put_req_header(request_headers_map)
-|> put_option(request_opts_keyword_list)
-|> put_req_body(request_body_term)
-|> YourClient.{http_method}!
-|> get_resp_body
-```
-
-See the documentation of `Maxwell.Conn` for more information.
-
-## Responses
-
-When calling one of (non-bang versions) of the HTTP method functions on a client module or the `Maxwell` module, you
-can expect either `{:ok, Maxwell.Conn.t}` or `{:error, reason, Maxwell.Conn.t}` to be returned.
-
-When calling of the bang versions of the HTTP method functions, e.g. `get!`, you can expect `Maxwell.Conn.t` if successful,
-or a `Maxwell.Error` will be raised.
-
-## Example Client
-
-The following is a full implementation of a client showing various features of Maxwell.
-
-```elixir
-defmodule Client do
-  #generate 4 function get/1, get!/1 post/1 post!/1 function
-  use Maxwell.Builder, ~w(get post)a
-
-  middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org"
-  middleware Maxwell.Middleware.Headers, %{"Content-Type" => "application/json"}
-  middleware Maxwell.Middleware.Opts, [connect_timeout: 5000, recv_timeout: 10000]
-  middleware Maxwell.Middleware.Json
-  middleware Maxwell.Middleware.Logger
-
-  adapter Maxwell.Adapter.Hackney
-
-  @doc """
-  Simple get request
-  Get origin ip
-  """
-  def get_ip() do
-    new
-    |> put_path("/ip")
-    |> get!
-    |> get_resp_body("origin")
-  end
-
-  @doc """
-  Post whole file once
-  ###Example
-     Client.post_file_once("./mix.exs")
-  """
-  def post_file_once(filepath) do
-    new
-    |> put_path("/post")
-    |> put_req_body({:file, filepath})
-    |> post!
-    |> get_resp_body("data")
-  end
-
-  @doc """
-  Post whole file by chunked
-  ###Example
-     Client.post_file_chunked("./mix.exs")
-  """
-  def post_file_chunked(filepath) do
-    new
-    |> put_path("/post")
-    |> put_req_header("transfer_encoding", "chunked")
-    |> put_req_body({:file, filepath})
-    |> post!
-    |> get_resp_body("data")
-  end
-
-  @doc """
-  Post by stream
-  ###Example
-     ["1", "2", "3"] |> Stream.map(fn(x) -> List.duplicate(x, 2) end) |> Client.post_stream
-  """
-  def post_stream(stream) do
-    new
-    |> put_path("/post")
-    |> put_req_body(stream)
-    |> post!
-    |> get_resp_body("data")
-  end
-
-  @doc """
-  Post multipart form
-  ###Example
-    Client.post_multipart_form({:multipart, [{:file, "./mix.exs"}]})
-  """
-  def post_multipart_form(multipart) do
-    new
-    |> put_path("/post")
-    |> put_req_body(multipart)
-    |> post!
-    |> get_resp_body("data")
-  end
-
-end
-
-```
+There are numerous helper functions for the `Maxwell.Conn` struct. See it's module docs
+for a list of all functions, and detailed info about how they behave.
 
 ## Installation
 
@@ -247,6 +135,11 @@ Sets the base url for all requests.
 ### Maxwell.Middleware.Headers
 
 Sets default headers for all requests.
+
+### Maxwell.Middleware.HeaderCase
+
+Enforces that all header keys share a specific casing style, e.g. lower-case,
+upper-case, or title-case.
 
 ### Maxwell.Middleware.Opts
 

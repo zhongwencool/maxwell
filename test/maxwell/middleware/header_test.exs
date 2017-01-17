@@ -3,22 +3,18 @@ defmodule HeaderTest do
   import Maxwell.Middleware.TestHelper
 
   alias Maxwell.Conn
-  test "Base Middleware Headers" do
+  test "sets default request headers" do
     conn =
-      request(Maxwell.Middleware.Headers,
-        %Conn{req_headers: %{}},
-        %{"content-type" => {"Content-Type", "text/plain"}})
-    assert conn.req_headers == %{"content-type" => {"Content-Type", "text/plain"}}
+      request(Maxwell.Middleware.Headers, Conn.new(), %{"content-type" => "text/plain"})
+    assert conn.req_headers == %{"content-type" => "text/plain"}
   end
 
-  test "Replace Middleware Headers" do
-    conn = request(Maxwell.Middleware.Headers,
-      %Conn{req_headers: %{"content-type" => {"Content-Type", "application/json"}}},
-      %{"content-type" => {"Content-Type", "text/plain"}})
-    assert conn.req_headers == %{"content-type" => {"Content-Type", "application/json"}}
+  test "overrides request headers" do
+    conn = request(Maxwell.Middleware.Headers, %Conn{req_headers: %{"content-type" => "application/json"}}, %{"content-type" => "text/plain"})
+    assert conn.req_headers == %{"content-type" => "text/plain"}
   end
 
-  test "header key is not string" do
+  test "raises an error if header key is not a string" do
     assert_raise ArgumentError, "Header keys must be strings, but got: %{key: \"value\"}", fn ->
       defmodule TAtom111 do
         use Maxwell.Builder, [:get, :post]
@@ -27,6 +23,5 @@ defmodule HeaderTest do
       raise "ok"
     end
   end
-
 end
 

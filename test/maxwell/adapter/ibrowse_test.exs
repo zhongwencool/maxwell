@@ -16,92 +16,79 @@ defmodule Maxwell.IbrowseMockTest do
     middleware Maxwell.Middleware.Json
 
     def get_ip_test() do
-      "/ip" |> put_path |> Client.get!
+      new("/ip") |> Client.get!
     end
 
     def encode_decode_json_test(body) do
-      "/post"
-      |> put_path
+      new("/post")
       |> put_req_body(body)
       |> post!
       |> get_resp_body("json")
     end
 
     def user_agent_test(user_agent) do
-      "/user-agent"
-      |> put_path
+      new("/user-agent")
       |> put_req_header("user-agent", user_agent)
       |> get!
       |> get_resp_body("user-agent")
     end
 
     def put_json_test(json) do
-      "/put"
-      |> put_path
+      new("/put")
       |> put_req_body(json)
       |> put!
       |> get_resp_body("data")
     end
 
     def delete_test() do
-      "/delete"
-      |> put_path
+      new("/delete")
       |> delete!
       |> get_resp_body("data")
     end
 
     def normalized_error_test() do
-      "/"
-      |> put_path
-      |> Map.put(:url, "http://broken.local")
+      new("http://broken.local")
       |> get
     end
 
     def timeout_test() do
-      "/delay/5"
-      |> put_path
+      new("/delay/5")
       |> put_query_string("foo", "bar")
       |> put_option(:inactivity_timeout, 1000)
       |> Client.get
     end
 
     def multipart_test() do
-      "/post"
-      |> put_path
+      new("/post")
       |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh"}]})
       |> Client.post!
     end
     def multipart_with_extra_header_test() do
-      "/post"
-      |> put_path
+      new("/post")
       |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]})
       |> Client.post!
     end
 
     def file_test(filepath) do
-      "/post"
-      |> put_path
+      new("/post")
       |> put_req_body({:file, filepath})
       |> Client.post!
     end
 
     def file_test(filepath, content_type) do
-      "/post"
-      |> put_path
+      new("/post")
       |> put_req_body({:file, filepath})
       |> put_req_header("content-type", content_type)
       |> Client.post!
     end
 
     def stream_test() do
-      "/post"
-      |> put_path
+      new("/post")
       |> put_req_header("content-type", "application/vnd.lotus-1-2-3")
       |> put_req_header("content-length", 6)
       |> put_req_body(Stream.map(["1", "2", "3"], fn(x) -> List.duplicate(x, 2) end))
       |> Client.post!
     end
-
   end
 
   if Code.ensure_loaded?(:rand) do
@@ -141,7 +128,6 @@ defmodule Maxwell.IbrowseMockTest do
      end] do
     result = %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"} |> Client.encode_decode_json_test
     assert result == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
-
   end
 
   test_with_mock "mutilpart body file", :ibrowse,
@@ -288,6 +274,5 @@ defmodule Maxwell.IbrowseMockTest do
     {:error, :req_timedout, conn} = Client.timeout_test
     assert conn.state == :error
   end
-
 end
 

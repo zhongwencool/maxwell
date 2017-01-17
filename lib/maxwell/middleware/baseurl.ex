@@ -25,7 +25,7 @@ defmodule Maxwell.Middleware.BaseUrl do
   alias Maxwell.Conn
 
   def init(base_url) do
-    conn = Conn.parse_url(base_url)
+    conn = Conn.new(base_url)
     opts = %{url: conn.url, path: conn.path, query: conn.query_string}
     case opts.url do
       url when url in [nil, ""] ->

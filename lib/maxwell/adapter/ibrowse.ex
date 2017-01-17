@@ -58,10 +58,9 @@ if Code.ensure_loaded?(:ibrowse) do
 
     defp format_response({:ok, status, headers, body}, conn) do
       {status, _} = status |> to_string |> Integer.parse
-      headers = for {key, value} <- headers, into: %{} do
-        down_key = key |> to_string |> String.downcase
-        {down_key, {key, to_string(value)}}
-      end
+      headers = Enum.reduce(headers, %{}, fn {k, v}, acc ->
+        Map.put(acc, String.downcase(to_string(k)), to_string(v))
+      end)
       %{conn | status:        status,
                resp_headers:  headers,
                resp_body:     body,
@@ -77,8 +76,6 @@ if Code.ensure_loaded?(:ibrowse) do
     defp format_response({:error, reason}, conn) do
       {:error, reason, %{conn | state: :error}}
     end
-
   end
-
 end
 

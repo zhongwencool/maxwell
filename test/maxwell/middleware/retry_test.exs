@@ -36,19 +36,19 @@ defmodule RetryTest do
   end
 
   test "pass on successful request" do
-    assert Conn.put_path("/ok") |> Client.get! |> Conn.get_resp_body() == "ok"
+    assert Conn.new("/ok") |> Client.get! |> Conn.get_resp_body() == "ok"
   end
 
   test "pass after retry" do
-    assert Conn.put_path("/maybe") |> Client.get! |> Conn.get_resp_body() == "maybe"
+    assert Conn.new("/maybe") |> Client.get! |> Conn.get_resp_body() == "maybe"
   end
 
   test "raise error if max_retries is exceeded" do
-    assert_raise Maxwell.Error, fn -> Conn.put_path("/nope") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/nope") |> Client.get! end
   end
 
   test "raise error if error other than econnrefused occurs" do
-    assert_raise Maxwell.Error, fn -> Conn.put_path("/boom") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/boom") |> Client.get! end
   end
 
 end

@@ -66,10 +66,10 @@ defmodule Maxwell.Adapter.Httpc do
 
   defp header_serialize(headers) do
     {content_type, headers} = Map.pop(headers, "content-type")
-    headers = Enum.map(headers, fn({_, {key, value}}) -> {to_char_list(key), to_char_list(value)} end)
+    headers = Enum.map(headers, fn {key, value} -> {to_char_list(key), to_char_list(value)} end)
     case content_type do
-      nil -> {nil, headers}
-      {_, type} -> {to_char_list(type), headers}
+      nil  -> {nil, headers}
+      type -> {to_char_list(type), headers}
     end
   end
 
@@ -80,9 +80,7 @@ defmodule Maxwell.Adapter.Httpc do
   defp format_response({:ok, {status_line, headers, body}}, conn) do
     {_http_version, status, _reason_phrase} = status_line
     headers = for {key, value} <- headers, into: %{} do
-      key = key |> to_string
-      down_key = key |> String.downcase
-      {down_key, {key, to_string(value)}}
+      {String.downcase(to_string(key)), to_string(value)}
     end
     %{conn | status:        status,
              resp_headers:  headers,
@@ -107,6 +105,5 @@ defmodule Maxwell.Adapter.Httpc do
   defp format_response({:error, reason}, conn) do
     {:error, reason, %{conn | state: :error}}
   end
-
 end
 
