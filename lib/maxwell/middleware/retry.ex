@@ -25,10 +25,7 @@ defmodule Maxwell.Middleware.Retry do
   def call(conn, next, opts) do
     retry_delay = Keyword.get(opts, :delay)
     max_retries = Keyword.get(opts, :max_retries)
-
-    with %Maxwell.Conn{} = conn <- request(conn, opts),
-         %Maxwell.Conn{} = conn <- retry(conn, next, retry_delay, max_retries),
-      do: response(conn, opts)
+    retry(conn, next, retry_delay, max_retries)
   end
 
   defp retry(conn, next, retry_delay, max_retries) when max_retries > 0 do
