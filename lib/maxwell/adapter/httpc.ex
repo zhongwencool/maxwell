@@ -95,11 +95,11 @@ defmodule Maxwell.Adapter.Httpc do
     conn = %{conn | state: :error}
     case List.keyfind(info, :inet, 0) do
       {:inet, _, :econnrefused} ->
-         {:error, :econnrefused, conn}
+        {:error, :econnrefused, %{conn | state: :error}}
       {:inet, _, reason} ->
-         {:error, reason, conn}
+        {:error, reason, %{conn | state: :error}}
       _ ->
-         {:error, err, conn}
+        {:error, err, %{conn | state: :error}}
     end
   end
   defp format_response({:error, reason}, conn) do
