@@ -74,7 +74,14 @@ defmodule Maxwell.Adapter.Httpc do
   end
 
   defp opts_serialize(opts) do
-    Keyword.split(opts, @http_options)
+    {http_opts, other_opts} = new_opts = Keyword.split(opts, @http_options)
+    case Keyword.pop(http_opts, :proxy_auth) do
+      {nil, _} -> new_opts
+      {{auth_name, auth_passwd}, http_opts} ->
+        auth_name = auth_name |> to_char_list
+        auth_passwd = auth_passwd |> to_char_list
+        {[{:proxy_auth, {auth_name, auth_passwd}}|http_opts], other_opts}
+    end
   end
 
   defp format_response({:ok, {status_line, headers, body}}, conn) do

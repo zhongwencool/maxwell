@@ -11,6 +11,7 @@ if Code.ensure_loaded?(:ibrowse) do
             method: method, opts: opts, req_body: req_body} = conn
       url = Util.url_serialize(url, path, query_string, :char_list)
       req_headers = Util.header_serialize(req_headers)
+      opts = options_seralize(opts)
       result = :ibrowse.send_req(url, req_headers, method, req_body || "", opts)
       format_response(result, conn)
     end
@@ -21,6 +22,7 @@ if Code.ensure_loaded?(:ibrowse) do
       url = Util.url_serialize(url, path, query_string, :char_list)
       {req_headers, req_body} = Util.multipart_encode(conn, multiparts)
       req_headers = Util.header_serialize(req_headers)
+      opts = options_seralize(opts)
       result = :ibrowse.send_req(url, req_headers, method, req_body, opts)
       format_response(result, conn)
     end
@@ -29,6 +31,7 @@ if Code.ensure_loaded?(:ibrowse) do
       %Conn{url: url, query_string: query_string, path: path,
             method: method, opts: opts, req_body: {:file, filepath}} = conn
       url = Util.url_serialize(url, path, query_string, :char_list)
+      opts = options_seralize(opts)
       chunked = Util.chunked?(conn)
       opts =
         case chunked do
@@ -50,10 +53,28 @@ if Code.ensure_loaded?(:ibrowse) do
             method: method, opts: opts, req_body: req_body} = conn
       url = Util.url_serialize(url, path, query_string, :char_list)
       req_headers = Util.header_serialize(req_headers)
+      opts = options_seralize(opts)
       opts = Keyword.put(opts, :transfer_encoding, :chunked)
       req_body = {&Util.stream_iterate/1, req_body}
       result = :ibrowse.send_req(url, req_headers, method, req_body, opts)
       format_response(result, conn)
+    end
+
+    defp options_seralize(opts) do
+      case Keyword.pop(opts, :proxy) do
+        {nil, _} -> opts
+        {{host, port}, opts} ->
+          host = String.to_char_list(host)
+          port = String.to_integer(port)
+          opts = Keyword.merge(opts, [proxy_host: host, proxy_port: port])
+          case Keyword.pop(opts, :proxy_auth) do
+            {nil, _ } -> opts
+            {{user, passwd}, opts} ->
+              user = String.to_charlist(user)
+              passwd = String.to_charlist(passwd)
+              Keyword.merge(opts, [proxy_user: user, proxy_passwd: passwd])
+          end
+      end
     end
 
     defp format_response({:ok, status, headers, body}, conn) do
