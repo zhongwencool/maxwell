@@ -20,20 +20,17 @@ defmodule Maxwell.Middleware.Headers do
   alias Maxwell.Conn
 
   def init(headers) do
-    check_headers(headers)
-    Conn.new()
-    |> Conn.put_req_headers(headers)
-    |> Map.get(:req_headers)
+    check_headers!(headers)
+    headers
   end
 
   def request(%Conn{} = conn, req_headers) do
-    Conn.put_req_headers(conn, req_headers)
+    %{conn | req_headers: Map.merge(req_headers, conn.req_headers)}
   end
 
-  defp check_headers(headers) do
-    case Enum.all?(headers, fn {key, _value} -> is_binary(key) end) do
-      true  -> :ok
-      false -> raise(ArgumentError, "Header keys must be strings, but got: #{inspect headers}");
+  defp check_headers!(headers) do
+    unless Enum.all?(headers, fn {key, _value} -> is_binary(key) end) do
+      raise(ArgumentError, "Header keys must be strings, but got: #{inspect headers}")
     end
   end
 end
