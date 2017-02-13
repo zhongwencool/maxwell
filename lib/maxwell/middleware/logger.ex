@@ -31,11 +31,10 @@ defmodule Maxwell.Middleware.Logger do
   def call(request_env, next_fn, options) do
     start_time = :os.timestamp()
     new_result = next_fn.(request_env)
-    method = request_env.method |> to_string |> String.upcase
     case new_result do
       {:error, reason, _conn} ->
-        error_reason = to_string(:io_lib.format("~p", [reason]))
-        Logger.error("#{method} #{request_env.url}>> #{IO.ANSI.red}ERROR: " <> error_reason)
+        method = request_env.method |> to_string |> String.upcase
+        Logger.error("#{method} #{request_env.url}>> #{IO.ANSI.red}ERROR: #{inspect reason}")
       %Maxwell.Conn{} = response_conn ->
         finish_time = :os.timestamp()
         duration = :timer.now_diff(finish_time, start_time)
@@ -57,7 +56,7 @@ defmodule Maxwell.Middleware.Logger do
         :error -> IO.ANSI.red
       end
 
-    unless is_nil(color) do
+    unless is_nil(level) do
       message = "#{method} #{url} <<<#{color}#{status}(#{ms}ms)#{IO.ANSI.reset}\n#{inspect conn}"
       Logger.log(level, message)
     end
