@@ -6,7 +6,14 @@ defmodule Maxwell.Middleware.Logger do
 
         # Client.ex
         use Maxwell.Builder ~(get)a
-        @middleware Maxwell.Middleware.Log [log_level: :debug]
+
+        middleware Maxwell.Middleware.Logger, log_level: :debug
+
+        middleware Maxwell.Middleware.Logger, log_level: [
+          info: [1..100, 200..299, 404],
+          warn: 300..399,
+          error: :default
+        ]
 
         def request do
           "/test" |> url |> get!
