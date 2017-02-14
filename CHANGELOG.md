@@ -1,5 +1,19 @@
 ------------------
 
+## 2.2.0 - 2017-02-14
+### Added
+- Add retry middleware
+- Add fuse middleware
+- Add header base middleware
+
+### Changed
+-  Setting log_level [by status code in Logger Middleware](https://github.com/zhongwencool/maxwell/pull/45).
+-  Improve a collection of [general API](https://github.com/zhongwencool/maxwell/pull/36).
+-  Improve [the BaseUrl middleware](https://github.com/zhongwencool/maxwell/pull/38)
+-  Fixed warning by elixir v1.4.0.
+-  Support poison ~> 3.0.
+-  Numerous document updates.
+
 ## 2.1.0 - 2016-12-19
 ### Added
 - Support httpc adapter.
