@@ -36,22 +36,21 @@ defmodule Maxwell.Middleware.Logger do
   end
 
   def call(request_env, next_fn, options) do
-    start_time = :os.timestamp()
+    start = System.monotonic_time()
     new_result = next_fn.(request_env)
     case new_result do
       {:error, reason, _conn} ->
         method = request_env.method |> to_string |> String.upcase
         Logger.error("#{method} #{request_env.url}>> #{IO.ANSI.red}ERROR: #{inspect reason}")
       %Maxwell.Conn{} = response_conn ->
-        finish_time = :os.timestamp()
-        duration = :timer.now_diff(finish_time, start_time)
-        duration_ms = :io_lib.format("~.3f", [duration / 10_000])
-        log_response_message(options, response_conn, duration_ms)
+        stop = System.monotonic_time()
+        diff = System.convert_time_unit(stop - start, :native, :micro_seconds)
+        log_response_message(options, response_conn, diff)
     end
     new_result
   end
 
-  defp log_response_message(options, conn, ms) do
+  defp log_response_message(options, conn, diff) do
     %Maxwell.Conn{status: status, url: url, method: method} = conn
     level = get_level(options, status)
     color =
@@ -64,10 +63,14 @@ defmodule Maxwell.Middleware.Logger do
       end
 
     unless is_nil(level) do
-      message = "#{method} #{url} <<<#{color}#{status}(#{ms}ms)#{IO.ANSI.reset}\n#{inspect conn}"
+      diff_format = formatted_diff(diff)
+      message = "#{method} #{url} <<<#{color}#{status}(#{diff_format})#{IO.ANSI.reset}\n#{inspect conn}"
       Logger.log(level, message)
     end
   end
+
+  defp formatted_diff(diff) when diff > 1000, do: [diff |> div(1000) |> Integer.to_string, "ms"]
+  defp formatted_diff(diff), do: [Integer.to_string(diff), "µs"]
 
   defp get_level([], _code),                      do: nil
   defp get_level([{code, level} | _], code),      do: level
