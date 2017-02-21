@@ -1,13 +1,24 @@
 defmodule Maxwell.Middleware.Logger do
   @moduledoc  """
   Log the request and response by Logger, default log_level is :info.
+  Setting log_level in 3 ways:
+
+  ### Log everything by log_level
+
+      middleware Maxwell.Middleware.Logger, log_level: :debug
+
+  ### Log request by specific status code.
+
+      middleware Maxwell.Middleware.Logger, log_level: [debug: 200, error: 404, info: default]
+
+  ### Log request by status code's Ranges
+
+      middleware Maxwell.Middleware.Logger, log_level: [error: [500..599, 300..399, 400], warn: 404, debug: default]
 
   ### Examples
 
         # Client.ex
         use Maxwell.Builder ~(get)a
-
-        middleware Maxwell.Middleware.Logger, log_level: :debug
 
         middleware Maxwell.Middleware.Logger, log_level: [
           info: [1..100, 200..299, 404],
@@ -15,8 +26,8 @@ defmodule Maxwell.Middleware.Logger do
           error: :default
         ]
 
-        def request do
-          "/test" |> url |> get!
+        def your_own_request(url) do
+          url |> new() |> get!()
         end
 
   """
@@ -36,15 +47,15 @@ defmodule Maxwell.Middleware.Logger do
   end
 
   def call(request_env, next_fn, options) do
-    start = System.monotonic_time()
+    start = System.system_time(:milliseconds)
     new_result = next_fn.(request_env)
     case new_result do
       {:error, reason, _conn} ->
         method = request_env.method |> to_string |> String.upcase
         Logger.error("#{method} #{request_env.url}>> #{IO.ANSI.red}ERROR: #{inspect reason}")
       %Maxwell.Conn{} = response_conn ->
-        stop = System.monotonic_time()
-        diff = System.convert_time_unit(stop - start, :native, :micro_seconds)
+        stop = System.system_time(:milliseconds)
+        diff = stop - start
         log_response_message(options, response_conn, diff)
     end
     new_result
@@ -63,14 +74,10 @@ defmodule Maxwell.Middleware.Logger do
       end
 
     unless is_nil(level) do
-      diff_format = formatted_diff(diff)
-      message = "#{method} #{url} <<<#{color}#{status}(#{diff_format})#{IO.ANSI.reset}\n#{inspect conn}"
+      message = "#{method} #{url} <<<#{color}#{status}(#{diff}ms)#{IO.ANSI.reset}\n#{inspect conn}"
       Logger.log(level, message)
     end
   end
-
-  defp formatted_diff(diff) when diff > 1000, do: [diff |> div(1000) |> Integer.to_string, "ms"]
-  defp formatted_diff(diff), do: [Integer.to_string(diff), "µs"]
 
   defp get_level([], _code),                      do: nil
   defp get_level([{code, level} | _], code),      do: level
