@@ -139,6 +139,14 @@ defmodule Maxwell.Adapter.Util do
   defp append_query_string(url, path, query)when query == %{}, do: url <> path
   defp append_query_string(url, path, query) do
     query_string = URI.encode_query(query)
-    url <> path <> "?" <> query_string
+    case {String.ends_with?(url, "/"), String.starts_with?(path, "/")} do
+      {false, false} ->
+        url <> "/" <> path <> "?" <> query_string
+      {true, true}   ->
+        "/" <> new_path = path
+        url <> new_path <> "?" <> query_string
+      _ ->
+        url <> path <> "?" <> query_string
+    end
   end
 end

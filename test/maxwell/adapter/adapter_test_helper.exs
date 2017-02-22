@@ -14,11 +14,12 @@ defmodule Maxwell.Adapter.TestHelper do
         middleware Maxwell.Middleware.Json
 
         def get_ip_test() do
-          get!(new("/ip"))
+          "/ip" |> new() |> get!()
         end
 
         def encode_decode_json_test(body) do
-          new("/post")
+          "post"
+          |> new()
           |> put_req_body(body)
           |> post!
           |> get_resp_body("json")

@@ -11,12 +11,12 @@ defmodule Maxwell.IbrowseMockTest do
     use Maxwell.Builder
     adapter Maxwell.Adapter.Ibrowse
 
-    middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org"
+    middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org/"
     middleware Maxwell.Middleware.Opts, [connect_timeout: 5000]
     middleware Maxwell.Middleware.Json
 
     def get_ip_test() do
-      new("/ip") |> Client.get!
+      "/ip" |> new() |> Client.get!
     end
 
     def encode_decode_json_test(body) do
