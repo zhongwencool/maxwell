@@ -23,16 +23,16 @@ defmodule LoggerTest do
     output404 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> %{x| status: 404} end, [{404, :debug}]) end
     output500 = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> %{x| status: 500} end, [{500..599, :warn}, {:default, :error}]) end
     outputok  = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> x end, [default: :info]) end
-    nooutput  = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> x end, [{400.599, :info}]) end
+    nooutput  = capture_log fn -> Maxwell.Middleware.Logger.call(conn, fn(x) -> x end, [{400..599, :info}]) end
     assert outputstr =~ ~r"\e\[31m\n\d+:\d+:\d+.\d+ \[error\] GET http://example.com>> \e\[31mERROR: \"bad request\"\n\e\[0m"
 
-    assert output301 =~ ~r"\e\[31m\n\d+:\d+:\d+.\d+ \[error\] get http://example.com <<<\e\[31m301\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 301, url: \"http://example.com\"\}\n\e\[0m"
+    assert output301 =~ ~r"\e\[31m\n\d+:\d+:\d+.\d+ \[error\] get http://example.com <<<\e\[31m301\(\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 301, url: \"http://example.com\"\}\n\e\[0m"
 
-    assert output404 =~ ~r"\e\[36m\n\d+:\d+:\d+.\d+ \[debug\] get http://example.com <<<\e\[36m404\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 404, url: \"http://example.com\"\}\n\e\[0m"
+    assert output404 =~ ~r"\e\[36m\n\d+:\d+:\d+.\d+ \[debug\] get http://example.com <<<\e\[36m404\(\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 404, url: \"http://example.com\"\}\n\e\[0m"
 
-    assert output500 =~ ~r"\e\[33m\n\d+:\d+:\d+.\d+ \[warn\]  get http://example.com <<<\e\[33m500\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 500, url: \"http://example.com\"\}\n\e\[0m"
+    assert output500 =~ ~r"\e\[33m\n\d+:\d+:\d+.\d+ \[warn\]  get http://example.com <<<\e\[33m500\(\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 500, url: \"http://example.com\"\}\n\e\[0m"
 
-    assert outputok  =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[22m200\(\d+.\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 200, url: \"http://example.com\"}\n\e\[0m"
+    assert outputok  =~ ~r"\e\[22m\n\d+:\d+:\d+.\d+ \[info\]  get http://example.com <<<\e\[22m200\(\d+ms\)\e\[0m\n%Maxwell.Conn\{method: :get, opts: \[\], path: \"\", query_string: \%\{\}, req_body: nil, req_headers: \%\{\}, resp_body: \"\", resp_headers: \%\{\}, state: :unsent, status: 200, url: \"http://example.com\"}\n\e\[0m"
 
     assert nooutput == ""
   end

@@ -1,13 +1,24 @@
 defmodule Maxwell.Middleware.Logger do
   @moduledoc  """
   Log the request and response by Logger, default log_level is :info.
+  Setting log_level in 3 ways:
+
+  ### Log everything by log_level
+
+      middleware Maxwell.Middleware.Logger, log_level: :debug
+
+  ### Log request by specific status code.
+
+      middleware Maxwell.Middleware.Logger, log_level: [debug: 200, error: 404, info: default]
+
+  ### Log request by status code's Ranges
+
+      middleware Maxwell.Middleware.Logger, log_level: [error: [500..599, 300..399, 400], warn: 404, debug: default]
 
   ### Examples
 
         # Client.ex
         use Maxwell.Builder ~(get)a
-
-        middleware Maxwell.Middleware.Logger, log_level: :debug
 
         middleware Maxwell.Middleware.Logger, log_level: [
           info: [1..100, 200..299, 404],
@@ -15,8 +26,8 @@ defmodule Maxwell.Middleware.Logger do
           error: :default
         ]
 
-        def request do
-          "/test" |> url |> get!
+        def your_own_request(url) do
+          url |> new() |> get!()
         end
 
   """
@@ -36,22 +47,21 @@ defmodule Maxwell.Middleware.Logger do
   end
 
   def call(request_env, next_fn, options) do
-    start_time = :os.timestamp()
+    start = System.system_time(:milliseconds)
     new_result = next_fn.(request_env)
     case new_result do
       {:error, reason, _conn} ->
         method = request_env.method |> to_string |> String.upcase
         Logger.error("#{method} #{request_env.url}>> #{IO.ANSI.red}ERROR: #{inspect reason}")
       %Maxwell.Conn{} = response_conn ->
-        finish_time = :os.timestamp()
-        duration = :timer.now_diff(finish_time, start_time)
-        duration_ms = :io_lib.format("~.3f", [duration / 10_000])
-        log_response_message(options, response_conn, duration_ms)
+        stop = System.system_time(:milliseconds)
+        diff = stop - start
+        log_response_message(options, response_conn, diff)
     end
     new_result
   end
 
-  defp log_response_message(options, conn, ms) do
+  defp log_response_message(options, conn, diff) do
     %Maxwell.Conn{status: status, url: url, method: method} = conn
     level = get_level(options, status)
     color =
@@ -64,7 +74,7 @@ defmodule Maxwell.Middleware.Logger do
       end
 
     unless is_nil(level) do
-      message = "#{method} #{url} <<<#{color}#{status}(#{ms}ms)#{IO.ANSI.reset}\n#{inspect conn}"
+      message = "#{method} #{url} <<<#{color}#{status}(#{diff}ms)#{IO.ANSI.reset}\n#{inspect conn}"
       Logger.log(level, message)
     end
   end
