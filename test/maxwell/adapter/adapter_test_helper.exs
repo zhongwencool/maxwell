@@ -26,45 +26,52 @@ defmodule Maxwell.Adapter.TestHelper do
         end
 
         def user_agent_test(user_agent) do
-          new("/user-agent")
+          "/user-agent"
+          |> new()
           |> put_req_header("user-agent", user_agent)
           |> get!
           |> get_resp_body("user-agent")
         end
 
         def put_json_test(json) do
-          new("/put")
+          "/put"
+          |> new()
           |> put_req_body(json)
           |> put!
           |> get_resp_body("data")
         end
 
         def delete_test() do
-          new("/delete")
+          "delete"
+          |> new()
           |> delete!
           |> get_resp_body("data")
         end
 
         def multipart_test() do
-          new("/post")
+          "/post"
+          |> new()
           |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh"}]})
           |> post!
         end
         def multipart_with_extra_header_test() do
-          new("/post")
+          "/post"
+          |> new()
           |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]})
           |> post!
         end
 
         def file_test(filepath) do
-          new("/post")
+          "/post"
+          |> new()
           |> put_req_header("transfer-encoding", "chunked")
           |> put_req_body({:file, filepath})
           |> post!
         end
 
         def file_test(filepath, content_type) do
-          new("/post")
+          "/post"
+          |> new()
           |> put_req_header("transfer-encoding", "Chunked")
           |> put_req_body({:file, filepath})
           |> put_req_header("content-type", content_type)
@@ -72,14 +79,16 @@ defmodule Maxwell.Adapter.TestHelper do
         end
 
         def file_without_transfer_encoding_test(filepath, content_type) do
-          new("/post")
+          "/post"
+          |> new()
           |> put_req_body({:file, filepath})
           |> put_req_header("content-type", content_type)
           |> post!
         end
 
         def stream_test() do
-          new("/post")
+          "/post"
+          |> new()
           |> put_req_header("content-type", "application/vnd.lotus-1-2-3")
           |> put_req_header("content-length", 6)
           |> put_req_body(Stream.map(["1", "2", "3"], fn(x) -> List.duplicate(x, 2) end))

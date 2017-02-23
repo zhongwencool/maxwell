@@ -16,75 +16,85 @@ defmodule Maxwell.IbrowseMockTest do
     middleware Maxwell.Middleware.Json
 
     def get_ip_test() do
-      new() |> put_path("/ip") |> Client.get!
+      "/ip" |> new() |> Client.get!
     end
 
     def encode_decode_json_test(body) do
-      new()
-      |> put_path("post")
+      "post"
+      |> new()
       |> put_req_body(body)
       |> post!
       |> get_resp_body("json")
     end
 
     def user_agent_test(user_agent) do
-      new("/user-agent")
+      "/user-agent"
+      |> new()
       |> put_req_header("user-agent", user_agent)
       |> get!
       |> get_resp_body("user-agent")
     end
 
     def put_json_test(json) do
-      new("/put")
+      "/put"
+      |> new()
       |> put_req_body(json)
       |> put!
       |> get_resp_body("data")
     end
 
     def delete_test() do
-      new("/delete")
+      "/delete"
+      |> new()
       |> delete!
       |> get_resp_body("data")
     end
 
     def normalized_error_test() do
-      new("http://broken.local")
+      "http://broken.local"
+      |> new()
       |> get
     end
 
     def timeout_test() do
-      new("/delay/5")
+      "/delay/5"
+      |> new()
       |> put_query_string("foo", "bar")
       |> put_option(:inactivity_timeout, 1000)
       |> Client.get
     end
 
     def multipart_test() do
-      new("/post")
+      "/post"
+      |> new()
       |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh"}]})
       |> Client.post!
     end
     def multipart_with_extra_header_test() do
-      new("/post")
+      "/post"
+      |> new()
       |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]})
       |> Client.post!
     end
 
     def file_test(filepath) do
-      new("/post")
+      "/post"
+      |> new()
       |> put_req_body({:file, filepath})
       |> Client.post!
     end
 
     def file_test(filepath, content_type) do
-      new("/post")
+      "/post"
+      |> new()
       |> put_req_body({:file, filepath})
       |> put_req_header("content-type", content_type)
       |> Client.post!
     end
 
     def stream_test() do
-      new("/post")
+      "/post"
+      |> new()
       |> put_req_header("content-type", "application/vnd.lotus-1-2-3")
       |> put_req_header("content-length", 6)
       |> put_req_body(Stream.map(["1", "2", "3"], fn(x) -> List.duplicate(x, 2) end))

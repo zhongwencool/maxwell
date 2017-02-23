@@ -7,8 +7,8 @@ defmodule Maxwell do
   ### Basic Usage
 
       ## Returns Origin IP, for example %{"origin" => "127.0.0.1"}
-      Maxwell.Conn.new("http://httpbin.org")
-      |> Maxwell.put_path("/ip")
+      "http://httpbin.org/ip"
+      |> Maxwell.Conn.new()
       |> Maxwell.get!()
       |> Maxwell.Conn.get_resp_body()
       |> Poison.decode!()
@@ -28,16 +28,16 @@ defmodule Maxwell do
 
            ## Returns origin IP, for example "127.0.0.1"
            def ip() do
-             new()
-             |> put_path("/ip")
+             "/ip"
+             |> new()
              |> get!()
              |> get_resp_body("origin")
            end
 
            ## Generates n random bytes of binary data, accepts optional seed integer parameter
            def get_random_bytes(size) do
-             new()
-             |> put_path("/bytes/\#\{size\}")
+             "/bytes/\#\{size\}"
+             |> new()
              |> get!()
              |> get_resp_body(&to_string/1)
            end

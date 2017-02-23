@@ -23,6 +23,7 @@ defmodule Maxwell.Adapter.Util do
 
   """
   def url_serialize(url, path, query_string, type \\ :string) do
+    IO.inspect {:xxxxxxx, url, path}
     url = url |> append_query_string(path, query_string)
     case type do
       :string -> url
@@ -136,23 +137,10 @@ defmodule Maxwell.Adapter.Util do
   end
   defp multipart_body(:end), do: :eof
 
-  defp append_query_string(url, path, query)when query == %{}, do: url_joint_path(url, path)
+  defp append_query_string(url, path, query)when query == %{}, do: Path.join(url, path)
   defp append_query_string(url, path, query) do
     query_string = URI.encode_query(query)
-    url_path = url_joint_path(url ,path)
-    url_path <> "?" <> query_string
-  end
-
-  defp url_joint_path(url, path) do
-    case {String.ends_with?(url, "/"), String.starts_with?(path, "/")} do
-      {false, false} ->
-        url <> "/" <> path
-      {true, true}   ->
-        "/" <> new_path = path
-        url <> new_path
-      _ ->
-        url <> path
-    end
+    Path.join(url, path) <> "?" <> query_string
   end
 
 end
