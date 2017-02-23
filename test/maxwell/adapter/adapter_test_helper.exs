@@ -18,7 +18,7 @@ defmodule Maxwell.Adapter.TestHelper do
         end
 
         def encode_decode_json_test(body) do
-          "post"
+          "/post"
           |> new()
           |> put_req_body(body)
           |> post!

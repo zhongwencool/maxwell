@@ -87,7 +87,7 @@ defmodule MaxwellAdapterTest do
 
   test "path + query" do
     conn = new("http://example.com/foo?a=1&b=foo")
-      |> Client.get!
+    |> Client.get!
     assert conn.url == "http://example.com"
     assert conn.path == "/foo"
     assert conn.query_string == %{"a" => "1", "b" => "foo"}

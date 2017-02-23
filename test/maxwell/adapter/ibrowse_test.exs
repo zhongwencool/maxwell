@@ -16,11 +16,12 @@ defmodule Maxwell.IbrowseMockTest do
     middleware Maxwell.Middleware.Json
 
     def get_ip_test() do
-      "/ip" |> new() |> Client.get!
+      new() |> put_path("/ip") |> Client.get!
     end
 
     def encode_decode_json_test(body) do
-      new("/post")
+      new()
+      |> put_path("post")
       |> put_req_body(body)
       |> post!
       |> get_resp_body("json")

@@ -17,10 +17,11 @@ defmodule Maxwell.HackneyMockTest do
     middleware Maxwell.Middleware.Json
 
     def get_ip_test do
-      get!(new("/ip"))
+      new() |> put_path("ip") |> get!()
     end
     def encode_decode_json_test(body) do
-      new("/post")
+      new()
+      |> put_path("/post")
       |> put_req_body(body)
       |> post!
       |> get_resp_body("json")
