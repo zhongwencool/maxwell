@@ -14,7 +14,7 @@ defmodule ConnTest do
   test "new/1" do
     assert new("localhost") == %Conn{url: "http://localhost"}
     assert new("localhost:8080") == %Conn{url: "http://localhost:8080"}
-    assert new("example") == %Conn{path: "example"}
+    assert new("example") == %Conn{path: "/example"}
     assert new("example.com") == %Conn{url: "http://example.com"}
     assert new("example.com:8080") == %Conn{url: "http://example.com:8080"}
     assert new("http://example.com") == %Conn{url: "http://example.com"}

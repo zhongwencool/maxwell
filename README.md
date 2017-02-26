@@ -26,7 +26,7 @@ defmodule GitHubClient do
   middleware Maxwell.Middleware.Json
   middleware Maxwell.Middleware.Logger
 
-  # adapter can be omitted, and the default will be used (currently :httpc)
+  # adapter can be omitted, and the default will be used (currently :ibrowse)
   adapter Maxwell.Adapter.Hackney
 
   # List public repositories for the specified user.

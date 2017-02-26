@@ -136,10 +136,10 @@ defmodule Maxwell.Adapter.Util do
   end
   defp multipart_body(:end), do: :eof
 
-  defp append_query_string(url, path, query)when query == %{}, do: Path.join(url, path)
+  defp append_query_string(url, path, query)when query == %{}, do: url <> path
   defp append_query_string(url, path, query) do
     query_string = URI.encode_query(query)
-    Path.join(url, path) <> "?" <> query_string
+    url <> path <> "?" <> query_string
   end
 
 end
