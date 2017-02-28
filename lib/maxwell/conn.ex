@@ -32,16 +32,8 @@ defmodule Maxwell.Conn do
 
   ### Protocols
 
-  `Maxwell.Conn` implements both the Collectable and Inspect protocols
-    out of the box. The inspect protocol provides a nice representation
-    of the connection while the collectable protocol allows developers
-    to easily chunk data. For example:
-
-         # Send the stream request headers
-         conn = post(conn, :stream)
-         # Pipe the given list into a connection
-         # Each item is emitted as a stream
-         Enum.into(~w(each chunk as a word), conn)
+  `Maxwell.Conn` implements Inspect protocols out of the box.
+  The inspect protocol provides a nice representation of the connection.
 
   """
   @type t :: %__MODULE__{
@@ -104,38 +96,37 @@ defmodule Maxwell.Conn do
   """
   def new(), do: %Conn{}
   def new(url) when is_binary(url) do
-    uri    = URI.parse(url)
-    scheme = uri.scheme || "http"
-    path   = uri.path || ""
+    %URI{scheme: scheme, path: path, query: query} = uri = URI.parse(url)
+    scheme = scheme || "http"
+    path   = path || ""
     conn = case uri do
-      %URI{host: nil} = uri ->
-        # This is a badly formed URI, so we'll do best effort:
-        cond do
-          # example.com:8080
-          uri.scheme != nil and Integer.parse(uri.path) != :error ->
-            %Conn{url: "http://#{uri.scheme}:#{uri.path}"}
-          # example.com
-          String.contains?(path, ".") ->
-            %Conn{url: "#{scheme}://#{path}"}
-          # special case for localhost
-          uri.path == "localhost" ->
-            %Conn{url: "#{scheme}://localhost"}
-          # example - not a valid hostname, assume it's a path
-          :else ->
-            %Conn{path: path}
-        end
-      %URI{userinfo: nil, scheme: "http", port: 80} = uri  ->
-        %Conn{url: "#{scheme}://#{uri.host}", path: path}
-      %URI{userinfo: nil, scheme: "https", port: 443} = uri  ->
-        %Conn{url: "#{scheme}://#{uri.host}", path: path}
-      %URI{userinfo: nil, port: port} = uri  ->
-        %Conn{url: "#{scheme}://#{uri.host}:#{port}", path: path}
-      %URI{userinfo: userinfo, port: port} = uri ->
-        %Conn{url: "#{scheme}://#{userinfo}@#{uri.host}:#{port}", path: path}
-    end
-    case uri.query do
-      nil   -> conn
-      query -> put_query_string(conn, URI.decode_query(query))
+             %URI{host: nil} ->
+               # This is a badly formed URI, so we'll do best effort:
+               cond do
+                 # example.com:8080
+                 scheme != nil and Integer.parse(path) != :error ->
+                   %Conn{url: "http://#{scheme}:#{path}"}
+                 String.contains?(path, ".") -> # example.com
+                   %Conn{url: "#{scheme}://#{path}"}
+                 path == "localhost" -> # special case for localhost
+                   %Conn{url: "#{scheme}://localhost"}
+                 String.starts_with?(path, "/") -> # /example - not a valid hostname, assume it's a path
+                   %Conn{path: path}
+                 true -> # example - not a valid hostname, assume it's a path
+                   %Conn{path: "/" <> path}
+               end
+             %URI{userinfo: nil, scheme: "http", port: 80, host: host} ->
+               %Conn{url: "http://#{host}", path: path}
+             %URI{userinfo: nil, scheme: "https", port: 443, host: host} ->
+               %Conn{url: "https://#{host}", path: path}
+             %URI{userinfo: nil, port: port, host: host} ->
+               %Conn{url: "#{scheme}://#{host}:#{port}", path: path}
+             %URI{userinfo: userinfo, port: port, host: host} ->
+               %Conn{url: "#{scheme}://#{userinfo}@#{host}:#{port}", path: path}
+           end
+    case is_nil(query) do
+      true   -> conn
+      false -> put_query_string(conn, URI.decode_query(query))
     end
   end
 
