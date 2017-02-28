@@ -96,35 +96,34 @@ defmodule Maxwell.Conn do
   """
   def new(), do: %Conn{}
   def new(url) when is_binary(url) do
-    %URI{scheme: scheme, path: path, host: host, query: query,
-    userinfo: userinfo, port: port} = URI.parse(url)
+    %URI{scheme: scheme, path: path, query: query} = uri = URI.parse(url)
     scheme = scheme || "http"
     path   = path || ""
-    conn = cond do
-      is_nil(host) ->
-        # This is a badly formed URI, so we'll do best effort:
-        cond do
-          # example.com:8080
-          scheme != nil and Integer.parse(path) != :error ->
-            %Conn{url: "http://#{scheme}:#{path}"}
-          String.contains?(path, ".") -> # example.com
-            %Conn{url: "#{scheme}://#{path}"}
-          path == "localhost" -> # special case for localhost
-            %Conn{url: "#{scheme}://localhost"}
-          String.starts_with?(path, "/") -> # /example - not a valid hostname, assume it's a path
-              %Conn{path: path}
-          true -> # example - not a valid hostname, assume it's a path
-             %Conn{path: "/" <> path}
-        end
-      is_nil(userinfo) and scheme == "http" and port == 80  ->
-        %Conn{url: "#{scheme}://#{host}", path: path}
-      is_nil(userinfo) and scheme == "https" and port == 443  ->
-        %Conn{url: "#{scheme}://#{host}", path: path}
-      is_nil(userinfo)  ->
-        %Conn{url: "#{scheme}://#{host}:#{port}", path: path}
-      true ->
-        %Conn{url: "#{scheme}://#{userinfo}@#{host}:#{port}", path: path}
-    end
+    conn = case uri do
+             %URI{host: nil} ->
+               # This is a badly formed URI, so we'll do best effort:
+               cond do
+                 # example.com:8080
+                 scheme != nil and Integer.parse(path) != :error ->
+                   %Conn{url: "http://#{scheme}:#{path}"}
+                 String.contains?(path, ".") -> # example.com
+                   %Conn{url: "#{scheme}://#{path}"}
+                 path == "localhost" -> # special case for localhost
+                   %Conn{url: "#{scheme}://localhost"}
+                 String.starts_with?(path, "/") -> # /example - not a valid hostname, assume it's a path
+                   %Conn{path: path}
+                 true -> # example - not a valid hostname, assume it's a path
+                   %Conn{path: "/" <> path}
+               end
+             %URI{userinfo: nil, scheme: "http", port: 80, host: host} ->
+               %Conn{url: "http://#{host}", path: path}
+             %URI{userinfo: nil, scheme: "https", port: 443, host: host} ->
+               %Conn{url: "https://#{host}", path: path}
+             %URI{userinfo: nil, port: port, host: host} ->
+               %Conn{url: "#{scheme}://#{host}:#{port}", path: path}
+             %URI{userinfo: userinfo, port: port, host: host} ->
+               %Conn{url: "#{scheme}://#{userinfo}@#{host}:#{port}", path: path}
+           end
     case is_nil(query) do
       true   -> conn
       false -> put_query_string(conn, URI.decode_query(query))
