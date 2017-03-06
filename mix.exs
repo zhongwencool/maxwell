@@ -36,7 +36,7 @@ defmodule Maxwell.Mixfile do
       {:ibrowse, "~> 4.2", optional: true},
       {:hackney, "~> 1.6", optional: true},
       {:fuse, "~> 2.4", optional: true},
-      {:excoveralls, "~> 0.5.1", only: :test},
+      {:excoveralls, "~> 0.6.2", only: :test},
       {:ex_doc, ">= 0.11.4", only: [:dev]},
       {:markdown, github: "devinus/markdown", only: [:dev]},
       {:cmark, "~> 0.6", only: [:dev]},
