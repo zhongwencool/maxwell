@@ -21,7 +21,8 @@ defmodule Maxwell.Middleware.Headers do
 
   def init(headers) do
     check_headers!(headers)
-    headers
+    conn = Conn.put_req_headers(%Conn{}, headers)
+    conn.req_headers
   end
 
   def request(%Conn{} = conn, req_headers) do
