@@ -19,8 +19,6 @@ use Mix.Config
 # Or configure a 3rd-party app:
 #
 #     config :logger, level: :info
-config :maxwell,
-  default_adapter: Maxwell.Adapter.Ibrowse
 config :sasl,
   errlog_type: :error
 #

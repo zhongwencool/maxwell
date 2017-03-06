@@ -2,18 +2,6 @@ defmodule Maxwell.Builder.Util do
   @moduledoc  """
   Utils for builder
   """
-
-  @doc """
-  Global default adapter.
-
-  ### Examples
-        config :maxwell,
-        default_adapter: Maxwell.Adapter.Hackney
-  """
-  def default_adapter do
-    Application.get_env(:maxwell, :default_adapter, Maxwell.Adapter.Ibrowse)
-  end
-
   @doc """
   Serialize http method to atom lists.
 

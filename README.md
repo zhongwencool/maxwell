@@ -98,22 +98,13 @@ Maxwell has support for different adapters that do the actual HTTP request proce
 
 Maxwell has built-in support for the [httpc](http://erlang.org/doc/man/httpc.html) Erlang HTTP client.
 
-To use it simply place `adapter Maxwell.Adapter.Httpc` in your API client definition, or by
-setting the global default adapter, as shown below:
-
-```ex
-config :maxwell,
-  default_adapter: Maxwell.Adapter.Httpc
-```
-
-**NOTE**: Remember to include `:ibrowse` in your applications list.
+To use it simply place `adapter Maxwell.Adapter.Httpc` in your API client definition.
 
 ### ibrowse
 
 Maxwell has built-in support for the [ibrowse](https://github.com/cmullaparthi/ibrowse) Erlang HTTP client.
 
-To use it simply place `adapter Maxwell.Adapter.Ibrowse` in your API client definition, or by
-setting the global default adapter, as shown previously.
+To use it simply place `adapter Maxwell.Adapter.Ibrowse` in your API client definition.
 
 **NOTE**: Remember to include `:ibrowse` in your applications list.
 
@@ -121,8 +112,7 @@ setting the global default adapter, as shown previously.
 
 Maxwell has built-in support for the [hackney](https://github.com/benoitc/hackney) Erlang HTTP client.
 
-To use it simply place `adapter Maxwell.Adapter.Hackney` in your API client definition, or by
-setting the global default adapter, as shown previously.
+To use it simply place `adapter Maxwell.Adapter.Hackney` in your API client definition.
 
 **NOTE**: Remember to include `:hackney` in your applications list.
 
