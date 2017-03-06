@@ -10,15 +10,11 @@ sudo: false
 
 script: "MIX_ENV=test mix do deps.get, test"
 
-env: MIX_ENV=test
-
 after_success:
-	- mix coveralls.travis
-	- mix coveralls.travis
+  - mix coveralls.travis  
   - mix deps.get --only docs
   - MIX_ENV=docs mix inch.report
   
 after_failure:
-	- mix compile
-	- mix coveralls.travis
-  
+  - mix compile
+  - mix coveralls.travis
