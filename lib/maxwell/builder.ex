@@ -189,7 +189,7 @@ defmodule Maxwell.Builder do
 
   defp quote_adapter_call(nil, conn) do
     quote do
-      unquote(Maxwell.Builder.Util.default_adapter).call(unquote(conn))
+      Maxwell.Adapter.Ibrowse.call(unquote(conn))
     end
   end
   defp quote_adapter_call(mod, conn) when is_atom(mod) do
