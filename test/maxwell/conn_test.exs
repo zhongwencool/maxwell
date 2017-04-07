@@ -24,6 +24,8 @@ defmodule ConnTest do
     assert new("http://example.com:8080/foo") == %Conn{url: "http://example.com:8080", path: "/foo"}
     assert new("http://user:pass@example.com:8080/foo") == %Conn{url: "http://user:pass@example.com:8080", path: "/foo"}
     assert new("http://example.com/foo?version=1") == %Conn{url: "http://example.com", path: "/foo", query_string: %{"version" => "1"}}
+    assert new("http://example.com/foo?ids[]=1&ids[]=2") == %Conn{url: "http://example.com", path: "/foo", query_string: %{"ids" => ["1", "2"]}}
+    assert new("http://example.com/foo?ids[foo]=1") == %Conn{url: "http://example.com", path: "/foo", query_string: %{"ids" => %{"foo" => "1"}}}
   end
 
   test "deprecated: put_path/1" do
@@ -233,4 +235,3 @@ defmodule ConnTest do
     end
   end
 end
-

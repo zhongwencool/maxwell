@@ -4,12 +4,10 @@ defmodule Maxwell.Adapter.Util do
   """
 
   @chunk_size 4 * 1024 * 1024
-  alias Maxwell.Conn
-  alias Maxwell.Multipart
+  alias Maxwell.{Conn, Multipart, Query}
 
   @doc """
-  Append path and query string to url,
-  query string encode by `URI.encode_query/1`.
+  Append path and query string to url
 
   * `url`   - `conn.url`
   * `path`  - `conn.path`
@@ -115,7 +113,7 @@ defmodule Maxwell.Adapter.Util do
     |> File.stream!([], @chunk_size)
     |> stream_iterate
   end
-  def stream_iterate(next_stream_fun)when is_function(next_stream_fun, 1) do
+  def stream_iterate(next_stream_fun) when is_function(next_stream_fun, 1) do
     case next_stream_fun.({:cont, nil}) do
       {:suspended, item, next_stream_fun} -> {:ok, item, next_stream_fun}
       {:halted, _} -> :eof
@@ -123,11 +121,11 @@ defmodule Maxwell.Adapter.Util do
     end
   end
   def stream_iterate(stream) do
-    case Enumerable.reduce(stream, {:cont, nil}, fn(item, nil)-> {:suspend, item} end) do
+    case Enumerable.reduce(stream, {:cont, nil}, fn (item, nil) -> {:suspend, item} end) do
       {:suspended, item, next_stream} -> {:ok, item, next_stream}
       {:done, _}   -> :eof
       {:halted, _} -> :eof
-	end
+    end
   end
 
   defp multipart_body({:start, boundary, multiparts}) do
@@ -136,11 +134,9 @@ defmodule Maxwell.Adapter.Util do
   end
   defp multipart_body(:end), do: :eof
 
-  defp append_query_string(url, path, query)when query == %{}, do: url <> path
+  defp append_query_string(url, path, query) when query == %{}, do: url <> path
   defp append_query_string(url, path, query) do
-    query_string = URI.encode_query(query)
+    query_string = Query.encode(query)
     url <> path <> "?" <> query_string
   end
-
 end
-
