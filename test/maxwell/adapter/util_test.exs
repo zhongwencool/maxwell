@@ -1,4 +1,4 @@
-defmodule ConnTest do
+defmodule Maxwell.Adapter.UtilTest do
   use ExUnit.Case
 
   import Maxwell.Adapter.Util
