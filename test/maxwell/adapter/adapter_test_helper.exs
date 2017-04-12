@@ -61,28 +61,19 @@ defmodule Maxwell.Adapter.TestHelper do
           |> post!
         end
 
-        def file_test(filepath) do
-          "/post"
-          |> new()
-          |> put_req_header("transfer-encoding", "chunked")
-          |> put_req_body({:file, filepath})
-          |> post!
-        end
-
         def file_test(filepath, content_type) do
           "/post"
           |> new()
-          |> put_req_header("transfer-encoding", "Chunked")
           |> put_req_body({:file, filepath})
           |> put_req_header("content-type", content_type)
           |> post!
         end
 
-        def file_without_transfer_encoding_test(filepath, content_type) do
+        def file_test(filepath) do
           "/post"
           |> new()
+          |> put_req_header("content-type", "application/vnd.lotus-1-2-3")
           |> put_req_body({:file, filepath})
-          |> put_req_header("content-type", content_type)
           |> post!
         end
 
@@ -94,6 +85,15 @@ defmodule Maxwell.Adapter.TestHelper do
           |> put_req_body(Stream.map(["1", "2", "3"], fn(x) -> List.duplicate(x, 2) end))
           |> post!
         end
+
+        def file_without_transfer_encoding_test(filepath, content_type) do
+          "/post"
+          |> new()
+          |> put_req_body({:file, filepath})
+          |> put_req_header("content-type", content_type)
+          |> post!
+        end
+
       end
 
       if Code.ensure_loaded?(:rand) do
