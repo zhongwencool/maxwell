@@ -28,7 +28,7 @@ defmodule Maxwell.Conn do
      * `state` - the connection state
 
   The connection state is used to track the connection lifecycle. It starts
-  as `:unsent` but is changed to `:sending`, Its final result is `:sent` or `:error`. 
+  as `:unsent` but is changed to `:sending`, Its final result is `:sent` or `:error`.
 
   ### Protocols
 
@@ -62,7 +62,7 @@ defmodule Maxwell.Conn do
     resp_headers: %{},
     resp_body: ""
 
-  alias Maxwell.Conn
+  alias Maxwell.{Conn, Query}
 
   defmodule AlreadySentError do
     @moduledoc """
@@ -126,7 +126,7 @@ defmodule Maxwell.Conn do
            end
     case is_nil(query) do
       true   -> conn
-      false -> put_query_string(conn, URI.decode_query(query))
+      false -> put_query_string(conn, Query.decode(query))
     end
   end
 
@@ -420,4 +420,3 @@ defmodule Maxwell.Conn do
     end
   end
 end
-
