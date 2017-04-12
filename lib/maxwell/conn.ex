@@ -432,6 +432,15 @@ defmodule Maxwell.Conn do
     %{conn | private: new_private}
   end
 
+  @doc """
+  Get a private value
+
+  ### Examples
+
+      iex> %Maxwell.Conn{private: %{user_id: "zhongwencool"}}
+      |> get_private(:user_id)
+      "zhongwencool"
+  """
   @spec get_private(Conn.t, Atom.t) :: term()
   def get_private(%Conn{private: private} = conn, key) do
     Map.get(private, key)
