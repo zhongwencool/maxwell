@@ -442,7 +442,7 @@ defmodule Maxwell.Conn do
       "zhongwencool"
   """
   @spec get_private(Conn.t, Atom.t) :: term()
-  def get_private(%Conn{private: private} = conn, key) do
+  def get_private(%Conn{private: private}, key) do
     Map.get(private, key)
   end
 
