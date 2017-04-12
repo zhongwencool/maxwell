@@ -50,7 +50,12 @@ defmodule Maxwell.Adapter.Httpc do
           query_string: query_string, path: path,
           method: method, opts: opts, req_body: req_body} = conn
     url = Util.url_serialize(url, path, query_string, :char_list)
-    req_body = {:chunkify, &Util.stream_iterate/1, req_body}
+    chunked = Util.chunked?(conn)
+    req_body =
+      case chunked do
+        true -> {:chunkify, &Util.stream_iterate/1, req_body}
+        false -> {&Util.stream_iterate/1, req_body}
+      end
     {content_type, req_headers} = header_serialize(req_headers)
     {http_opts, options} = opts_serialize(opts)
     result = request(method, url, req_headers, content_type, req_body, http_opts, options)

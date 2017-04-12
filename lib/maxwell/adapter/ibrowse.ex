@@ -50,7 +50,6 @@ if Code.ensure_loaded?(:ibrowse) do
             method: method, opts: opts, req_body: req_body} = conn
       url = Util.url_serialize(url, path, query_string, :char_list)
       req_headers = Util.header_serialize(req_headers)
-      opts = Keyword.put(opts, :transfer_encoding, :chunked)
       req_body = {&Util.stream_iterate/1, req_body}
       result = :ibrowse.send_req(url, req_headers, method, req_body, opts)
       format_response(result, conn)
