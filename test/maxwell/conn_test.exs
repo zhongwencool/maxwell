@@ -234,4 +234,13 @@ defmodule ConnTest do
       get_resp_body(%Conn{state: :unsent, resp_body: %{"foo" => "bar"}}, "foo")
     end
   end
+
+  test "put_private/3" do
+    assert put_private(%Conn{}, :user_id, "zhongwencool") == %Conn{private: %{user_id: "zhongwencool"}}
+  end
+
+  test "get_private/2" do
+    assert get_private(%Conn{}, :user_id) == nil
+    assert get_private(%Conn{private: %{user_id: "zhongwencool"}}, :user_id) == "zhongwencool"
+  end
 end
