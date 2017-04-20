@@ -28,7 +28,7 @@ defmodule Maxwell.Conn do
      * `state` - the connection state
 
   The connection state is used to track the connection lifecycle. It starts
-  as `:unsent` but is changed to `:sending`, Its final result is `:sent` or `:error`. 
+  as `:unsent` but is changed to `:sending`, Its final result is `:sent` or `:error`.
 
   ### Protocols
 
@@ -47,7 +47,8 @@ defmodule Maxwell.Conn do
     req_body: iodata | Map.t,
     status: non_neg_integer | nil,
     resp_headers: %{binary => binary},
-    resp_body: iodata | Map.t
+    resp_body: iodata | Map.t,
+    private: Map.t
   }
 
   defstruct state: :unsent,
@@ -60,9 +61,10 @@ defmodule Maxwell.Conn do
     opts: [],
     status: nil,
     resp_headers: %{},
-    resp_body: ""
+    resp_body: "",
+    private: %{}
 
-  alias Maxwell.Conn
+  alias Maxwell.{Conn, Query}
 
   defmodule AlreadySentError do
     @moduledoc """
@@ -126,7 +128,7 @@ defmodule Maxwell.Conn do
            end
     case is_nil(query) do
       true   -> conn
-      false -> put_query_string(conn, URI.decode_query(query))
+      false -> put_query_string(conn, Query.decode(query))
     end
   end
 
@@ -414,10 +416,39 @@ defmodule Maxwell.Conn do
   def get_resp_body(%Conn{resp_body: body}, keys) when is_list(keys),        do: get_in(body, keys)
   def get_resp_body(%Conn{resp_body: body}, key), do: body[key]
 
+
+  @doc """
+  Set a private value. If it already exists, it is updated.
+
+  ### Examples
+
+      iex> %Maxwell.Conn{private: %{}}
+      |> put_private(:user_id, "zhongwencool")
+      %Maxwell.Conn{private: %{user_id: "zhongwencool"}}
+  """
+  @spec put_private(Conn.t, Atom.t, term()) :: Conn.t
+  def put_private(%Conn{private: private} = conn, key, value) do
+    new_private = Map.put(private, key, value)
+    %{conn | private: new_private}
+  end
+
+  @doc """
+  Get a private value
+
+  ### Examples
+
+      iex> %Maxwell.Conn{private: %{user_id: "zhongwencool"}}
+      |> get_private(:user_id)
+      "zhongwencool"
+  """
+  @spec get_private(Conn.t, Atom.t) :: term()
+  def get_private(%Conn{private: private}, key) do
+    Map.get(private, key)
+  end
+
   defimpl Inspect, for: Conn do
     def inspect(conn, opts) do
       Inspect.Any.inspect(conn, opts)
     end
   end
 end
-
