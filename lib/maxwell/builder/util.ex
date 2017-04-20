@@ -2,6 +2,12 @@ defmodule Maxwell.Builder.Util do
   @moduledoc  """
   Utils for builder
   """
+
+  @doc """
+    Global default adapter.
+    """
+  def default_adapter(), do: Maxwell.Adapter.Ibrowse
+
   @doc """
   Serialize http method to atom lists.
 
