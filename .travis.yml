@@ -8,10 +8,9 @@ otp_release:
 
 sudo: false
 
-script: "MIX_ENV=test mix do deps.get, test"
+script: "MIX_ENV=test mix do deps.get, test, coveralls.travis"
 
-after_success:
-  - mix coveralls.travis  
+after_succes:
   - mix deps.get --only docs
   - MIX_ENV=docs mix inch.report
   
