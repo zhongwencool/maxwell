@@ -54,7 +54,11 @@ defmodule JsonTest do
   end
 
   test "decode error JSON body" do
-    {:error, {:decode_json_error, :invalid}, conn} = Conn.new("/decode_error") |> Client.get
+    conn =
+      case Conn.new("/decode_error") |> Client.get do
+        {:error, {:decode_json_error, :invalid, 4}, conn_tmp1} -> conn_tmp1
+        {:error, {:decode_json_error, :invalid}, conn_tmp2} -> conn_tmp2
+      end
     assert conn == %Conn{method: :get, opts: [connect_timeout: 3000],
                          path: "/decode_error", query_string: %{},
                          req_body: nil, req_headers: %{},

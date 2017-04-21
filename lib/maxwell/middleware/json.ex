@@ -150,6 +150,7 @@ defmodule Maxwell.Middleware.DecodeJson do
       :error -> conn
       false -> conn
       {:error, reason} -> {:error, {:decode_json_error, reason}, conn}
+      {:error, reason, pos} -> {:error, {:decode_json_error, reason, pos}, conn}
     end
   end
 
