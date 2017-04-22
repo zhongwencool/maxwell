@@ -162,7 +162,7 @@ defmodule Maxwell.Conn do
       put_query_string(%Conn{}, %{name: "zhong wen"})
 
   """
-  @spec put_query_string(Conn.t, map()) :: Conn.t | no_return
+  @spec put_query_string(t, map()) :: t | no_return
   def put_query_string(%Conn{state: :unsent, query_string: qs} = conn, query) do
     %{conn | query_string: Map.merge(qs, query)}
   end
@@ -196,7 +196,7 @@ defmodule Maxwell.Conn do
       |> put_req_headers(%{"Accept" => "application/json"})
       %Maxwell.Conn{req_headers: %{"accept" => "application/json", "content-type" => "text/javascript"}}
   """
-  @spec put_req_headers(Conn.t, map()) :: Conn.t | no_return
+  @spec put_req_headers(t, map()) :: t | no_return
   def put_req_headers(%Conn{state: :unsent, req_headers: headers} = conn, extra_headers) when is_map(extra_headers) do
     new_headers =
     extra_headers
@@ -245,7 +245,7 @@ defmodule Maxwell.Conn do
       iex> %Maxwell.Conn{req_headers: %{"cookie" => "xyz"} |> get_req_header
       %{"cookie" => "xyz"}
   """
-  @spec get_req_header(Conn.t) :: %{String.t => String.t}
+  @spec get_req_header(t) :: %{String.t => String.t}
   def get_req_headers(%Conn{req_headers: headers}), do: headers
 
   # TODO: Remove
@@ -264,7 +264,7 @@ defmodule Maxwell.Conn do
       iex> %Maxwell.Conn{req_headers: %{"cookie" => "xyz"} |> get_req_header("cookie")
       "xyz"
   """
-  @spec get_req_header(Conn.t, String.t) :: String.t | nil
+  @spec get_req_header(t, String.t) :: String.t | nil
   def get_req_header(conn, nil) do
     IO.warn "get_req_header/2 with a nil key is deprecated, use get_req_headers/2 instead"
     get_req_headers(conn)
@@ -279,7 +279,7 @@ defmodule Maxwell.Conn do
       iex> put_options(new(), connect_timeout: 4000)
       %Maxwell.Conn{opts: [connect_timeout: 4000]}
   """
-  @spec put_options(Conn.t, Keyword.t) :: Conn.t | no_return
+  @spec put_options(t, Keyword.t) :: t | no_return
   def put_options(%Conn{state: :unsent, opts: opts} = conn, extra_opts) when is_list(extra_opts) do
     %{conn | opts: Keyword.merge(opts, extra_opts)}
   end
@@ -293,7 +293,7 @@ defmodule Maxwell.Conn do
       iex> put_option(new(), :connect_timeout, 5000)
       %Maxwell.Conn{opts: [connect_timeout: 5000]}
   """
-  @spec put_option(Conn.t, atom(), term()) :: Conn.t | no_return
+  @spec put_option(t, atom(), term()) :: t | no_return
   def put_option(%Conn{state: :unsent, opts: opts} = conn, key, value) when is_atom(key) do
     %{conn | opts: [{key, value} | opts]}
   end
@@ -321,7 +321,7 @@ defmodule Maxwell.Conn do
       iex> put_req_body(new(), "new body")
       %Maxwell.Conn{req_body: "new_body"}
   """
-  @spec put_req_body(Conn.t, Stream.t | binary()) :: Conn.t | no_return
+  @spec put_req_body(t, Stream.t | binary()) :: t | no_return
   def put_req_body(%Conn{state: :unsent} = conn, req_body) do
     %{conn | req_body: req_body}
   end
@@ -343,7 +343,7 @@ defmodule Maxwell.Conn do
       iex> get_status(%Maxwell.Conn{status: 200})
       200
   """
-  @spec get_status(Conn.t) :: pos_integer | no_return
+  @spec get_status(t) :: pos_integer | no_return
   def get_status(%Conn{status: status, state: state}) when state !== :unsent, do: status
   def get_status(_conn), do: raise NotSentError
 
@@ -355,7 +355,7 @@ defmodule Maxwell.Conn do
       iex> %Maxwell.Conn{resp_headers: %{"cookie" => "xyz"} |> get_resp_header
       %{"cookie" => "xyz"}
   """
-  @spec get_resp_headers(Conn.t) :: %{String.t => String.t} | no_return
+  @spec get_resp_headers(t) :: %{String.t => String.t} | no_return
   def get_resp_headers(%Conn{state: :unsent}), do: raise NotSentError
   def get_resp_headers(%Conn{resp_headers: headers}), do: headers
 
@@ -375,7 +375,7 @@ defmodule Maxwell.Conn do
       iex> %Maxwell.Conn{resp_headers: %{"cookie" => "xyz"}} |> get_resp_header("cookie")
       "xyz"
   """
-  @spec get_resp_header(Conn.t, String.t) :: String.t | nil | no_return
+  @spec get_resp_header(t, String.t) :: String.t | nil | no_return
   def get_resp_header(%Conn{state: :unsent}, _key), do: raise NotSentError
   # TODO: remove
   def get_resp_header(conn, nil) do
@@ -392,7 +392,7 @@ defmodule Maxwell.Conn do
       iex> get_resp_body(%Maxwell.Conn{state: :sent, resp_body: "best http client"})
       "best http client"
   """
-  @spec get_resp_body(Conn.t) :: binary() | map() | no_return
+  @spec get_resp_body(t) :: binary() | map() | no_return
   def get_resp_body(%Conn{state: :sent, resp_body: body}), do: body
   def get_resp_body(_conn), do: raise NotSentError
 
@@ -426,7 +426,7 @@ defmodule Maxwell.Conn do
       |> put_private(:user_id, "zhongwencool")
       %Maxwell.Conn{private: %{user_id: "zhongwencool"}}
   """
-  @spec put_private(Conn.t, Atom.t, term()) :: Conn.t
+  @spec put_private(t, Atom.t, term()) :: t
   def put_private(%Conn{private: private} = conn, key, value) do
     new_private = Map.put(private, key, value)
     %{conn | private: new_private}
@@ -441,7 +441,7 @@ defmodule Maxwell.Conn do
       |> get_private(:user_id)
       "zhongwencool"
   """
-  @spec get_private(Conn.t, Atom.t) :: term()
+  @spec get_private(t, Atom.t) :: term()
   def get_private(%Conn{private: private}, key) do
     Map.get(private, key)
   end
