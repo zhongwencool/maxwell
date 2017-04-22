@@ -248,6 +248,17 @@ defmodule Maxwell.MultipartTest do
         == {:multipart, [{:file, "test.png", disposition, headers}]}
   end
 
+  test "add_file_with_name/3 should add a file with name" do
+    assert Multipart.new |> Multipart.add_file_with_name("test.png", "media")
+        == {:multipart, [{:file, "test.png", {"form-data", [{"name", "media"}, {"filename", "test.png"}]}, []}]}
+  end
+
+  test "add_file_with_name/4 should add a file with name and headers" do
+    headers = [{"content-type", "image/png"}]
+    assert Multipart.new |> Multipart.add_file_with_name("test.png", "media", headers)
+        == {:multipart, [{:file, "test.png", {"form-data", [{"name", "media"}, {"filename", "test.png"}]}, headers}]}
+  end
+
   test "add_field/3 should add a data part" do
     assert Multipart.new |> Multipart.add_field("key", "value")
         == {:multipart, [{"key", "value"}]}

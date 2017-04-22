@@ -42,6 +42,14 @@ defmodule Maxwell.Multipart do
     append_part(multipart, {:file, path, disposition, extra_headers})
   end
 
+  @spec add_file_with_name(t, Path.t, String.t) :: t
+  @spec add_file_with_name(t, Path.t, String.t, headers_t) :: t
+  def add_file_with_name(multipart, path, name, extra_headers \\ []) do
+    filename = Path.basename(path)
+    disposition = {"form-data", [{"name", name}, {"filename", filename}]}
+    append_part(multipart, {:file, path, disposition, extra_headers})
+  end
+
   @spec add_field(t, String.t, binary) :: t
   def add_field(multipart, name, value) when is_binary(name) and is_binary(value) do
     append_part(multipart, {name, value})
