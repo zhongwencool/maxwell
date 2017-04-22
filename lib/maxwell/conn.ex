@@ -36,6 +36,7 @@ defmodule Maxwell.Conn do
   The inspect protocol provides a nice representation of the connection.
 
   """
+  @type file_body_t :: {:file, Path.t}
   @type t :: %__MODULE__{
     state: :unsent | :sending | :sent | :error,
     method: Atom.t,
@@ -44,7 +45,7 @@ defmodule Maxwell.Conn do
     query_string: Map.t,
     opts: Keyword.t,
     req_headers: %{binary => binary},
-    req_body: iodata | Map.t,
+    req_body: iodata | Map.t | Maxwell.Multipart.t | file_body_t | Stream.t,
     status: non_neg_integer | nil,
     resp_headers: %{binary => binary},
     resp_body: iodata | Map.t,
@@ -96,7 +97,9 @@ defmodule Maxwell.Conn do
       iex> new("http://example.com/foo?bar=qux")
       %Maxwell.Conn{url: "http://example.com", path: "/foo", query_string: %{"bar" => "qux"}}
   """
+  @spec new() :: t
   def new(), do: %Conn{}
+  @spec new(binary) :: t
   def new(url) when is_binary(url) do
     %URI{scheme: scheme, path: path, query: query} = uri = URI.parse(url)
     scheme = scheme || "http"
@@ -140,7 +143,7 @@ defmodule Maxwell.Conn do
        iex> put_path(new(), "delete")
        %Maxwell.Conn{path: "delete"}
   """
-  @spec put_path(Conn.t, String.t) :: Conn.t | no_return
+  @spec put_path(t, String.t) :: t | no_return
   def put_path(%Conn{state: :unsent} = conn, path), do: %{conn | path: path}
   def put_path(_conn, _path), do: raise AlreadySentError
 
