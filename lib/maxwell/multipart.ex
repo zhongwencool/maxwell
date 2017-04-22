@@ -20,6 +20,47 @@ defmodule Maxwell.Multipart do
   @type t :: {:multipart, [part_t]}
   @eof_size 2
   @doc """
+  create a multipart struct
+  """
+  @spec new() :: t
+  def new(), do: {:multipart, []}
+
+  @spec add_file(t, Path.t) :: t
+  def add_file(multipart, path) do
+    append_part(multipart, {:file, path})
+  end
+
+  @spec add_file(t, Path.t, headers_t) :: t
+  def add_file(multipart, path, extra_headers) do
+    append_part(multipart, {:file, path, extra_headers})
+  end
+
+  @spec add_file(t, Path.t, disposition_t, headers_t) :: t
+  def add_file(multipart, path, disposition, extra_headers) do
+    append_part(multipart, {:file, path, disposition, extra_headers})
+  end
+
+  @spec add_field(t, String.t, binary) :: t
+  def add_field(multipart, name, value) when is_binary(name) and is_binary(value) do
+    append_part(multipart, {name, value})
+  end
+
+  @spec add_field(t, String.t, binary, headers_t) :: t
+  def add_field(multipart, name, value, extra_headers)
+  when is_binary(name) and is_binary(value) and is_list(extra_headers) do
+    append_part(multipart, {name, value, extra_headers})
+  end
+
+  @spec add_field(t, String.t, binary, disposition_t, headers_t) :: t
+  def add_field(multipart, name, value, disposition, extra_headers)
+  when is_binary(name) and is_binary(value) and is_tuple(disposition) and is_list(extra_headers) do
+    append_part(multipart, {name, value, disposition, extra_headers})
+  end
+
+  defp append_part({:multipart, parts}, part) do
+    {:multipart, parts ++ [part]}
+  end
+  @doc """
   multipart form encode.
 
       * `parts` - receives lists list's member format:
