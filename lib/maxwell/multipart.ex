@@ -26,17 +26,19 @@ defmodule Maxwell.Multipart do
   def new(), do: {:multipart, []}
 
   @spec add_file(t, Path.t) :: t
-  def add_file(multipart, path) do
+  def add_file(multipart, path) when is_binary(path) do
     append_part(multipart, {:file, path})
   end
 
   @spec add_file(t, Path.t, headers_t) :: t
-  def add_file(multipart, path, extra_headers) do
+  def add_file(multipart, path, extra_headers)
+  when is_binary(path) and is_list(extra_headers) do
     append_part(multipart, {:file, path, extra_headers})
   end
 
   @spec add_file(t, Path.t, disposition_t, headers_t) :: t
-  def add_file(multipart, path, disposition, extra_headers) do
+  def add_file(multipart, path, disposition, extra_headers)
+  when is_binary(path) and is_tuple(disposition) and is_list(extra_headers) do
     append_part(multipart, {:file, path, disposition, extra_headers})
   end
 
