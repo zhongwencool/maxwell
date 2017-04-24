@@ -21,7 +21,7 @@ defmodule GitHubClient do
 
   # For a complete list of middlewares, see the docs
   middleware Maxwell.Middleware.BaseUrl, "https://api.github.com"
-  middleware Maxwell.Middleware.Headers, %{"content-type": "application/vnd.github.v3+json", "user-agent": "zhongwenool"}
+  middleware Maxwell.Middleware.Headers, %{"content-type" => "application/vnd.github.v3+json", "user-agent" => "zhongwenool"}
   middleware Maxwell.Middleware.Opts,    connect_timeout: 3000
   middleware Maxwell.Middleware.Json
   middleware Maxwell.Middleware.Logger
