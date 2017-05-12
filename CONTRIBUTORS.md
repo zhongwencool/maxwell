@@ -7,3 +7,4 @@ Maxwell contributors
 * **[Imran Ismail](https://github.com/imranismail)**
 * **[lattenwald](https://github.com/lattenwald)**
 * **[dardub](https://github.com/dardub)**
+* **[Chris Dosé](https://github.com/doughsay)**

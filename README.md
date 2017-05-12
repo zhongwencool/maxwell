@@ -80,7 +80,7 @@ for a list of all functions, and detailed info about how they behave.
   1. Add maxwell to your list of dependencies in `mix.exs`:
 ```ex
    def deps do
-     [{:maxwell, "~> 2.2.0"}]
+     [{:maxwell, "~> 2.2.1"}]
    end
 ```
   2. Ensure maxwell has started before your application:

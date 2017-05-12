@@ -1,5 +1,16 @@
 ------------------
 
+## 2.2.1 - 2017-05-12
+### Added
+- Add [Conn.put_private/3 and Conn.get_private/2](https://github.com/zhongwencool/maxwell/pull/57)
+- Allow query strings to have nested params and arrays(https://github.com/zhongwencool/maxwell/pull/55).
+- Add fixed header override
+
+### Changed
+-  Using System.monotonic_time() to [show cost time](https://github.com/zhongwencool/maxwell/pull/48).
+-  Improve a collection of [general API](https://github.com/zhongwencool/maxwell/pull/36).
+-  [Refine multipart](https://github.com/zhongwencool/maxwell/pull/61)
+
 ## 2.2.0 - 2017-02-14
 ### Added
 - Add retry middleware
