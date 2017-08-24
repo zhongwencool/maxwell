@@ -30,9 +30,10 @@ defmodule Maxwell.Adapter do
         case res do
           %Conn{} -> res
           {:error, _reason, _conn} -> res
-          other ->
-            raise "invalid return from #{unquote(__CALLER__.module)}" <>
-                  " expected Maxwell.Conn.t or {:error, reason}, but got: #{inspect other}"
+# according to dialyzer this can never match since previous clauses completely covered the type {'error',_,#{'__struct__':='Elixir.Maxwell.Conn', 'method':=_, 'opts':=_, 'path':=_, 'query_string':=_, 'req_body':=_, 'req_headers':=_, 'state':='error', 'url':=_, _=>_}} | #{'__struct__':='Elixir.Maxwell.Conn', 'method':=_, 'opts':=_, 'path':=_, 'query_string':=_, 'req_body':='nil', 'req_headers':=_, 'resp_body':=binary(), 'resp_headers':=_, 'state':='sent', 'status':=_, 'url':=_, _=>_}
+#          other ->
+#            raise "invalid return from #{unquote(__CALLER__.module)}" <>
+#                  " expected Maxwell.Conn.t or {:error, reason}, but got: #{inspect other}"
         end
       end
 

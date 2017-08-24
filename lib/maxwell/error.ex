@@ -8,6 +8,7 @@ defmodule Maxwell.Error do
   """
   defexception [:url, :status, :method, :reason, :message, :conn]
 
+  @spec exception({module, atom | binary, Maxwell.Conn.t}) :: Exception.t
   def exception({module, reason, conn}) do
     %Maxwell.Conn{url: url, status: status, method: method, path: path} = conn
     message = """
