@@ -30,7 +30,6 @@ defmodule Maxwell.Adapter do
         case res do
           %Conn{} -> res
           {:error, _reason, _conn} -> res
-
           other ->
             raise "invalid return from #{unquote(__CALLER__.module)}" <>
                   " expected Maxwell.Conn.t or {:error, reason}, but got: #{inspect other}"
