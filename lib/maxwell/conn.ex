@@ -39,17 +39,17 @@ defmodule Maxwell.Conn do
   @type file_body_t :: {:file, Path.t}
   @type t :: %__MODULE__{
     state: :unsent | :sending | :sent | :error,
-    method: Atom.t,
+    method: atom,
     url: String.t,
     path: String.t,
-    query_string: Map.t,
+    query_string: map,
     opts: Keyword.t,
     req_headers: %{binary => binary},
-    req_body: iodata | Map.t | Maxwell.Multipart.t | file_body_t | Stream.t,
+    req_body: iodata | map | Maxwell.Multipart.t | file_body_t | Enumerable.t,
     status: non_neg_integer | nil,
     resp_headers: %{binary => binary},
-    resp_body: iodata | Map.t,
-    private: Map.t
+    resp_body: iodata | map,
+    private: map
   }
 
   defstruct state: :unsent,
@@ -324,7 +324,7 @@ defmodule Maxwell.Conn do
       iex> put_req_body(new(), "new body")
       %Maxwell.Conn{req_body: "new_body"}
   """
-  @spec put_req_body(t, Stream.t | binary()) :: t | no_return
+  @spec put_req_body(t, Enumerable.t | binary()) :: t | no_return
   def put_req_body(%Conn{state: :unsent} = conn, req_body) do
     %{conn | req_body: req_body}
   end
@@ -429,7 +429,7 @@ defmodule Maxwell.Conn do
       |> put_private(:user_id, "zhongwencool")
       %Maxwell.Conn{private: %{user_id: "zhongwencool"}}
   """
-  @spec put_private(t, Atom.t, term()) :: t
+  @spec put_private(t, atom, term()) :: t
   def put_private(%Conn{private: private} = conn, key, value) do
     new_private = Map.put(private, key, value)
     %{conn | private: new_private}
@@ -444,7 +444,7 @@ defmodule Maxwell.Conn do
       |> get_private(:user_id)
       "zhongwencool"
   """
-  @spec get_private(t, Atom.t) :: term()
+  @spec get_private(t, atom) :: term()
   def get_private(%Conn{private: private}, key) do
     Map.get(private, key)
   end
