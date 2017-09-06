@@ -1,5 +1,9 @@
 ------------------
 
+## 2.2.2 - 2017-09-06
+### Added
+- Fixed type specs of conn.ex, added type spec for error.ex
+
 ## 2.2.1 - 2017-05-12
 ### Added
 - Add [Conn.put_private/3 and Conn.get_private/2](https://github.com/zhongwencool/maxwell/pull/57)

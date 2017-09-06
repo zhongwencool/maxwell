@@ -8,3 +8,4 @@ Maxwell contributors
 * **[lattenwald](https://github.com/lattenwald)**
 * **[dardub](https://github.com/dardub)**
 * **[Chris Dosé](https://github.com/doughsay)**
+* **[Gerard de Bried](https://github.com/smeevil)
