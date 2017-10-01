@@ -9,9 +9,13 @@ defmodule Maxwell.Multipart do
   @type disposition_t :: {String.t, params_t}
   @type boundary_t :: String.t
   @type name_t :: String.t
+  @type file_content_t :: binary
   @type part_t :: {:file, Path.t}
               | {:file, Path.t, headers_t}
               | {:file, Path.t, disposition_t, headers_t}
+              | {:file_content, file_content_t, String.t}
+              | {:file_content, file_content_t, String.t, headers_t}
+              | {:file_content, file_content_t, String.t, disposition_t, headers_t}
               | {:mp_mixed, String.t, boundary_t}
               | {:mp_mixed_eof, boundary_t}
               | {name_t, binary}
@@ -50,6 +54,28 @@ defmodule Maxwell.Multipart do
     append_part(multipart, {:file, path, disposition, extra_headers})
   end
 
+  @spec add_file_content(t, file_content_t, String.t) :: t
+  def add_file_content(multipart, file_content, filename) do
+    append_part(multipart, {:file_content, file_content, filename})
+  end
+
+  @spec add_file_content(t, file_content_t, String.t, headers_t) :: t
+  def add_file_content(multipart, file_content, filename, extra_headers) do
+    append_part(multipart, {:file_content, file_content, filename, extra_headers})
+  end
+
+  @spec add_file_content(t, file_content_t, String.t, disposition_t, headers_t) :: t
+  def add_file_content(multipart, file_content, filename, disposition, extra_headers) do
+    append_part(multipart, {:file_content, file_content, filename, disposition, extra_headers})
+  end
+
+  @spec add_file_content_with_name(t, file_content_t, String.t, String.t) :: t
+  @spec add_file_content_with_name(t, file_content_t, String.t, String.t, headers_t) :: t
+  def add_file_content_with_name(multipart, file_content, filename, name, extra_headers \\ []) do
+    disposition = {"form-data", [{"name", name}, {"filename", filename}]}
+    append_part(multipart, {:file_content, file_content, filename, disposition, extra_headers})
+  end
+
   @spec add_field(t, String.t, binary) :: t
   def add_field(multipart, name, value) when is_binary(name) and is_binary(value) do
     append_part(multipart, {name, value})
@@ -78,11 +104,14 @@ defmodule Maxwell.Multipart do
            1. `{:file, path}`
            2. `{:file, path, extra_headers}`
            3. `{:file, path, disposition, extra_headers}`
-           4. `{:mp_mixed, name, mixed_boundary}`
-           5. `{:mp_mixed_eof, mixed_boundary}`
-           6. `{name, bin_data}`
-           7. `{name, bin_data, extra_headers}`
-           8. `{name, bin_data, disposition, extra_headers}`
+           4. `{:file_content, file_content, filename}`
+           5. `{:file_content, file_content, filename, extra_headers}`
+           6. `{:file_content, file_content, filename, disposition, extra_headers}`
+           7. `{:mp_mixed, name, mixed_boundary}`
+           8. `{:mp_mixed_eof, mixed_boundary}`
+           9. `{name, bin_data}`
+          10. `{name, bin_data, extra_headers}`
+          11. `{name, bin_data, disposition, extra_headers}`
 
   Returns `{body_binary, size}`
 
@@ -95,14 +124,17 @@ defmodule Maxwell.Multipart do
      * `boundary` - multipart boundary.
      * `parts` - receives lists list's member format:
 
-          1. `{:file, path}`
-          2. `{:file, path, extra_headers}`
-          3. `{:file, path, disposition, extra_headers}`
-          4. `{:mp_mixed, name, mixed_boundary}`
-          5. `{:mp_mixed_eof, mixed_boundary}`
-          6. `{name, bin_data}`
-          7. `{name, bin_data, extra_headers}`
-          8. `{name, bin_data, disposition, extra_headers}`
+           1. `{:file, path}`
+           2. `{:file, path, extra_headers}`
+           3. `{:file, path, disposition, extra_headers}`
+           4. `{:file_content, file_content, filename}`
+           5. `{:file_content, file_content, filename, extra_headers}`
+           6. `{:file_content, file_content, filename, disposition, extra_headers}`
+           7. `{:mp_mixed, name, mixed_boundary}`
+           8. `{:mp_mixed_eof, mixed_boundary}`
+           9. `{name, bin_data}`
+          10. `{name, bin_data, extra_headers}`
+          11. `{name, bin_data, disposition, extra_headers}`
 
   """
   @spec encode_form(boundary :: boundary_t, parts :: [part_t]) :: {boundary_t, integer}
@@ -132,8 +164,8 @@ defmodule Maxwell.Multipart do
   """
   @spec len_mp_stream(boundary :: boundary_t, parts :: [part_t]) :: integer
   def len_mp_stream(boundary, parts) do
-    size = Enum.reduce(parts, 0, fn(
-      {:file, path}, acc_size) ->
+    size = Enum.reduce(parts, 0, fn
+      ({:file, path}, acc_size) ->
         {mp_header, len} = mp_file_header(%{path: path}, boundary)
         acc_size + byte_size(mp_header) + len + @eof_size
       ({:file, path, extra_headers}, acc_size) ->
@@ -141,6 +173,16 @@ defmodule Maxwell.Multipart do
         acc_size + byte_size(mp_header) + len + @eof_size
       ({:file, path, disposition, extra_headers}, acc_size) ->
         file = %{path: path, extra_headers: extra_headers, disposition: disposition}
+        {mp_header, len} = mp_file_header(file, boundary)
+        acc_size + byte_size(mp_header) + len + @eof_size
+      ({:file_content, file_content, filename}, acc_size) ->
+        {mp_header, len} = mp_file_header(%{path: filename, filesize: byte_size(file_content)}, boundary)
+        acc_size + byte_size(mp_header) + len + @eof_size
+      ({:file_content, file_content, filename, extra_headers}, acc_size) ->
+        {mp_header, len} = mp_file_header(%{path: filename, filesize: byte_size(file_content), extra_headers: extra_headers}, boundary)
+        acc_size + byte_size(mp_header) + len + @eof_size
+      ({:file_content, file_content, filename, disposition, extra_headers}, acc_size) ->
+        file = %{path: filename, filesize: byte_size(file_content), extra_headers: extra_headers, disposition: disposition}
         {mp_header, len} = mp_file_header(file, boundary)
         acc_size + byte_size(mp_header) + len + @eof_size
       ({:mp_mixed, name, mixed_boundary}, acc_size) ->
@@ -190,6 +232,27 @@ defmodule Maxwell.Multipart do
     encode_form(parts, boundary, acc, acc_size)
   end
 
+  defp encode_form([{:file_content, file_content, filename}|parts], boundary, acc, acc_size) do
+    {mp_header, len} = mp_file_header(%{path: filename, filesize: byte_size(file_content)}, boundary)
+    acc_size = acc_size + byte_size(mp_header) + len + @eof_size
+    acc = acc <> mp_header <> file_content <> "\r\n"
+    encode_form(parts, boundary, acc, acc_size)
+  end
+  defp encode_form([{:file_content, file_content, filename, extra_headers}|parts], boundary, acc, acc_size) do
+    file = %{path: filename, filesize: byte_size(file_content), extra_headers: extra_headers}
+    {mp_header, len} = mp_file_header(file, boundary)
+    acc_size = acc_size + byte_size(mp_header) + len + @eof_size
+    acc = acc <> mp_header <> file_content <> "\r\n"
+    encode_form(parts, boundary, acc, acc_size)
+  end
+  defp encode_form([{:file_content, file_content, filename, disposition, extra_headers}|parts], boundary, acc, acc_size) do
+    file = %{path: filename, filesize: byte_size(file_content), extra_headers: extra_headers, disposition: disposition}
+    {mp_header, len} = mp_file_header(file, boundary)
+    acc_size = acc_size + byte_size(mp_header) + len + @eof_size
+    acc = acc <> mp_header <> file_content <> "\r\n"
+    encode_form(parts, boundary, acc, acc_size)
+  end
+
   defp encode_form([{:mp_mixed, name, mixed_boundary}|parts], boundary, acc, acc_size) do
     {mp_header, _} = mp_mixed_header(name, mixed_boundary)
     acc_size = acc_size + byte_size(mp_header) + @eof_size
@@ -228,7 +291,7 @@ defmodule Maxwell.Multipart do
     file_name = path |> :filename.basename |> to_string
     {disposition, params} = file[:disposition] || {"form-data", [{"name", "\"file\""}, {"filename", "\"" <> file_name <> "\""}]}
     ctype = :mimerl.filename(path)
-    len = :filelib.file_size(path)
+    len = file[:filesize] || :filelib.file_size(path)
 
     extra_headers = file[:extra_headers] || []
     extra_headers = extra_headers |>  Enum.map(fn({k, v}) -> {String.downcase(k), v} end)
