@@ -57,6 +57,42 @@ defmodule Maxwell.MultipartTest do
     assert String.replace(body, boundary, "") == "--\r\ncontent-length: 47\r\ncontent-disposition: form-data; name=content; filename=test/maxwell/multipart_test_file.sh\r\ncontent-type: image/jpeg\r\n\r\n#!/usr/bin/env bash\necho \"test multipart file\"\n\r\n----\r\n"
   end
 
+  test "File Content base" do
+    boundary = Multipart.new_boundary
+    filename = "test.sh"
+    file_content = "xxx"
+    {body, size} = Multipart.encode_form(boundary, [{:file_content, file_content, filename}])
+    assert size == 219
+    assert String.starts_with?(body, "--" <> boundary) == true
+    assert String.ends_with?(body, boundary <> "--\r\n") == true
+    assert String.replace(body, boundary, "") == "--\r\ncontent-length: 3\r\ncontent-disposition: form-data; name=\"file\"; filename=\"test.sh\"\r\ncontent-type: application/x-sh\r\n\r\nxxx\r\n----\r\n"
+  end
+
+  test "File Content ExtraHeaders" do
+    boundary = Multipart.new_boundary
+    filename = "test.sh"
+    file_content = "xxx"
+    extra_headers = [{"Content-Type", "image/jpeg"}]
+    {body, size} = Multipart.encode_form(boundary, [{:file_content, file_content, filename, extra_headers}])
+    assert size == 213
+    assert String.starts_with?(body, "--" <> boundary) == true
+    assert String.ends_with?(body, boundary <> "--\r\n") == true
+    assert String.replace(body, boundary, "") == "--\r\ncontent-length: 3\r\ncontent-disposition: form-data; name=\"file\"; filename=\"test.sh\"\r\ncontent-type: image/jpeg\r\n\r\nxxx\r\n----\r\n"
+  end
+
+  test "File Content Disposition" do
+    boundary = Multipart.new_boundary
+    filename = "test.sh"
+    file_content = "xxx"
+    extra_headers = [{"Content-Type", "image/jpeg"}]
+    disposition = {'form-data', [{"name", "content"}, {"filename", filename}]}
+    {body, size} = Multipart.encode_form(boundary, [{:file_content, file_content, filename, disposition, extra_headers}])
+    assert size == 212
+    assert String.starts_with?(body, "--" <> boundary) == true
+    assert String.ends_with?(body, boundary <> "--\r\n") == true
+    assert String.replace(body, boundary, "") == "--\r\ncontent-length: 3\r\ncontent-disposition: form-data; name=content; filename=test.sh\r\ncontent-type: image/jpeg\r\n\r\nxxx\r\n----\r\n"
+  end
+
   test "mp_mixed name mixedboudnary" do
     boundary = Multipart.new_boundary
     name = "mp_mixed_test_name"
@@ -147,6 +183,33 @@ defmodule Maxwell.MultipartTest do
     disposition = {"form-data", [{"name", "content"}]}
     size = Multipart.len_mp_stream(boundary, [{:file, file_path, disposition, extra_headers}])
     assert size == 239
+  end
+
+  test "file_content content filename stream len" do
+    boundary = Multipart.new_boundary
+    filename = "test.sh"
+    file_content = "xxx"
+    size = Multipart.len_mp_stream(boundary, [{:file_content, file_content, filename}])
+    assert size == 219
+  end
+
+  test "file_content content filename extra_headers stream len" do
+    boundary = Multipart.new_boundary
+    extra_headers = [{"Content-Type", "image/jpeg"}]
+    filename = "test.sh"
+    file_content = "xxx"
+    size = Multipart.len_mp_stream(boundary, [{:file_content, file_content, filename, extra_headers}])
+    assert size == 213
+  end
+
+  test "file_content content filename disposition extra_headers stream len" do
+    boundary = Multipart.new_boundary
+    extra_headers = [{"Content-Type", "image/jpeg"}]
+    filename = "test.sh"
+    file_content = "xxx"
+    disposition = {"form-data", [{"name", "content"}]}
+    size = Multipart.len_mp_stream(boundary, [{:file_content, file_content, filename, disposition, extra_headers}])
+    assert size == 194
   end
 
   test "mp_mixed stream len" do
@@ -257,6 +320,35 @@ defmodule Maxwell.MultipartTest do
     headers = [{"content-type", "image/png"}]
     assert Multipart.new |> Multipart.add_file_with_name("test.png", "media", headers)
         == {:multipart, [{:file, "test.png", {"form-data", [{"name", "media"}, {"filename", "test.png"}]}, headers}]}
+  end
+
+  test "add_file_content/3 should add a file_content part" do
+    assert Multipart.new |> Multipart.add_file_content("xxx", "test.txt")
+        == {:multipart, [{:file_content, "xxx", "test.txt"}]}
+  end
+
+  test "add_file_content/4 should add a file_content part with headers" do
+    headers = [{"content-type", "image/png"}]
+    assert Multipart.new |> Multipart.add_file_content("xxx", "test.png", headers)
+        == {:multipart, [{:file_content, "xxx", "test.png", headers}]}
+  end
+
+  test "add_file_content/5 should add a file part with disposition and headers" do
+    disposition = {"form-data", [{"name", "content"}, {"testname", "name"}]}
+    headers = [{"content-type", "image/png"}]
+    assert Multipart.new |> Multipart.add_file_content("xxx", "test.png", disposition, headers)
+        == {:multipart, [{:file_content, "xxx", "test.png", disposition, headers}]}
+  end
+
+  test "add_file_content_with_name/4 should add a file_content with name" do
+    assert Multipart.new |> Multipart.add_file_content_with_name("xxx", "test.png", "media")
+        == {:multipart, [{:file_content, "xxx", "test.png", {"form-data", [{"name", "media"}, {"filename", "test.png"}]}, []}]}
+  end
+
+  test "add_file_content_with_name/5 should add a file_content with name and headers" do
+    headers = [{"content-type", "image/png"}]
+    assert Multipart.new |> Multipart.add_file_content_with_name("xxx", "test.png", "media", headers)
+        == {:multipart, [{:file_content, "xxx", "test.png", {"form-data", [{"name", "media"}, {"filename", "test.png"}]}, headers}]}
   end
 
   test "add_field/3 should add a data part" do
