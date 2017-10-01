@@ -24,7 +24,7 @@ defmodule Maxwell.Adapter.Util do
     url = url |> append_query_string(path, query_string)
     case type do
       :string -> url
-      :char_list -> url |> to_char_list
+      :char_list -> url |> to_charlist
     end
   end
 

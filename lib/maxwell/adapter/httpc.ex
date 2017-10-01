@@ -71,10 +71,10 @@ defmodule Maxwell.Adapter.Httpc do
 
   defp header_serialize(headers) do
     {content_type, headers} = Map.pop(headers, "content-type")
-    headers = Enum.map(headers, fn {key, value} -> {to_char_list(key), to_char_list(value)} end)
+    headers = Enum.map(headers, fn {key, value} -> {to_charlist(key), to_charlist(value)} end)
     case content_type do
       nil  -> {nil, headers}
-      type -> {to_char_list(type), headers}
+      type -> {to_charlist(type), headers}
     end
   end
 

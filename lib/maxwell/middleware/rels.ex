@@ -18,7 +18,7 @@ defmodule Maxwell.Middleware.Rels do
       link
       |> to_string
       |> String.split(",")
-      |> Enum.map(&String.strip/1)
+      |> Enum.map(&String.trim/1)
       |> Enum.reduce(%{}, fn (e, acc) ->
            case Regex.named_captures(~r/(?<value>(.+)); rel=(?<key>(.+))/, e) do
              nil -> acc;
