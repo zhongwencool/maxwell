@@ -15,16 +15,6 @@ if Code.ensure_loaded?(:ibrowse) do
       format_response(result, conn)
     end
 
-    def send_multipart(conn) do
-      %Conn{url: url,query_string: query_string, path: path,
-            method: method, opts: opts, req_body: {:multipart, multiparts}} = conn
-      url = Util.url_serialize(url, path, query_string, :char_list)
-      {req_headers, req_body} = Util.multipart_encode(conn, multiparts)
-      req_headers = Util.header_serialize(req_headers)
-      result = :ibrowse.send_req(url, req_headers, method, req_body, opts)
-      format_response(result, conn)
-    end
-
     def send_file(conn) do
       %Conn{url: url, query_string: query_string, path: path,
             method: method, opts: opts, req_body: {:file, filepath}} = conn

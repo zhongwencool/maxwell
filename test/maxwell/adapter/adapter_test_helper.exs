@@ -54,6 +54,12 @@ defmodule Maxwell.Adapter.TestHelper do
           |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh"}]})
           |> post!
         end
+        def multipart_file_content_test() do
+          "/post"
+          |> new()
+          |> put_req_body({:multipart, [{:file_content, "xxx", "test.txt"}]})
+          |> post!
+        end
         def multipart_with_extra_header_test() do
           "/post"
           |> new()
@@ -117,12 +123,17 @@ defmodule Maxwell.Adapter.TestHelper do
         assert result == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
       end
 
-      test "mutilpart body file" do
+      test "multipart body file" do
         conn = unquote(client).multipart_test
         assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
       end
 
-      test "mutilpart body file extra headers" do
+      test "multipart body file_content" do
+        conn = unquote(client).multipart_file_content_test
+        assert get_resp_body(conn, "files") == %{"file" => "xxx"}
+      end
+
+      test "multipart body file extra headers" do
         conn = unquote(client).multipart_with_extra_header_test
         assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
       end

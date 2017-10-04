@@ -17,17 +17,6 @@ defmodule Maxwell.Adapter.Httpc do
     format_response(result, conn)
   end
 
-  def send_multipart(conn) do
-    %Conn{url: url,query_string: query_string, path: path,
-          method: method, opts: opts, req_body: {:multipart, multiparts}} = conn
-    url = Util.url_serialize(url, path, query_string, :char_list)
-    {req_headers, req_body} = Util.multipart_encode(conn, multiparts)
-    {content_type, req_headers} = header_serialize(req_headers)
-    {http_opts, options} = opts_serialize(opts)
-    result = request(method, url, req_headers, content_type, req_body, http_opts, options)
-    format_response(result, conn)
-  end
-
   def send_file(conn) do
     %Conn{url: url, query_string: query_string, path: path,
           method: method, opts: opts, req_body: {:file, filepath}} = conn

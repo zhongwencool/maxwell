@@ -56,17 +56,6 @@ defmodule Maxwell.HttpcMockTest do
       |> Client.get
     end
 
-    def multipart_test() do
-      new("/post")
-      |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh"}]})
-      |> Client.post!
-    end
-    def multipart_with_extra_header_test() do
-      new("/post")
-      |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]})
-      |> Client.post!
-    end
-
     def file_test(filepath) do
       new("/post")
       |> put_req_body({:file, filepath})
@@ -126,34 +115,6 @@ defmodule Maxwell.HttpcMockTest do
     end] do
     result = %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"} |> Client.encode_decode_json_test
     assert result == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
-  end
-
-  test_with_mock "mutilpart body file", :httpc,
-    [request: fn(_,_,_,_) ->
-      {:ok,
-       {{'HTTP/1.1', 200, 'OK'},
-        [{'connection', 'keep-alive'}, {'date', 'Sun, 18 Dec 2016 07:12:26 GMT'},
-         {'server', 'nginx'}, {'content-length', '392'},
-         {'content-type', 'application/json'}, {'access-control-allow-origin', '*'},
-         {'access-control-allow-credentials', 'true'}],
-        '{\n  "args": {}, \n  "data": "", \n  "files": {\n    "file": "#!/usr/bin/env bash\\necho \\"test multipart file\\"\\n"\n  }, \n  "form": {}, \n  "headers": {\n    "Content-Length": "279", \n    "Content-Type": "multipart/form-data; boundary=---------------------------strhhsyppielzidl", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}}
-    end] do
-    conn = Client.multipart_test
-    assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
-  end
-
-  test_with_mock "mutilpart body file extra headers", :httpc,
-    [request: fn(_,_,_,_) ->
-      {:ok,
-       {{'HTTP/1.1', 200, 'OK'},
-        [{'connection', 'keep-alive'}, {'date', 'Sun, 18 Dec 2016 07:12:55 GMT'},
-         {'server', 'nginx'}, {'content-length', '392'},
-         {'content-type', 'application/json'}, {'access-control-allow-origin', '*'},
-         {'access-control-allow-credentials', 'true'}],
-        '{\n  "args": {}, \n  "data": "", \n  "files": {\n    "file": "#!/usr/bin/env bash\\necho \\"test multipart file\\"\\n"\n  }, \n  "form": {}, \n  "headers": {\n    "Content-Length": "273", \n    "Content-Type": "multipart/form-data; boundary=---------------------------zyqgbugdbtbhzjlh", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}}
-    end] do
-    conn = Client.multipart_with_extra_header_test
-    assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
   end
 
   test_with_mock "send file without content-type", :httpc,

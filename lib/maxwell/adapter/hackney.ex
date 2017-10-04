@@ -15,12 +15,6 @@ if Code.ensure_loaded?(:hackney) do
       format_response(result, conn)
     end
 
-    def send_multipart(conn) do
-      %Conn{req_body: {:multipart, multiparts}} = conn
-      {req_headers, req_body} = Util.multipart_encode(conn, multiparts)
-      send_direct(%Conn{conn | req_headers: req_headers, req_body: req_body})
-    end
-
     def send_file(conn), do: send_direct(conn)
 
     def send_stream(conn) do

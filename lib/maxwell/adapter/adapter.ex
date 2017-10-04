@@ -8,7 +8,6 @@ defmodule Maxwell.Adapter do
   @type return_t :: Maxwell.Conn.t | {:error, any, Maxwell.Conn.t}
 
   @callback send_direct(Maxwell.Conn.t) :: return_t
-  @callback send_multipart(Maxwell.Conn.t) :: return_t
   @callback send_file(Maxwell.Conn.t) :: return_t
 
   defmacro __using__(_opts) do
@@ -48,18 +47,6 @@ defmodule Maxwell.Adapter do
       end
 
       @doc """
-      Send multipart form request.
-
-      * `conn` - `%Maxwell.Conn{}`, the req_body is `{:multipart, form_list}`
-      see `Maxwell.Multipart.encode_form/2` for form_list
-
-      Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term, %Maxwell.Conn{}}`.
-      """
-      def send_multipart(conn) do
-        raise Maxwell.Error, {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_multipart/1", conn}
-      end
-
-      @doc """
       Send file request.
 
       * `conn` - `%Maxwell.Conn{}`, the req_body is `{:file, filepath}`.
@@ -83,7 +70,13 @@ defmodule Maxwell.Adapter do
         raise Maxwell.Error, {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_stream/1", conn}
       end
 
-      defoverridable [send_direct: 1, send_multipart: 1, send_file: 1, send_stream: 1] end
+      defp send_multipart(conn) do
+        %Conn{req_body: {:multipart, multiparts}} = conn
+        {req_headers, req_body} = Util.multipart_encode(conn, multiparts)
+        send_direct(%Conn{conn | req_headers: req_headers, req_body: req_body})
+      end
+
+      defoverridable [send_direct: 1, send_file: 1, send_stream: 1] end
   end
 
 end
