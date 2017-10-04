@@ -57,19 +57,6 @@ defmodule Maxwell.HackneyMockTest do
       |> Client.get
     end
 
-    def multipart_test() do
-      "/post"
-      |> new()
-      |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh"}]})
-      |> Client.post!
-    end
-    def multipart_with_extra_header_test() do
-      "/post"
-      |> new()
-      |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]})
-      |> Client.post!
-    end
-
     def file_test() do
       "/post"
       |> new()
@@ -126,35 +113,6 @@ defmodule Maxwell.HackneyMockTest do
     res = %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"} |> Client.encode_decode_json_test
     assert res == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
 
-  end
-
-  test_with_mock "mutilpart body file", :hackney,
-    [request: fn(_,_,_,_,_) ->
-      {:ok, 200,
-       [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:42:07 GMT"},
-        {"Content-Type", "application/json"}, {"Content-Length", "428"},
-        {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-        {"Access-Control-Allow-Credentials", "true"}], make_ref()} end,
-     body: fn _ -> {:ok,
-                     "{\n  \"args\": {}, \n  \"data\": \"\", \n  \"files\": {\n    \"file\": \"#!/usr/bin/env bash\\necho \\\"test multipart file\\\"\\n\"\n  }, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"279\", \n    \"Content-Type\": \"multipart/form-data; boundary=---------------------------tvvbujkbhrbruqcy\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": null, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/post\"\n}\n"}
-     end ] do
-    conn = Client.multipart_test
-    assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
-  end
-
-  test_with_mock "mutilpart body file extra headers", :hackney,
-    [request: fn(_,_,_,_,_) ->
-      {:ok, 200,
-       [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:45:10 GMT"},
-        {"Content-Type", "application/json"}, {"Content-Length", "428"},
-        {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-        {"Access-Control-Allow-Credentials", "true"}], make_ref()}
-    end, body: fn _ ->
-      {:ok,
-       "{\n  \"args\": {}, \n  \"data\": \"\", \n  \"files\": {\n    \"file\": \"#!/usr/bin/env bash\\necho \\\"test multipart file\\\"\\n\"\n  }, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"273\", \n    \"Content-Type\": \"multipart/form-data; boundary=---------------------------dlhrimiytrrvmxqk\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": null, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/post\"\n}\n"}
-    end ] do
-    conn = Client.multipart_with_extra_header_test
-    assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
   end
 
   test_with_mock "send file", :hackney,
