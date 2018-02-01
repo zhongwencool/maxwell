@@ -23,8 +23,8 @@ defmodule Maxwell.Builder do
 
   """
   @http_methods [:get, :head, :delete, :trace, :options, :post, :put, :patch]
-  @method_without_body [{:get!, :get}, {:head!, :head}, {:delete!, :delete}, {:trace!, :trace}, {:options!, :options}]
-  @method_with_body [{:post!, :post}, {:put!, :put}, {:patch!, :patch}]
+  @method_without_body [{:get!, :get}, {:head!, :head}, {:trace!, :trace}, {:options!, :options}]
+  @method_with_body [{:post!, :post}, {:put!, :put}, {:patch!, :patch}, {:delete!, :delete}]
 
   defmacro __using__(methods) do
     methods = methods |> Macro.expand(__CALLER__) |> Maxwell.Builder.Util.serialize_method_to_atom(@http_methods)
