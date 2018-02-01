@@ -41,9 +41,10 @@ defmodule Maxwell.Adapter.TestHelper do
           |> get_resp_body("data")
         end
 
-        def delete_test() do
+        def delete_json_test(json) do
           "delete"
           |> new()
+          |> put_req_body(json)
           |> delete!
           |> get_resp_body("data")
         end
@@ -166,7 +167,7 @@ defmodule Maxwell.Adapter.TestHelper do
       end
 
       test "/delete" do
-        assert unquote(client).delete_test == ""
+        assert %{"key" => "value"} |> unquote(client).delete_json_test == "{\"key\":\"value\"}"
       end
 
       test "Head without body(test return {:ok, status, header})" do
