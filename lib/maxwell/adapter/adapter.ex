@@ -1,15 +1,15 @@
 defmodule Maxwell.Adapter do
-  @moduledoc  """
+  @moduledoc """
   Define adapter behaviour.
 
   ### Examples
   See `Maxwell.Adapter.Ibrowse`.
   """
-  @type return_t :: Maxwell.Conn.t | {:error, any, Maxwell.Conn.t}
+  @type return_t :: Maxwell.Conn.t() | {:error, any, Maxwell.Conn.t()}
 
-  @callback send_direct(Maxwell.Conn.t) :: return_t
-  @callback send_stream(Maxwell.Conn.t) :: return_t
-  @callback send_file(Maxwell.Conn.t) :: return_t
+  @callback send_direct(Maxwell.Conn.t()) :: return_t
+  @callback send_stream(Maxwell.Conn.t()) :: return_t
+  @callback send_file(Maxwell.Conn.t()) :: return_t
 
   defmacro __using__(_opts) do
     quote location: :keep do
@@ -19,13 +19,13 @@ defmodule Maxwell.Adapter do
       alias Maxwell.Adapter.Util
 
       @doc false
-      @spec call(Conn.t) :: Conn.t | {:error, reason :: any(), Conn.t}
+      @spec call(Conn.t()) :: Conn.t() | {:error, reason :: any(), Conn.t()}
       def call(conn) do
         case conn.req_body do
           {:multipart, _} -> send_multipart(conn)
-          {:file, _}      -> send_file(conn)
-          %Stream{}       -> send_stream(conn)
-          _               -> send_direct(conn)
+          {:file, _} -> send_file(conn)
+          %Stream{} -> send_stream(conn)
+          _ -> send_direct(conn)
         end
       end
 
@@ -37,7 +37,8 @@ defmodule Maxwell.Adapter do
       Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term, %Maxwell.Conn{}}`.
       """
       def send_direct(conn) do
-        raise Maxwell.Error, {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_direct/1", conn}
+        raise Maxwell.Error,
+              {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_direct/1", conn}
       end
 
       @doc """
@@ -49,7 +50,8 @@ defmodule Maxwell.Adapter do
       Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term, %Maxwell.Conn{}}`.
       """
       def send_file(conn) do
-        raise Maxwell.Error, {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_file/1", conn}
+        raise Maxwell.Error,
+              {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_file/1", conn}
       end
 
       @doc """
@@ -61,7 +63,8 @@ defmodule Maxwell.Adapter do
       Returns `{:ok, %Maxwell.Conn{}}` or `{:error, reason_term, %Maxwell.Conn{}}`.
       """
       def send_stream(conn) do
-        raise Maxwell.Error, {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_stream/1", conn}
+        raise Maxwell.Error,
+              {__MODULE__, "#{__MODULE__} Adapter doesn't implement send_stream/1", conn}
       end
 
       defp send_multipart(conn) do
@@ -70,7 +73,7 @@ defmodule Maxwell.Adapter do
         send_direct(%Conn{conn | req_headers: req_headers, req_body: req_body})
       end
 
-      defoverridable [send_direct: 1, send_file: 1, send_stream: 1] end
+      defoverridable send_direct: 1, send_file: 1, send_stream: 1
+    end
   end
-
 end

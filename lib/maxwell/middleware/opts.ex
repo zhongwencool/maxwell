@@ -1,5 +1,5 @@
 defmodule Maxwell.Middleware.Opts do
-  @moduledoc  """
+  @moduledoc """
   Merge adapter's options (keyword list) to adapter's options
 
   ## Examples
@@ -21,4 +21,3 @@ defmodule Maxwell.Middleware.Opts do
     %{conn | opts: new_opts}
   end
 end
-

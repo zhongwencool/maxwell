@@ -1,5 +1,5 @@
 defmodule Maxwell.Middleware.BaseUrl do
-  @moduledoc  """
+  @moduledoc """
   Sets the base url for all requests in this module.
 
   You may provide any valid URL, and it will be parsed into it's requisite parts and
@@ -27,9 +27,12 @@ defmodule Maxwell.Middleware.BaseUrl do
   def init(base_url) do
     conn = Conn.new(base_url)
     opts = %{url: conn.url, path: conn.path, query: conn.query_string}
+
     case opts.url do
       url when url in [nil, ""] ->
-        raise ArgumentError, "BaseUrl middleware expects a proper url containing a hostname, got #{base_url}"
+        raise ArgumentError,
+              "BaseUrl middleware expects a proper url containing a hostname, got #{base_url}"
+
       _ ->
         opts
     end
@@ -46,12 +49,14 @@ defmodule Maxwell.Middleware.BaseUrl do
   defp ensure_base_url(%Conn{url: url} = conn, base_url) when url in [nil, ""] do
     %{conn | url: base_url}
   end
+
   defp ensure_base_url(conn, _base_url), do: conn
 
   # Ensures the base path is always present
   defp ensure_base_path(%Conn{path: path} = conn, base_path) when path in [nil, ""] do
     %{conn | path: base_path}
   end
+
   defp ensure_base_path(%Conn{path: path} = conn, base_path) do
     if String.starts_with?(path, base_path) do
       conn
@@ -71,4 +76,3 @@ defmodule Maxwell.Middleware.BaseUrl do
     a <> "/" <> b
   end
 end
-

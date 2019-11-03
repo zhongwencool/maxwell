@@ -16,6 +16,7 @@ sudo: false
 
 before_script:
   - MIX_ENV=test mix do deps.get
+  - mix format --check-formatted
 script:
   - MIX_ENV=test mix test
 after_script:

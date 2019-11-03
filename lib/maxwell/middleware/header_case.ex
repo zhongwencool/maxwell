@@ -20,36 +20,51 @@ defmodule Maxwell.Middleware.HeaderCase do
       %Maxwell.Conn{req_headers: %{"Content-Type" => "application/json}}
   """
   alias Maxwell.Conn
+
   def init(casing) when casing in [:lower, :upper, :title] do
     casing
   end
+
   def init(casing) do
-    raise ArgumentError, "HeaderCase middleware expects a casing style of :lower, :upper, or :title - got: #{casing}"
+    raise ArgumentError,
+          "HeaderCase middleware expects a casing style of :lower, :upper, or :title - got: #{
+            casing
+          }"
   end
 
   def request(%Conn{req_headers: headers} = conn, :lower) do
-    new_headers = headers
-    |> Enum.map(fn {k, v} -> {String.downcase(k), v} end)
-    |> Enum.into(%{})
+    new_headers =
+      headers
+      |> Enum.map(fn {k, v} -> {String.downcase(k), v} end)
+      |> Enum.into(%{})
+
     %{conn | req_headers: new_headers}
   end
+
   def request(%Conn{req_headers: headers} = conn, :upper) do
-    new_headers = headers
-    |> Enum.map(fn {k, v} -> {String.upcase(k), v} end)
-    |> Enum.into(%{})
+    new_headers =
+      headers
+      |> Enum.map(fn {k, v} -> {String.upcase(k), v} end)
+      |> Enum.into(%{})
+
     %{conn | req_headers: new_headers}
   end
+
   def request(%Conn{req_headers: headers} = conn, :title) do
-    new_headers = headers
-    |> Enum.map(fn {k, v} ->
-      tk = k
-      |> String.downcase
-      |> String.split(~r/[-_]/, include_captures: true, trim: true)
-      |> Enum.map(&String.capitalize/1)
-      |> Enum.join
-      {tk, v}
-    end)
-    |> Enum.into(%{})
+    new_headers =
+      headers
+      |> Enum.map(fn {k, v} ->
+        tk =
+          k
+          |> String.downcase()
+          |> String.split(~r/[-_]/, include_captures: true, trim: true)
+          |> Enum.map(&String.capitalize/1)
+          |> Enum.join()
+
+        {tk, v}
+      end)
+      |> Enum.into(%{})
+
     %{conn | req_headers: new_headers}
   end
 end
