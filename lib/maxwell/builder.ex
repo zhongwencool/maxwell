@@ -169,7 +169,6 @@ defmodule Maxwell.Builder do
     quote do
       defp call_middleware(unquote(conn)) do
         case unquote(middleware_call) do
-          {:error, _} = err -> err
           {:error, _, _} = err -> err
           %Maxwell.Conn{} = ok -> {:ok, ok}
         end
@@ -210,4 +209,3 @@ defmodule Maxwell.Builder do
   end
 
 end
-

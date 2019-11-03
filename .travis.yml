@@ -19,6 +19,7 @@ before_script:
 script:
   - MIX_ENV=test mix test
 after_script:
+  - mix dialyzer
   - MIX_ENV=test mix coveralls.travis
   - mix deps.get --only docs
   - MIX_ENV=docs mix inch.report
