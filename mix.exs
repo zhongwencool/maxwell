@@ -41,10 +41,10 @@ defmodule Maxwell.Mixfile do
       {:hackney, "~> 1.15", optional: true},
       {:fuse, "~> 2.4", optional: true},
       {:excoveralls, "~> 0.6", only: :test},
-      {:ex_doc, "~> 0.15", only: [:dev]},
       {:inch_ex, "~> 2.0", only: :docs},
       {:credo, "~> 1.1", only: [:dev]},
       {:mimic, "~> 1.1", only: :test},
+      {:ex_doc, "~> 0.21", only: [:dev], runtime: false},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false}
     ]
   end
