@@ -5,6 +5,7 @@ if Code.ensure_loaded?(:ibrowse) do
     """
     use Maxwell.Adapter
 
+    @impl true
     def send_direct(conn) do
       %Conn{url: url, req_headers: req_headers,
             query_string: query_string, path: path,
@@ -15,6 +16,7 @@ if Code.ensure_loaded?(:ibrowse) do
       format_response(result, conn)
     end
 
+    @impl true
     def send_file(conn) do
       %Conn{url: url, query_string: query_string, path: path,
             method: method, opts: opts, req_body: {:file, filepath}} = conn
@@ -34,6 +36,7 @@ if Code.ensure_loaded?(:ibrowse) do
       format_response(result, conn)
     end
 
+    @impl true
     def send_stream(conn) do
       %Conn{url: url, req_headers: req_headers,
             query_string: query_string, path: path,
@@ -67,4 +70,3 @@ if Code.ensure_loaded?(:ibrowse) do
     end
   end
 end
-

@@ -18,6 +18,7 @@ defmodule Maxwell.Mixfile do
      ],
      test_coverage: [tool: ExCoveralls],
      xref: [exclude: [Poison, Maxwell.Adapter.Ibrowse]],
+     dialyzer: [plt_add_deps: true],
      deps: deps()]
   end
 
@@ -41,6 +42,7 @@ defmodule Maxwell.Mixfile do
       {:inch_ex, "~> 2.0", only: :docs},
       {:credo, "~> 1.1", only: [:dev]},
       {:mock, "~> 0.3", only: :test},
+      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false}
     ]
   end
 

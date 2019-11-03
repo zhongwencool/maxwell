@@ -6,6 +6,7 @@ defmodule Maxwell.Adapter.Httpc do
   @http_options [:timeout, :connect_timeout, :ssl, :essl, :autoredirect, :proxy_auth, :version, :relaxed, :url_encode]
   use Maxwell.Adapter
 
+  @impl true
   def send_direct(conn) do
     %Conn{url: url, req_headers: req_headers,
           query_string: query_string, path: path,
@@ -17,6 +18,7 @@ defmodule Maxwell.Adapter.Httpc do
     format_response(result, conn)
   end
 
+  @impl true
   def send_file(conn) do
     %Conn{url: url, query_string: query_string, path: path,
           method: method, opts: opts, req_body: {:file, filepath}} = conn
@@ -34,6 +36,8 @@ defmodule Maxwell.Adapter.Httpc do
     format_response(result, conn)
   end
 
+
+  @impl true
   def send_stream(conn) do
     %Conn{url: url, req_headers: req_headers,
           query_string: query_string, path: path,
@@ -100,4 +104,3 @@ defmodule Maxwell.Adapter.Httpc do
     {:error, reason, %{conn | state: :error}}
   end
 end
-

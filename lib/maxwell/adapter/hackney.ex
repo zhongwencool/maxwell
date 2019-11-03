@@ -5,6 +5,7 @@ if Code.ensure_loaded?(:hackney) do
     """
     use Maxwell.Adapter
 
+    @impl true
     def send_direct(conn) do
       %Conn{url: url, req_headers: req_headers,
             path: path,method: method, query_string: query_string,
@@ -15,8 +16,10 @@ if Code.ensure_loaded?(:hackney) do
       format_response(result, conn)
     end
 
+    @impl true
     def send_file(conn), do: send_direct(conn)
 
+    @impl true
     def send_stream(conn) do
       %Conn{url: url, req_headers: req_headers,
             path: path,method: method, query_string: query_string,
@@ -56,4 +59,3 @@ if Code.ensure_loaded?(:hackney) do
     end
   end
 end
-
