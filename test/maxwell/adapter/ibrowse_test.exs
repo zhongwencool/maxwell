@@ -89,16 +89,9 @@ defmodule Maxwell.IbrowseMockTest do
     end
   end
 
-  if Code.ensure_loaded?(:rand) do
-    setup do
-      :rand.seed(:exs1024, {:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer})
-      :ok
-    end
-  else
-    setup do
-      :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
-      :ok
-    end
+  setup do
+    :rand.seed(:exs1024, {:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer})
+    :ok
   end
 
   test "sync request" do
