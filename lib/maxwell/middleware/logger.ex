@@ -47,14 +47,14 @@ defmodule Maxwell.Middleware.Logger do
   end
 
   def call(request_env, next_fn, options) do
-    start = System.system_time(:milliseconds)
+    start = System.system_time(:millisecond)
     new_result = next_fn.(request_env)
     case new_result do
       {:error, reason, _conn} ->
         method = request_env.method |> to_string |> String.upcase
         Logger.error("#{method} #{request_env.url}>> #{IO.ANSI.red}ERROR: #{inspect reason}")
       %Maxwell.Conn{} = response_conn ->
-        stop = System.system_time(:milliseconds)
+        stop = System.system_time(:millisecond)
         diff = stop - start
         log_response_message(options, response_conn, diff)
     end

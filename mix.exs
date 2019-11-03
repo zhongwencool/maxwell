@@ -4,7 +4,7 @@ defmodule Maxwell.Mixfile do
   def project do
     [app: :maxwell,
      version: "2.2.2",
-     elixir: "~> 1.3",
+     elixir: "~> 1.9",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      package: [
@@ -33,18 +33,15 @@ defmodule Maxwell.Mixfile do
     [
       {:mimerl, "~> 1.0.2"}, # for find multipart ctype
       {:poison, "~> 2.1 or ~> 3.0", optional: true},
-      {:ibrowse, "~> 4.2", optional: true},
-      {:hackney, "~> 1.6", optional: true},
+      {:ibrowse, "~> 4.4", optional: true},
+      {:hackney, "~> 1.15", optional: true},
       {:fuse, "~> 2.4", optional: true},
-      {:excoveralls, "~> 0.6.2", only: :test},
-      {:ex_doc, ">= 0.11.4", only: [:dev]},
-      {:markdown, github: "devinus/markdown", only: [:dev]},
-      {:cmark, "~> 0.6", only: [:dev]},
-      {:inch_ex, "~> 0.5.4", only: :docs},
-      {:credo, "~> 0.5", only: [:dev]},
-      {:mock, "~> 0.3.1", only: :test},
+      {:excoveralls, "~> 0.6", only: :test},
+      {:ex_doc, "~> 0.15", only: [:dev]},
+      {:inch_ex, "~> 2.0", only: :docs},
+      {:credo, "~> 1.1", only: [:dev]},
+      {:mock, "~> 0.3", only: :test},
     ]
   end
 
 end
-
