@@ -1,5 +1,14 @@
 ------------------
 
+## 2.3.0 - 2019-11-03
+### Added
+- Code Format
+
+### Changed
+- Change mock to mimic
+- Fixed dialyzer
+- Deprecated elixir version > 1.8
+
 ## 2.2.2 - 2017-09-06
 ### Added
 - Fixed type specs of conn.ex, added type spec for error.ex

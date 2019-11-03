@@ -56,7 +56,7 @@ module for your API, as shown below:
 ```elixir
 iex(1)> alias Maxwell.Conn
 iex(2)> Conn.new("http://httpbin.org/drip") |>
-    Conn.put_query_string(%{numbytes: 25, duration: 1, delay: 1, code: 200}) |> 
+    Conn.put_query_string(%{numbytes: 25, duration: 1, delay: 1, code: 200}) |>
     Maxwell.get
 {:ok,
  %Maxwell.Conn{method: :get, opts: [], path: "/drip",
@@ -80,7 +80,7 @@ for a list of all functions, and detailed info about how they behave.
   1. Add maxwell to your list of dependencies in `mix.exs`:
 ```ex
    def deps do
-     [{:maxwell, "~> 2.2.2"}]
+     [{:maxwell, "~> 2.3"}]
    end
 ```
   2. Ensure maxwell has started before your application:
@@ -160,13 +160,13 @@ You may provide your own encoder/decoder by providing the following options:
 
 ```ex
 # For the EncodeJson module
-middleware Maxwell.Middleware.EncodeJson, 
-  encode_content_type: "text/javascript", 
+middleware Maxwell.Middleware.EncodeJson,
+  encode_content_type: "text/javascript",
   encode_func: &other_json_lib.encode/1]
 
 # For the DecodeJson module
-middleware Maxwell.Middleware.DecodeJson, 
-  decode_content_types: ["yourowntype"], 
+middleware Maxwell.Middleware.DecodeJson,
+  decode_content_types: ["yourowntype"],
   decode_func: &other_json_lib.decode/1]
 
 # Both sets of options can be provided to the Json module
@@ -187,4 +187,3 @@ then provide guidance on implementation if necessary.
 ## License
 
 See the [LICENSE](https://github.com/zhongwencool/maxwell/blob/master/LICENSE) file for license rights and limitations (MIT).
-

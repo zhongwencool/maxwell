@@ -4,7 +4,7 @@ defmodule Maxwell.Mixfile do
   def project do
     [
       app: :maxwell,
-      version: "2.2.2",
+      version: "2.3.0",
       elixir: "~> 1.8",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
