@@ -4,8 +4,9 @@ end
 
 defmodule Maxwell.HackneyMockTest do
   use ExUnit.Case, async: false
+  use Mimic
+
   import Maxwell.Conn
-  import Mock
 
   defmodule Client do
     use Maxwell.Builder
@@ -73,167 +74,170 @@ defmodule Maxwell.HackneyMockTest do
 
   end
 
-  if Code.ensure_loaded?(:rand) do
-    setup do
-      :rand.seed(:exs1024, {:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer})
-      :ok
-    end
-  else
-    setup do
-      :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
-      :ok
-    end
+  setup do
+    :rand.seed(:exs1024, {:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer})
+    :ok
   end
 
-  test_with_mock "sync request", :hackney,
-    [request: fn(_,_,_,_,_) ->
+  test "sync request" do
+    :hackney
+    |> stub(:request, fn(_,_,_,_,_) ->
       {:ok, 200,
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:33:54 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "33"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
         {"Access-Control-Allow-Credentials", "true"}], make_ref()}
-    end,
-     body: fn(_) -> {:ok, "{\n  \"origin\": \"183.240.20.213\"\n}\n"} end
-    ] do
+    end)
+    |> stub(:body, fn(_) -> {:ok, "{\n  \"origin\": \"183.240.20.213\"\n}\n"} end)
     assert Client.get_ip_test |> get_status == 200
   end
 
-  test_with_mock "encode decode json", :hackney,
-    [request: fn(_,_,_,_,_) ->
+  test "encode decode json" do
+    :hackney
+    |> stub(:request, fn(_,_,_,_,_) ->
       {:ok, 200,
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:40:41 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "419"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
         {"Access-Control-Allow-Credentials", "true"}], make_ref()}
-    end,
-     body: fn _ -> {:ok,
-                     "{\n  \"args\": {}, \n  \"data\": \"{\\\"josnkey2\\\":\\\"jsonvalue2\\\",\\\"josnkey1\\\":\\\"jsonvalue1\\\"}\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"49\", \n    \"Content-Type\": \"application/json\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": {\n    \"josnkey1\": \"jsonvalue1\", \n    \"josnkey2\": \"jsonvalue2\"\n  }, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/post\"\n}\n"}
-     end
-    ] do
+    end)
+    |> stub(:body, fn _ -> {:ok,
+                           "{\n  \"args\": {}, \n  \"data\": \"{\\\"josnkey2\\\":\\\"jsonvalue2\\\",\\\"josnkey1\\\":\\\"jsonvalue1\\\"}\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"49\", \n    \"Content-Type\": \"application/json\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": {\n    \"josnkey1\": \"jsonvalue1\", \n    \"josnkey2\": \"jsonvalue2\"\n  }, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/post\"\n}\n"}
+    end)
     res = %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"} |> Client.encode_decode_json_test
     assert res == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
 
   end
 
-  test_with_mock "send file", :hackney,
-    [request: fn(_,_,_,_,_) ->
+  test "send file" do
+    :hackney
+    |> stub(:request, fn(_,_,_,_,_) ->
       {:ok, 200,
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:46:14 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "352"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
         {"Access-Control-Allow-Credentials", "true"}], make_ref()}
-    end,
-     body: fn _ ->
-       {:ok,
-        "{\n  \"args\": {}, \n  \"data\": \"#!/usr/bin/env bash\\necho \\\"test multipart file\\\"\\n\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"47\", \n    \"Content-Type\": \"application/x-sh\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": null, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/post\"\n}\n"}
-     end ] do
+    end)
+    |> stub(:body, fn _ ->
+      {:ok,
+       "{\n  \"args\": {}, \n  \"data\": \"#!/usr/bin/env bash\\necho \\\"test multipart file\\\"\\n\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"47\", \n    \"Content-Type\": \"application/x-sh\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": null, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/post\"\n}\n"}
+    end)
     conn = Client.file_test
     assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
   end
 
-  test_with_mock "send stream", :hackney,
-    [request: fn(_,_,_,_,_) ->
-      {:ok, make_ref()}
-    end,
-     send_body: fn _,_ -> :ok end,
-     start_response: fn _ ->
-       {:ok, 200,
-        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:47:26 GMT"},
-         {"Content-Type", "application/json"}, {"Content-Length", "267"},
-         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
-         {"Access-Control-Allow-Credentials", "true"}], make_ref()}
-     end,
-     body: fn _ ->
-       {:ok,
-        "{\n  \"args\": {}, \n  \"data\": \"112233\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"6\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": 112233, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/post\"\n}\n"}
-     end ] do
+  test "send stream" do
+    :hackney
+    |> stub(:request, fn(_,_,_,_,_) -> {:ok, make_ref()} end)
+    |> stub(:send_body, fn _,_ -> :ok end)
+    |> stub(:start_response, fn _ ->
+      {:ok, 200,
+       [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:47:26 GMT"},
+        {"Content-Type", "application/json"}, {"Content-Length", "267"},
+        {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
+        {"Access-Control-Allow-Credentials", "true"}], make_ref()}
+    end)
+    |> stub(:body, fn _ ->
+      {:ok,
+       "{\n  \"args\": {}, \n  \"data\": \"112233\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"6\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": 112233, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/post\"\n}\n"}
+    end)
     conn = Client.stream_test
     assert get_resp_body(conn, "data") == "112233"
   end
 
-  test_with_mock "send stream error", :hackney,
-    [request: fn _,_,_,_,_ -> {:error, :closed} end,
-     send_body: fn _,_ -> {:error, :closed} end,
-     start_response: fn _ -> {:ok, 200, [], make_ref()} end,
-     body: fn _ -> {:ok, "error connection closed"}
-     end ] do
+  test "send stream error" do
+    :hackney
+    |> stub(:request, fn _,_,_,_,_ -> {:error, :closed} end)
+    |> stub(:send_body, fn _,_ -> {:error, :closed} end)
+    |> stub(:start_response, fn _ -> {:ok, 200, [], make_ref()} end)
+    |> stub(:body, fn _ -> {:ok, "error connection closed"} end)
+
     assert_raise(Maxwell.Error,
       "url: http://httpbin.org\npath: \"/post\"\nmethod: post\nstatus: \nreason: :closed\nmodule: Elixir.Maxwell.HackneyMockTest.Client\n",
       fn -> Client.stream_test |> get_resp_body("data")  end)
   end
 
-  test_with_mock "user-agent header test", :hackney,
-    [request: fn(_,_,_,_,_) ->
+  test "user-agent header test" do
+    :hackney
+    |> stub(:request, fn(_,_,_,_,_) ->
       {:ok, 200,
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:52:41 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "27"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
         {"Access-Control-Allow-Credentials", "true"}], make_ref()}
-    end,
-     body: fn _ ->
-       {:ok, "{\n  \"user-agent\": \"test\"\n}\n"}
-     end ] do
+    end)
+    |> stub(:body, fn _ ->
+      {:ok, "{\n  \"user-agent\": \"test\"\n}\n"}
+    end)
     assert "test" |> Client.user_agent_test == "test"
   end
 
-  test_with_mock "/put", :hackney,
-    [request: fn _,_,_,_,_ ->
+  test "/put" do
+    :hackney
+    |> stub(:request, fn _,_,_,_,_ ->
       {:ok, 200,
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:54:56 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "339"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
         {"Access-Control-Allow-Credentials", "true"}], make_ref()}
-    end, body: fn _ ->
+    end)
+    |> stub(:body, fn _ ->
       {:ok,
        "{\n  \"args\": {}, \n  \"data\": \"{\\\"key\\\":\\\"value\\\"}\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Content-Length\": \"15\", \n    \"Content-Type\": \"application/json\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": {\n    \"key\": \"value\"\n  }, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/put\"\n}\n"}
-    end ] do
+    end)
     assert %{"key" => "value"} |> Client.put_json_test == "{\"key\":\"value\"}"
   end
 
-  test_with_mock "/delete", :hackney,
-    [request: fn _,_,_,_,_ ->
+  test "/delete" do
+    :hackney
+    |> stub(:request, fn _,_,_,_,_ ->
       {:ok, 200,
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:53:52 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "233"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
         {"Access-Control-Allow-Credentials", "true"}], make_ref()}
-    end, body: fn _ ->
+    end)
+    |> stub(:body, fn _ ->
       {:ok,
        "{\n  \"args\": {}, \n  \"data\": \"\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"hackney/1.6.3\"\n  }, \n  \"json\": null, \n  \"origin\": \"183.240.20.213\", \n  \"url\": \"http://httpbin.org/delete\"\n}\n"}
-    end ] do
+    end)
+
     assert Client.delete_test == ""
   end
 
-  test_with_mock "/delete error", :hackney,
-    [request: fn _,_,_,_,_ ->
+  test "/delete error" do
+    :hackney
+    |> stub(:request, fn _,_,_,_,_ ->
       {:ok, 200,
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:53:52 GMT"},
         {"Content-Type", "application/json"}, {"Content-Length", "233"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
         {"Access-Control-Allow-Credentials", "true"}], make_ref()}
-    end, body: fn _ ->
-      {:error, {:closed, ""}}
-    end ] do
+    end)
+    |> stub(:body, fn _ -> {:error, {:closed, ""}} end)
+
     assert_raise(Maxwell.Error,
       "url: http://httpbin.org\npath: \"/delete\"\nmethod: delete\nstatus: \nreason: {:closed, \"\"}\nmodule: Elixir.Maxwell.HackneyMockTest.Client\n",
       fn -> Client.delete_test end)
   end
 
-  test_with_mock "adapter return error", :hackney,
-    [request: fn _,_,_,_,_ -> {:error, :timeout} end] do
+  test "adapter return error" do
+    :hackney
+    |> stub(:request, fn _,_,_,_,_ -> {:error, :timeout} end)
+
     {:error, :timeout, conn} = Client.timeout_test
     assert conn.state == :error
   end
 
-  test_with_mock "Head without body(test hackney.ex return {:ok, status, header})", :hackney,
-    [request: fn _,_,_,_,_ ->
+  test "Head without body(test hackney.ex return {:ok, status, header})" do
+    :hackney
+    |> stub(:request, fn _,_,_,_,_ ->
       {:ok, 200,
        [{"Server", "nginx"}, {"Date", "Sun, 18 Dec 2016 03:57:09 GMT"},
         {"Content-Type", "text/html; charset=utf-8"}, {"Content-Length", "12150"},
         {"Connection", "keep-alive"}, {"Access-Control-Allow-Origin", "*"},
         {"Access-Control-Allow-Credentials", "true"}]}
-    end] do
+    end)
     assert Client.head! |> get_resp_body == ""
   end
 end
-

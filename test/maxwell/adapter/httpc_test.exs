@@ -5,7 +5,7 @@ end
 defmodule Maxwell.HttpcMockTest do
   use ExUnit.Case, async: false
   import Maxwell.Conn
-  import Mock
+  use Mimic
 
   defmodule Client do
     use Maxwell.Builder
@@ -79,19 +79,14 @@ defmodule Maxwell.HttpcMockTest do
 
   end
 
-  if Code.ensure_loaded?(:rand) do
-    setup do
-      :rand.seed(:exs1024, {:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer})
-      :ok
-    end
-  else
-    setup do
-      :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
-      :ok
-    end
+  setup do
+    :rand.seed(:exs1024, {:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer})
+    :ok
   end
-  test_with_mock "sync request", :httpc,
-    [request: fn(_,_,_,_) ->
+
+  test "sync request" do
+    :httpc
+    |> stub(:request, fn(_,_,_,_) ->
       {:ok,
        {{'HTTP/1.1', 200, 'OK'},
         [{'connection', 'keep-alive'}, {'date', 'Sun, 18 Dec 2016 07:05:33 GMT'},
@@ -99,12 +94,13 @@ defmodule Maxwell.HttpcMockTest do
          {'content-type', 'application/json'}, {'access-control-allow-origin', '*'},
          {'access-control-allow-credentials', 'true'}],
         '{\n  "args": {}, \n  "data": "{\\"josnkey2\\":\\"jsonvalue2\\",\\"josnkey1\\":\\"jsonvalue1\\"}", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "49", \n    "Content-Type": "application/json", \n    "Host": "httpbin.org"\n  }, \n  "json": {\n    "josnkey1": "jsonvalue1", \n    "josnkey2": "jsonvalue2"\n  }, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}}
-    end] do
+    end)
     assert Client.get_ip_test |> Maxwell.Conn.get_status == 200
   end
 
-  test_with_mock "encode decode json test", :httpc,
-    [request: fn(_,_,_,_) ->
+  test "encode decode json test" do
+    :httpc
+    |> stub(:request, fn(_,_,_,_) ->
       {:ok,
        {{'HTTP/1.1', 200, 'OK'},
         [{'connection', 'keep-alive'}, {'date', 'Sun, 18 Dec 2016 07:09:37 GMT'},
@@ -112,13 +108,14 @@ defmodule Maxwell.HttpcMockTest do
          {'content-type', 'application/json'}, {'access-control-allow-origin', '*'},
          {'access-control-allow-credentials', 'true'}],
         '{\n  "args": {}, \n  "data": "{\\"josnkey2\\":\\"jsonvalue2\\",\\"josnkey1\\":\\"jsonvalue1\\"}", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "49", \n    "Content-Type": "application/json", \n    "Host": "httpbin.org"\n  }, \n  "json": {\n    "josnkey1": "jsonvalue1", \n    "josnkey2": "jsonvalue2"\n  }, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}}
-    end] do
+    end)
     result = %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"} |> Client.encode_decode_json_test
     assert result == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
   end
 
-  test_with_mock "send file without content-type", :httpc,
-    [request: fn(_,_,_,_) ->
+  test "send file without content-type" do
+    :httpc
+    |> stub(:request, fn(_,_,_,_) ->
       {:ok,
        {{'HTTP/1.1', 200, 'OK'},
         [{'connection', 'keep-alive'}, {'date', 'Sun, 18 Dec 2016 07:22:05 GMT'},
@@ -126,13 +123,14 @@ defmodule Maxwell.HttpcMockTest do
          {'content-type', 'application/json'}, {'access-control-allow-origin', '*'},
          {'access-control-allow-credentials', 'true'}],
         '{\n  "args": {}, \n  "data": "#!/usr/bin/env bash\\necho \\"test multipart file\\"\\n", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "47", \n    "Content-Type": "application/x-sh", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}}
-    end] do
+    end)
     conn = Client.file_test("test/maxwell/multipart_test_file.sh")
     assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
   end
 
-  test_with_mock "send file with content-type", :httpc,
-    [request: fn(_,_,_,_) ->
+  test "send file with content-type" do
+    :httpc
+    |> stub(:request, fn(_,_,_,_) ->
       {:ok,
        {{'HTTP/1.1', 200, 'OK'},
         [{'connection', 'keep-alive'}, {'date', 'Sun, 18 Dec 2016 07:24:17 GMT'},
@@ -140,13 +138,14 @@ defmodule Maxwell.HttpcMockTest do
          {'content-type', 'application/json'}, {'access-control-allow-origin', '*'},
          {'access-control-allow-credentials', 'true'}],
         '{\n  "args": {}, \n  "data": "#!/usr/bin/env bash\\necho \\"test multipart file\\"\\n", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "47", \n    "Content-Type": "application/x-sh", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}}
-    end] do
+    end)
     conn = Client.file_test("test/maxwell/multipart_test_file.sh", "application/x-sh")
     assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
   end
 
-  test_with_mock "send stream", :httpc,
-    [request: fn(_,_,_,_) ->
+  test "send stream" do
+    :httpc
+    |> stub(:request, fn(_,_,_,_) ->
       {:ok,
        {{'HTTP/1.1', 200, 'OK'},
         [{'connection', 'keep-alive'}, {'date', 'Sun, 18 Dec 2016 07:28:25 GMT'},
@@ -154,13 +153,14 @@ defmodule Maxwell.HttpcMockTest do
          {'content-type', 'application/json'}, {'access-control-allow-origin', '*'},
          {'access-control-allow-credentials', 'true'}],
         '{\n  "args": {}, \n  "data": "112233", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "6", \n    "Content-Type": "application/vnd.lotus-1-2-3", \n    "Host": "httpbin.org"\n  }, \n  "json": 112233, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/post"\n}\n'}}
-    end] do
+    end)
     conn = Client.stream_test
     assert get_resp_body(conn, "data") == "112233"
   end
 
-  test_with_mock "user-agent header test", :httpc,
-    [request: fn(_,_,_,_) ->
+  test "user-agent header test" do
+    :httpc
+    |> stub(:request, fn(_,_,_,_) ->
       {:ok,
        {{'HTTP/1.1', 200, 'OK'},
         [{'connection', 'keep-alive'}, {'date', 'Sun, 18 Dec 2016 07:30:00 GMT'},
@@ -168,12 +168,13 @@ defmodule Maxwell.HttpcMockTest do
          {'content-type', 'application/json'}, {'access-control-allow-origin', '*'},
          {'access-control-allow-credentials', 'true'}],
         '{\n  "user-agent": "test"\n}\n'}}
-    end] do
+    end)
     assert "test" |> Client.user_agent_test == "test"
   end
 
-  test_with_mock "/put", :httpc,
-    [request: fn(_,_,_,_) ->
+  test "/put" do
+    :httpc
+    |> stub(:request, fn(_,_,_,_) ->
       {:ok,
        {{'HTTP/1.1', 200, 'OK'},
         [{'connection', 'keep-alive'}, {'date', 'Sun, 18 Dec 2016 07:30:30 GMT'},
@@ -181,12 +182,13 @@ defmodule Maxwell.HttpcMockTest do
          {'content-type', 'application/json'}, {'access-control-allow-origin', '*'},
          {'access-control-allow-credentials', 'true'}],
         '{\n  "args": {}, \n  "data": "{\\"key\\":\\"value\\"}", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "15", \n    "Content-Type": "application/json", \n    "Host": "httpbin.org"\n  }, \n  "json": {\n    "key": "value"\n  }, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/put"\n}\n'}}
-    end] do
+    end)
     assert %{"key" => "value"} |> Client.put_json_test == "{\"key\":\"value\"}"
   end
 
-  test_with_mock "/delete", :httpc,
-    [request: fn(_,_,_,_) ->
+  test "/delete" do
+    :httpc
+    |> stub(:request, fn(_,_,_,_) ->
       {:ok,
        {{'HTTP/1.1', 200, 'OK'},
         [{'connection', 'keep-alive'}, {'date', 'Sun, 18 Dec 2016 07:31:04 GMT'},
@@ -194,48 +196,52 @@ defmodule Maxwell.HttpcMockTest do
          {'content-type', 'application/json'}, {'access-control-allow-origin', '*'},
          {'access-control-allow-credentials', 'true'}],
         '{\n  "args": {}, \n  "data": "", \n  "files": {}, \n  "form": {}, \n  "headers": {\n    "Content-Length": "0", \n    "Host": "httpbin.org"\n  }, \n  "json": null, \n  "origin": "183.240.20.213", \n  "url": "http://httpbin.org/delete"\n}\n'}}
-    end] do
+    end)
     assert Client.delete_test == ""
   end
 
-  test_with_mock "connection refused error is normalized", :httpc,
-    [request: fn (_,_,_,_) ->
+  test "connection refused error is normalized" do
+    :httpc
+    |> stub(:request, fn (_,_,_,_) ->
         {:error, {:failed_connect, [{:inet, [], :econnrefused}]}}
-     end] do
+     end)
      {:error, :econnrefused, conn} = Client.normalized_error_test
      assert conn.state == :error
   end
 
-  test_with_mock "timeout error is normalized", :httpc,
-    [request: fn (_,_,_,_) ->
+  test "timeout error is normalized" do
+    :httpc
+    |> stub(:request, fn (_,_,_,_) ->
         {:error, {:failed_connect, [{:inet, [], :timeout}]}}
-     end] do
+     end)
      {:error, :timeout, conn} = Client.normalized_error_test
      assert conn.state == :error
   end
 
-  test_with_mock "unrecognized connection failed error is normalized", :httpc,
-    [request: fn (_,_,_,_) ->
+  test "unrecognized connection failed error is normalized" do
+   :httpc
+   |> stub(:request, fn (_,_,_,_) ->
         {:error, {:failed_connect, [{:tcp, [], :i_made_this_up}]}}
-     end] do
+     end)
      {:error, {:failed_connect, [{:tcp, [], :i_made_this_up}]}, conn} = Client.normalized_error_test
      assert conn.state == :error
   end
 
-  test_with_mock "internal error is normalized", :httpc,
-    [request: fn (_,_,_,_) ->
+  test "internal error is normalized" do
+   :httpc
+   |> stub(:request, fn (_,_,_,_) ->
         {:error, :internal}
-     end] do
+     end)
      {:error, :internal, conn} = Client.normalized_error_test
      assert conn.state == :error
   end
 
-  test_with_mock "adapter return error", :httpc,
-    [request: fn(_,_,_,_) ->
+  test "adapter return error" do
+   :httpc
+   |> stub(:request, fn(_,_,_,_) ->
       {:error, :timeout}
-    end] do
+    end)
     {:error, :timeout, conn} = Client.timeout_test
     assert conn.state == :error
   end
 end
-
