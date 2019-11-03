@@ -4,8 +4,9 @@ defmodule FuseTest do
 
   defmodule FuseAdapter do
     def call(%{path: path} = conn) do
-      send self(), :request_made
+      send(self(), :request_made)
       conn = %{conn | state: :sent}
+
       case path do
         "/ok" -> %{conn | status: 200, resp_body: "ok"}
         "/unavailable" -> {:error, :econnrefused, conn}
@@ -15,12 +16,13 @@ defmodule FuseTest do
 
   defmodule Client do
     use Maxwell.Builder
+
     middleware Maxwell.Middleware.Fuse,
       name: __MODULE__,
       fuse_opts: {{:standard, 2, 10_000}, {:reset, 60_000}}
+
     adapter FuseAdapter
   end
-
 
   setup do
     {:ok, _} = Application.ensure_all_started(:fuse)
@@ -29,20 +31,20 @@ defmodule FuseTest do
   end
 
   test "regular endpoint" do
-    assert Conn.new("/ok") |> Client.get! |> Conn.get_resp_body() == "ok"
+    assert Conn.new("/ok") |> Client.get!() |> Conn.get_resp_body() == "ok"
   end
 
   test "unavailable endpoint" do
-    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get!() end
     assert_receive :request_made
-    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get!() end
     assert_receive :request_made
-    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get!() end
     assert_receive :request_made
 
-    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get!() end
     refute_receive :request_made
-    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get! end
+    assert_raise Maxwell.Error, fn -> Conn.new("/unavailable") |> Client.get!() end
     refute_receive :request_made
   end
 end

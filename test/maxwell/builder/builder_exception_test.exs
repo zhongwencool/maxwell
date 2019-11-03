@@ -10,11 +10,13 @@ defmodule BuilderExceptionTest do
   end
 
   test "Builder Method Format integer " do
-    assert_raise ArgumentError, "http methods format must be [:get] or [\"get\"] or ~w(get) or ~w(get)a 12345", fn ->
-      defmodule TInteger do
-        use Maxwell.Builder, 12345
-      end
-    end
+    assert_raise ArgumentError,
+                 "http methods format must be [:get] or [\"get\"] or ~w(get) or ~w(get)a 12345",
+                 fn ->
+                   defmodule TInteger do
+                     use Maxwell.Builder, 12345
+                   end
+                 end
   end
 
   test "Builder Adapter Exception Test" do
@@ -31,6 +33,7 @@ defmodule BuilderExceptionTest do
       defmodule TBinary do
         use Maxwell.Builder, ["get", "post"]
       end
+
       raise "ok"
     end
   end
@@ -40,8 +43,8 @@ defmodule BuilderExceptionTest do
       defmodule TAtomList do
         use Maxwell.Builder, [:get, :post]
       end
+
       raise "ok"
     end
   end
 end
-

@@ -75,6 +75,7 @@ defmodule Maxwell.Query do
       case :binary.split(binary, "=") do
         [key, value] ->
           {decode_www_form(key), decode_www_form(value)}
+
         [key] ->
           {decode_www_form(key), nil}
       end
@@ -112,7 +113,8 @@ defmodule Maxwell.Query do
         #
         case :binary.split(subkey, "[") do
           [key, subpart] ->
-            [key|:binary.split(subpart, "][", [:global])]
+            [key | :binary.split(subpart, "][", [:global])]
+
           _ ->
             [key]
         end
@@ -120,7 +122,7 @@ defmodule Maxwell.Query do
         [key]
       end
 
-    assign_parts parts, value, acc
+    assign_parts(parts, value, acc)
   end
 
   # We always assign the value in the last segment.
@@ -133,12 +135,14 @@ defmodule Maxwell.Query do
   # the item to the list or create a new one if it does
   # not yet. This assumes that items are iterated in
   # reverse order.
-  defp assign_parts([key,""|t], value, acc) do
+  defp assign_parts([key, "" | t], value, acc) do
     case Map.fetch(acc, key) do
       {:ok, current} when is_list(current) ->
         Map.put(acc, key, assign_list(t, current, value))
+
       :error ->
         Map.put(acc, key, assign_list(t, [], value))
+
       _ ->
         acc
     end
@@ -147,34 +151,36 @@ defmodule Maxwell.Query do
   # The current segment is a parent segment of a
   # map. We need to create a map and then
   # continue looping.
-  defp assign_parts([key|t], value, acc) do
+  defp assign_parts([key | t], value, acc) do
     case Map.fetch(acc, key) do
       {:ok, %{} = current} ->
         Map.put(acc, key, assign_parts(t, value, current))
+
       :error ->
         Map.put(acc, key, assign_parts(t, value, %{}))
+
       _ ->
         acc
     end
   end
 
   defp assign_list(t, current, value) do
-    if value = assign_list(t, value), do: [value|current], else: current
+    if value = assign_list(t, value), do: [value | current], else: current
   end
 
   defp assign_list([], value), do: value
-  defp assign_list(t, value),  do: assign_parts(t, value, %{})
+  defp assign_list(t, value), do: assign_parts(t, value, %{})
 
   @doc """
   Encodes the given map or list of tuples.
   """
   def encode(kv, encoder \\ &to_string/1) do
-    IO.iodata_to_binary encode_pair("", kv, encoder)
+    IO.iodata_to_binary(encode_pair("", kv, encoder))
   end
 
   # covers structs
   defp encode_pair(field, %{__struct__: struct} = map, encoder) when is_atom(struct) do
-    [field, ?=|encode_value(map, encoder)]
+    [field, ?= | encode_value(map, encoder)]
   end
 
   # covers maps
@@ -189,14 +195,17 @@ defmodule Maxwell.Query do
 
   # covers non-keyword lists
   defp encode_pair(parent_field, list, encoder) when is_list(list) do
-    prune Enum.flat_map list, fn
-      value when is_map(value) and map_size(value) != 1 ->
-        raise ArgumentError,
-          "cannot encode maps inside lists when the map has 0 or more than 1 elements, " <>
-          "got: #{inspect(value)}"
-      value ->
-        [?&, encode_pair(parent_field <> "[]", value, encoder)]
-    end
+    prune(
+      Enum.flat_map(list, fn
+        value when is_map(value) and map_size(value) != 1 ->
+          raise ArgumentError,
+                "cannot encode maps inside lists when the map has 0 or more than 1 elements, " <>
+                  "got: #{inspect(value)}"
+
+        value ->
+          [?&, encode_pair(parent_field <> "[]", value, encoder)]
+      end)
+    )
   end
 
   # covers nil
@@ -206,32 +215,36 @@ defmodule Maxwell.Query do
 
   # encoder fallback
   defp encode_pair(field, value, encoder) do
-    [field, ?=|encode_value(value, encoder)]
+    [field, ?= | encode_value(value, encoder)]
   end
 
   defp encode_kv(kv, parent_field, encoder) do
-    prune Enum.flat_map kv, fn
-      {_, value} when value in [%{}, []] ->
-        []
-      {field, value} ->
-        field =
-          if parent_field == "" do
-            encode_key(field)
-          else
-            parent_field <> "[" <> encode_key(field) <> "]"
-          end
-        [?&, encode_pair(field, value, encoder)]
-    end
+    prune(
+      Enum.flat_map(kv, fn
+        {_, value} when value in [%{}, []] ->
+          []
+
+        {field, value} ->
+          field =
+            if parent_field == "" do
+              encode_key(field)
+            else
+              parent_field <> "[" <> encode_key(field) <> "]"
+            end
+
+          [?&, encode_pair(field, value, encoder)]
+      end)
+    )
   end
 
   defp encode_key(item) do
-    item |> to_string |> URI.encode_www_form
+    item |> to_string |> URI.encode_www_form()
   end
 
   defp encode_value(item, encoder) do
-    item |> encoder.() |> URI.encode_www_form
+    item |> encoder.() |> URI.encode_www_form()
   end
 
-  defp prune([?&|t]), do: t
+  defp prune([?& | t]), do: t
   defp prune([]), do: []
 end

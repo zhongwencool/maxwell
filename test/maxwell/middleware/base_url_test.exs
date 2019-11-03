@@ -1,7 +1,7 @@
 defmodule BaseUrlTest do
-  use ExUnit.Case 
-  import Maxwell.Middleware.TestHelper 
-  alias Maxwell.Conn 
+  use ExUnit.Case
+  import Maxwell.Middleware.TestHelper
+  alias Maxwell.Conn
 
   test "simple base url" do
     opts = Maxwell.Middleware.BaseUrl.init("http://example.com")
@@ -44,4 +44,3 @@ defmodule BaseUrlTest do
     assert_raise ArgumentError, fn -> Maxwell.Middleware.BaseUrl.init("/foo") end
   end
 end
-

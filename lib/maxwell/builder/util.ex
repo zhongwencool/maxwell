@@ -1,11 +1,11 @@
 defmodule Maxwell.Builder.Util do
-  @moduledoc  """
+  @moduledoc """
   Utils for builder
   """
 
   @doc """
-    Global default adapter.
-    """
+  Global default adapter.
+  """
   def default_adapter(), do: Maxwell.Adapter.Ibrowse
 
   @doc """
@@ -20,12 +20,15 @@ defmodule Maxwell.Builder.Util do
 
   """
   def serialize_method_to_atom([], default_methods), do: default_methods
-  def serialize_method_to_atom(methods = [atom|_], _)when is_atom(atom), do: methods
-  def serialize_method_to_atom(methods = [str|_], _)when is_binary(str) do
+  def serialize_method_to_atom(methods = [atom | _], _) when is_atom(atom), do: methods
+
+  def serialize_method_to_atom(methods = [str | _], _) when is_binary(str) do
     for method <- methods, do: String.to_atom(method)
   end
+
   def serialize_method_to_atom(methods, _) do
-    raise ArgumentError, "http methods format must be [:get] or [\"get\"] or ~w(get) or ~w(get)a #{methods}"
+    raise ArgumentError,
+          "http methods format must be [:get] or [\"get\"] or ~w(get) or ~w(get)a #{methods}"
   end
 
   @doc """
@@ -39,10 +42,11 @@ defmodule Maxwell.Builder.Util do
   ```
   """
   def allow_methods?([], _allow_methods), do: true
-  def allow_methods?([method|methods], allow_methods) do
-    unless method in allow_methods, do: raise ArgumentError, "http methods don't support #{method}"
+
+  def allow_methods?([method | methods], allow_methods) do
+    unless method in allow_methods,
+      do: raise(ArgumentError, "http methods don't support #{method}")
+
     allow_methods?(methods, allow_methods)
   end
-
 end
-

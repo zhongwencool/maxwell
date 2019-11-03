@@ -33,12 +33,15 @@ defmodule Maxwell.Middleware.Retry do
       {:error, :econnrefused, _conn} ->
         :timer.sleep(retry_delay)
         retry(conn, next, retry_delay, max_retries - 1)
+
       {:error, _reason, _conn} = err ->
         err
+
       conn ->
         conn
     end
   end
+
   defp retry(conn, next, _retry_delay, _max_retries) do
     next.(conn)
   end

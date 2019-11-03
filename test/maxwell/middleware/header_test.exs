@@ -3,14 +3,20 @@ defmodule HeaderTest do
   import Maxwell.Middleware.TestHelper
 
   alias Maxwell.Conn
+
   test "sets default request headers" do
-    conn =
-      request(Maxwell.Middleware.Headers, Conn.new(), %{"content-type" => "text/plain"})
+    conn = request(Maxwell.Middleware.Headers, Conn.new(), %{"content-type" => "text/plain"})
     assert conn.req_headers == %{"content-type" => "text/plain"}
   end
 
   test "overrides request headers" do
-    conn = request(Maxwell.Middleware.Headers, %Conn{req_headers: %{"content-type" => "application/json"}}, %{"content-type" => "text/plain"})
+    conn =
+      request(
+        Maxwell.Middleware.Headers,
+        %Conn{req_headers: %{"content-type" => "application/json"}},
+        %{"content-type" => "text/plain"}
+      )
+
     assert conn.req_headers == %{"content-type" => "application/json"}
   end
 
@@ -20,8 +26,8 @@ defmodule HeaderTest do
         use Maxwell.Builder, [:get, :post]
         middleware Maxwell.Middleware.Headers, %{:key => "value"}
       end
+
       raise "ok"
     end
   end
 end
-

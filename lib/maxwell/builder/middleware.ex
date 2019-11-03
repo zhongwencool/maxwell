@@ -1,5 +1,5 @@
 defmodule Maxwell.Builder.Middleware do
-  @moduledoc"""
+  @moduledoc """
   Methods for setting up middlewares.
   """
 
@@ -18,6 +18,4 @@ defmodule Maxwell.Builder.Middleware do
       @middleware {unquote(middleware), unquote(middleware).init(unquote(opts))}
     end
   end
-
 end
-

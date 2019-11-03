@@ -1,5 +1,5 @@
 defmodule Maxwell.Middleware.Headers do
-  @moduledoc  """
+  @moduledoc """
   Add fixed headers to request's headers
 
   ## Examples
@@ -31,8 +31,7 @@ defmodule Maxwell.Middleware.Headers do
 
   defp check_headers!(headers) do
     unless Enum.all?(headers, fn {key, _value} -> is_binary(key) end) do
-      raise(ArgumentError, "Header keys must be strings, but got: #{inspect headers}")
+      raise(ArgumentError, "Header keys must be strings, but got: #{inspect(headers)}")
     end
   end
 end
-

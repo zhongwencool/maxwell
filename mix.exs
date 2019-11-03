@@ -2,29 +2,31 @@ defmodule Maxwell.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :maxwell,
-     version: "2.2.2",
-     elixir: "~> 1.8",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     package: [
-       maintainers: ["zhongwencool"],
-       links: %{"GitHub" => "https://github.com/zhongwencool/maxwell"},
-       files: ~w(lib LICENSE mix.exs README.md),
-       description: """
-       Maxwell is an HTTP client adapter.
-       """,
-       licenses: ["MIT"]
-     ],
-     test_coverage: [tool: ExCoveralls],
-     xref: [exclude: [Poison, Maxwell.Adapter.Ibrowse]],
-     dialyzer: [plt_add_deps: true],
-     deps: deps()]
+    [
+      app: :maxwell,
+      version: "2.2.2",
+      elixir: "~> 1.8",
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      package: [
+        maintainers: ["zhongwencool"],
+        links: %{"GitHub" => "https://github.com/zhongwencool/maxwell"},
+        files: ~w(lib LICENSE mix.exs README.md),
+        description: """
+        Maxwell is an HTTP client adapter.
+        """,
+        licenses: ["MIT"]
+      ],
+      test_coverage: [tool: ExCoveralls],
+      xref: [exclude: [Poison, Maxwell.Adapter.Ibrowse]],
+      dialyzer: [plt_add_deps: true],
+      deps: deps()
+    ]
   end
 
   # Type "mix help compile.app" for more information
   def application do
-    [applications: applications(Mix.env)]
+    [applications: applications(Mix.env())]
   end
 
   defp applications(:test), do: [:logger, :poison, :ibrowse, :hackney]
@@ -32,7 +34,8 @@ defmodule Maxwell.Mixfile do
 
   defp deps do
     [
-      {:mimerl, "~> 1.0.2"}, # for find multipart ctype
+      # for find multipart ctype
+      {:mimerl, "~> 1.0.2"},
       {:poison, "~> 2.1 or ~> 3.0", optional: true},
       {:ibrowse, "~> 4.4", optional: true},
       {:hackney, "~> 1.15", optional: true},
@@ -45,5 +48,4 @@ defmodule Maxwell.Mixfile do
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false}
     ]
   end
-
 end

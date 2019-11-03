@@ -1,6 +1,7 @@
 defmodule Maxwell.Adapter.TestHelper do
-  defmacro __using__([adapter: adapter]) do
+  defmacro __using__(adapter: adapter) do
     client = adapter |> Macro.expand(__CALLER__) |> Module.concat(TestClient)
+
     quote location: :keep do
       use ExUnit.Case, async: false
       import Maxwell.Conn
@@ -10,7 +11,7 @@ defmodule Maxwell.Adapter.TestHelper do
         adapter unquote(adapter)
 
         middleware Maxwell.Middleware.BaseUrl, "http://httpbin.org"
-        middleware Maxwell.Middleware.Opts, [connect_timeout: 5000]
+        middleware Maxwell.Middleware.Opts, connect_timeout: 5000
         middleware Maxwell.Middleware.Json
 
         def get_ip_test() do
@@ -55,16 +56,21 @@ defmodule Maxwell.Adapter.TestHelper do
           |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh"}]})
           |> post!
         end
+
         def multipart_file_content_test() do
           "/post"
           |> new()
           |> put_req_body({:multipart, [{:file_content, "xxx", "test.txt"}]})
           |> post!
         end
+
         def multipart_with_extra_header_test() do
           "/post"
           |> new()
-          |> put_req_body({:multipart, [{:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]})
+          |> put_req_body(
+            {:multipart,
+             [{:file, "test/maxwell/multipart_test_file.sh", [{"Content-Type", "image/jpeg"}]}]}
+          )
           |> post!
         end
 
@@ -89,7 +95,7 @@ defmodule Maxwell.Adapter.TestHelper do
           |> new()
           |> put_req_header("content-type", "application/vnd.lotus-1-2-3")
           |> put_req_header("content-length", 6)
-          |> put_req_body(Stream.map(["1", "2", "3"], fn(x) -> List.duplicate(x, 2) end))
+          |> put_req_body(Stream.map(["1", "2", "3"], fn x -> List.duplicate(x, 2) end))
           |> post!
         end
 
@@ -100,17 +106,25 @@ defmodule Maxwell.Adapter.TestHelper do
           |> put_req_header("content-type", content_type)
           |> post!
         end
-
       end
 
       if Code.ensure_loaded?(:rand) do
         setup do
-          :rand.seed(:exs1024, {:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer})
+          :rand.seed(
+            :exs1024,
+            {:erlang.phash2([node()]), :erlang.monotonic_time(), :erlang.unique_integer()}
+          )
+
           :ok
         end
       else
         setup do
-          :random.seed(:erlang.phash2([node()]), :erlang.monotonic_time, :erlang.unique_integer)
+          :random.seed(
+            :erlang.phash2([node()]),
+            :erlang.monotonic_time(),
+            :erlang.unique_integer()
+          )
+
           :ok
         end
       end
@@ -120,13 +134,19 @@ defmodule Maxwell.Adapter.TestHelper do
       end
 
       test "encode decode json test" do
-        result = %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"} |> unquote(client).encode_decode_json_test
+        result =
+          %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
+          |> unquote(client).encode_decode_json_test
+
         assert result == %{"josnkey1" => "jsonvalue1", "josnkey2" => "jsonvalue2"}
       end
 
       test "multipart body file" do
         conn = unquote(client).multipart_test
-        assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+
+        assert get_resp_body(conn, "files") == %{
+                 "file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"
+               }
       end
 
       test "multipart body file_content" do
@@ -136,21 +156,36 @@ defmodule Maxwell.Adapter.TestHelper do
 
       test "multipart body file extra headers" do
         conn = unquote(client).multipart_with_extra_header_test
-        assert get_resp_body(conn, "files") == %{"file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"}
+
+        assert get_resp_body(conn, "files") == %{
+                 "file" => "#!/usr/bin/env bash\necho \"test multipart file\"\n"
+               }
       end
 
       test "send file without content-type" do
         conn = unquote(client).file_test("test/maxwell/multipart_test_file.sh")
-        assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
+
+        assert get_resp_body(conn, "data") ==
+                 "#!/usr/bin/env bash\necho \"test multipart file\"\n"
       end
 
       test "send file with content-type" do
-        conn = unquote(client).file_test("test/maxwell/multipart_test_file.sh", "application/x-sh")
-        assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
+        conn =
+          unquote(client).file_test("test/maxwell/multipart_test_file.sh", "application/x-sh")
+
+        assert get_resp_body(conn, "data") ==
+                 "#!/usr/bin/env bash\necho \"test multipart file\"\n"
       end
+
       test "file_without_transfer_encoding" do
-        conn = unquote(client).file_without_transfer_encoding_test("test/maxwell/multipart_test_file.sh", "application/x-sh")
-        assert get_resp_body(conn, "data") == "#!/usr/bin/env bash\necho \"test multipart file\"\n"
+        conn =
+          unquote(client).file_without_transfer_encoding_test(
+            "test/maxwell/multipart_test_file.sh",
+            "application/x-sh"
+          )
+
+        assert get_resp_body(conn, "data") ==
+                 "#!/usr/bin/env bash\necho \"test multipart file\"\n"
       end
 
       test "send stream" do
@@ -171,10 +206,9 @@ defmodule Maxwell.Adapter.TestHelper do
       end
 
       test "Head without body(test return {:ok, status, header})" do
-        body = unquote(client).head! |> get_resp_body |> Kernel.to_string
+        body = unquote(client).head! |> get_resp_body |> Kernel.to_string()
         assert body == ""
       end
     end
   end
 end
-

@@ -1,5 +1,5 @@
 defmodule Maxwell do
-  @moduledoc  """
+  @moduledoc """
   The maxwell specification.
 
   There are two kind of usages: basic usage and advanced middleware usage.
@@ -45,6 +45,4 @@ defmodule Maxwell do
 
   """
   use Maxwell.Builder
-
 end
-
