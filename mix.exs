@@ -41,7 +41,7 @@ defmodule Maxwell.Mixfile do
       {:ex_doc, "~> 0.15", only: [:dev]},
       {:inch_ex, "~> 2.0", only: :docs},
       {:credo, "~> 1.1", only: [:dev]},
-      {:mock, "~> 0.3", only: :test},
+      {:mimic, "~> 1.1", only: :test},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false}
     ]
   end
