@@ -11,7 +11,7 @@ defmodule Maxwell.Mixfile do
       package: [
         maintainers: ["zhongwencool"],
         links: %{"GitHub" => "https://github.com/zhongwencool/maxwell"},
-        files: ~w(lib LICENSE mix.exs README.md),
+        files: ~w(lib LICENSE mix.exs README.md .formatter.exs),
         description: """
         Maxwell is an HTTP client adapter.
         """,
