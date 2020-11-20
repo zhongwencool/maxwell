@@ -3,11 +3,14 @@
 [![Build Status](https://travis-ci.org/zhongwencool/maxwell.svg?branch=master)](https://travis-ci.org/zhongwencool/maxwell)
 [![Inline docs](http://inch-ci.org/github/zhongwencool/maxwell.svg)](http://inch-ci.org/github/zhongwencool/maxwell)
 [![Coveralls Coverage](https://img.shields.io/coveralls/zhongwencool/maxwell.svg)](https://coveralls.io/github/zhongwencool/maxwell)
-[![Hex.pm](https://img.shields.io/hexpm/v/maxwell.svg)](http://hex.pm/packages/maxwell)
+[![Module Version](https://img.shields.io/hexpm/v/maxwell.svg)](https://hex.pm/packages/maxwell)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/maxwell/)
+[![Total Download](https://img.shields.io/hexpm/dt/maxwell.svg)](https://hex.pm/packages/maxwell)
+[![License](https://img.shields.io/hexpm/l/maxwell.svg)](https://github.com/zhongwencool/maxwell/blob/master/LICENSE)
+[![Last Updated](https://img.shields.io/github/last-commit/zhongwencool/maxwell.svg)](https://github.com/zhongwencool/maxwell/commits/master)
+
 
 Maxwell is an HTTP client that provides a common interface over [:httpc](http://erlang.org/doc/man/httpc.html), [:ibrowse](https://github.com/cmullaparthi/ibrowse), [:hackney](https://github.com/benoitc/hackney).
-
-[Documentation for Maxwell is available online](https://hexdocs.pm/maxwell).
 
 ## Getting Started
 
@@ -77,18 +80,21 @@ for a list of all functions, and detailed info about how they behave.
 
 ## Installation
 
-  1. Add maxwell to your list of dependencies in `mix.exs`:
-```ex
-   def deps do
-     [{:maxwell, "~> 2.3"}]
-   end
-```
-  2. Ensure maxwell has started before your application:
-```ex
-   def application do
-      [applications: [:maxwell]] # also add your adapter(ibrowse, hackney)
-   end
-```
+1.  Add maxwell to your list of dependencies in `mix.exs`:
+
+    ```ex
+    def deps do
+      [{:maxwell, "~> 2.3"}]
+    end
+    ```
+
+2.  Ensure maxwell has started before your application:
+
+    ```ex
+    def application do
+       [applications: [:maxwell]] # also add your adapter(ibrowse, hackney)
+    end
+    ```
 
 ## Adapters
 
