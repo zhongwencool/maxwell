@@ -1,30 +1,26 @@
 defmodule Maxwell.Mixfile do
   use Mix.Project
 
+  @source_url "https://github.com/zhongwencool/maxwell"
+  @version "2.3.0"
+
   def project do
     [
       app: :maxwell,
-      version: "2.3.0",
+      version: @version,
       elixir: "~> 1.8",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      package: [
-        maintainers: ["zhongwencool"],
-        links: %{"GitHub" => "https://github.com/zhongwencool/maxwell"},
-        files: ~w(lib LICENSE mix.exs README.md .formatter.exs),
-        description: """
-        Maxwell is an HTTP client adapter.
-        """,
-        licenses: ["MIT"]
-      ],
+      description: "Maxwell is an HTTP client adapter.",
+      docs: docs(),
+      package: package(),
+      deps: deps(),
       test_coverage: [tool: ExCoveralls],
       xref: [exclude: [Poison, Maxwell.Adapter.Ibrowse]],
-      dialyzer: [plt_add_deps: true],
-      deps: deps()
+      dialyzer: [plt_add_deps: true]
     ]
   end
 
-  # Type "mix help compile.app" for more information
   def application do
     [applications: applications(Mix.env())]
   end
@@ -32,9 +28,20 @@ defmodule Maxwell.Mixfile do
   defp applications(:test), do: [:logger, :poison, :ibrowse, :hackney]
   defp applications(_), do: [:logger]
 
+  defp package do
+    [
+      maintainers: ["zhongwencool"],
+      links: %{
+        "Changelog" => "#{@source_url}/blob/master/CHANGELOG.md",
+        "GitHub" => @source_url
+      },
+      files: ~w(lib LICENSE mix.exs README.md CHANGELOG.md .formatter.exs),
+      licenses: ["MIT"]
+    ]
+  end
+
   defp deps do
     [
-      # for find multipart ctype
       {:mimerl, "~> 1.0.2"},
       {:poison, "~> 2.1 or ~> 3.0", optional: true},
       {:ibrowse, "~> 4.4", optional: true},
@@ -44,8 +51,20 @@ defmodule Maxwell.Mixfile do
       {:inch_ex, "~> 2.0", only: :docs},
       {:credo, "~> 1.1", only: [:dev]},
       {:mimic, "~> 1.1", only: :test},
-      {:ex_doc, "~> 0.21", only: [:dev], runtime: false},
+      {:ex_doc, ">= 0.0.0", only: [:dev], runtime: false},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      source_url: @source_url,
+      source_ref: @version,
+      extras: [
+        "README.md",
+        "CHANGELOG.md"
+      ]
     ]
   end
 end
