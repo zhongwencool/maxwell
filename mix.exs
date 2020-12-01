@@ -2,7 +2,7 @@ defmodule Maxwell.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/zhongwencool/maxwell"
-  @version "2.3.0"
+  @version "2.3.1"
 
   def project do
     [
@@ -42,17 +42,17 @@ defmodule Maxwell.Mixfile do
 
   defp deps do
     [
-      {:mimerl, "~> 1.0.2"},
+      {:mimerl, "~> 1.2"},
       {:poison, "~> 2.1 or ~> 3.0", optional: true},
       {:ibrowse, "~> 4.4", optional: true},
-      {:hackney, "~> 1.15", optional: true},
+      {:hackney, "~> 1.16", optional: true},
       {:fuse, "~> 2.4", optional: true},
-      {:excoveralls, "~> 0.6", only: :test},
+      {:excoveralls, "~> 0.13", only: :test},
       {:inch_ex, "~> 2.0", only: :docs},
-      {:credo, "~> 1.1", only: [:dev]},
-      {:mimic, "~> 1.1", only: :test},
+      {:credo, "~> 1.5", only: [:dev]},
+      {:mimic, "~> 1.3", only: :test},
       {:ex_doc, ">= 0.0.0", only: [:dev], runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.0.0", only: [:dev], runtime: false}
     ]
   end
 
