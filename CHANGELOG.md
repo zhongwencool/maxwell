@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.1 - 2020-12-01
+### Changed
+- update deps `mimerl`
+
 ## 2.3.0 - 2019-11-03
 ### Added
 - Code Format
