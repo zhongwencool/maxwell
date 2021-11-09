@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.0-dev
+### Changed
+- replace `mimerl` with `mime`
+
 ## 2.3.1 - 2020-12-01
 ### Changed
 - update deps `mimerl`
