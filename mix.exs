@@ -22,11 +22,11 @@ defmodule Maxwell.Mixfile do
   end
 
   def application do
-    [applications: applications(Mix.env())]
+    [extra_applications: extra_applications(Mix.env())]
   end
 
-  defp applications(:test), do: [:logger, :poison, :ibrowse, :hackney]
-  defp applications(_), do: [:logger]
+  defp extra_applications(:test), do: [:ssl, :inets, :logger, :poison, :ibrowse, :hackney]
+  defp extra_applications(_), do: [:ssl, :inets, :logger]
 
   defp package do
     [
@@ -42,7 +42,7 @@ defmodule Maxwell.Mixfile do
 
   defp deps do
     [
-      {:mimerl, "~> 1.2"},
+      {:mime, "~> 1.0 or ~> 2.0"},
       {:poison, "~> 2.1 or ~> 3.0", optional: true},
       {:ibrowse, "~> 4.4", optional: true},
       {:hackney, "~> 1.16", optional: true},

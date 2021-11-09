@@ -60,7 +60,11 @@ defmodule Maxwell.Adapter.Util do
           req_headers
 
         false ->
-          content_type = :mimerl.filename(filepath)
+          content_type =
+            filepath
+            |> Path.extname()
+            |> String.trim_leading(".")
+            |> MIME.type()
 
           conn
           |> Conn.put_req_header("content-type", content_type)

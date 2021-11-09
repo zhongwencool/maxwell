@@ -353,7 +353,12 @@ defmodule Maxwell.Multipart do
       file[:disposition] ||
         {"form-data", [{"name", "\"file\""}, {"filename", "\"" <> file_name <> "\""}]}
 
-    ctype = :mimerl.filename(path)
+    content_type =
+      path
+      |> Path.extname()
+      |> String.trim_leading(".")
+      |> MIME.type()
+
     len = file[:filesize] || :filelib.file_size(path)
 
     extra_headers = file[:extra_headers] || []
@@ -363,7 +368,7 @@ defmodule Maxwell.Multipart do
       [
         {"content-length", len},
         {"content-disposition", disposition, params},
-        {"content-type", ctype}
+        {"content-type", content_type}
       ]
       |> replace_header_from_extra(extra_headers)
       |> mp_header(boundary)
@@ -386,13 +391,19 @@ defmodule Maxwell.Multipart do
     {disposition, params} = data[:disposition] || {"form-data", [{"name", "\"" <> name <> "\""}]}
     extra_headers = data[:extra_headers] || []
     extra_headers = extra_headers |> Enum.map(fn {k, v} -> {String.downcase(k), v} end)
-    ctype = :mimerl.filename(name)
+
+    content_type =
+      name
+      |> Path.extname()
+      |> String.trim_leading(".")
+      |> MIME.type()
+
     len = byte_size(data[:binary])
 
     headers =
       [
         {"content-length", len},
-        {"content-type", ctype},
+        {"content-type", content_type},
         {"content-disposition", disposition, params}
       ]
       |> replace_header_from_extra(extra_headers)
