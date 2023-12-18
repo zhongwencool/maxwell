@@ -17,7 +17,8 @@ defmodule Maxwell.Mixfile do
       deps: deps(),
       test_coverage: [tool: ExCoveralls],
       xref: [exclude: [Poison, Maxwell.Adapter.Ibrowse]],
-      dialyzer: [plt_add_deps: true]
+      dialyzer: [plt_add_deps: true],
+      elixirc_options: [prune_code_paths: false]
     ]
   end
 
