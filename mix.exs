@@ -2,7 +2,7 @@ defmodule Maxwell.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/zhongwencool/maxwell"
-  @version "2.4.0-alpha.1"
+  @version "2.4.0"
 
   def project do
     [
